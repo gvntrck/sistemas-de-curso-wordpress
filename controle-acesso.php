@@ -1,12 +1,29 @@
 <?php
 /**
  * Controle de Acesso a Cursos
- * Versão: 1.0.0
+ * Versão: 1.0.1
  *
  * Sistema de permissões para cursos com:
  * - Tabela própria no banco de dados
  * - Funções de verificação e gerenciamento de acesso
  * - Painel administrativo com CRUD e ações em lote
+ *
+ * Uso por outros snippets:
+ * - Verificar acesso: acesso_cursos_has($user_id, $curso_id)
+ * - Conceder acesso: acesso_cursos_grant($user_id, $curso_id, $data_fim = null, $created_by = null)
+ * - Revogar acesso: acesso_cursos_revoke($user_id, $curso_id)
+ * - Suspender acesso: acesso_cursos_suspend($user_id, $curso_id)
+ * - Listar acessos: acesso_cursos_list($args = [])
+ * - Contar acessos: acesso_cursos_count($args = [])
+ * - Cursos do usuário: acesso_cursos_get_user_cursos($user_id)
+ *
+ * Hooks registrados:
+ * - init: acesso_cursos_criar_tabela
+ * - admin_menu: acesso_cursos_admin_menu
+ * - admin_init: acesso_cursos_admin_process
+ *
+ * Observação: este arquivo não aplica bloqueio no front-end por si só.
+ * Para restringir conteúdo, chame acesso_cursos_has() em templates/hooks apropriados.
  *
  * Status possíveis: ativo, suspenso, revogado
  * data_fim NULL = acesso vitalício
