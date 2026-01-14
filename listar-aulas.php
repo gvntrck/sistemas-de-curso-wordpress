@@ -10,7 +10,7 @@
  * Pré-requisitos:
  * - CPT curso:  curso
  * - CPT aula:   aula
- * - ACF field (aula): embed_do_vimeo (oEmbed/HTML) e descricao (WYSIWYG/textarea)
+ * - ACF field (aula): embed_do_vimeo (campo de texto) e descricao (WYSIWYG/textarea)
  *
  * Uso:
  * [lista-aulas] (dentro do single do curso)
