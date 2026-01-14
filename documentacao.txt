@@ -1,0 +1,45 @@
+Documentação rápida — Estrutura de CPTs e relações
+
+Resumo dos CPTs
+1) trilha
+- Usado como “container” para agrupar cursos.
+- O shortcode [cursos_da_trilha] assume que o post atual é uma trilha.
+
+2) curso
+- CPT principal de cursos.
+- Campo ACF: trilha (post object/relationship) → referencia o ID do CPT trilha.
+- Campo ACF: capa_vertical (imagem/URL) → usado para exibir capa no shortcode de trilha.
+
+3) aula
+- CPT de aulas do curso.
+- Campo ACF: curso (post object/relationship) → referencia o ID do CPT curso.
+- Campos ACF: embed_do_vimeo (oEmbed/HTML) e descricao (WYSIWYG/textarea).
+
+Relações (chaves/meta usadas)
+- Curso → Trilha: meta_key = "trilha" (valor = ID da trilha).
+- Aula → Curso: meta_key = "curso" (valor = ID do curso).
+
+Shortcodes existentes
+- [cursos_da_trilha]
+  - Lista CPT “curso” relacionados à trilha atual via meta_key "trilha".
+  - Usa campo capa_vertical para a imagem do curso.
+
+- [lista-aulas]
+  - Lista CPT “aula” relacionados a um curso via meta_key "curso".
+  - Se estiver dentro de um single de curso, tenta usar o curso atual.
+  - Renderiza vídeo (embed_do_vimeo) e descrição (descricao).
+
+Controle de acesso (cursos)
+- Tabela: wp_acesso_cursos
+- Função principal: acesso_cursos_has($user_id, $curso_id)
+- Status: ativo, suspenso, revogado (data_fim nula = vitalício).
+
+Como criar novos snippets seguindo o padrão
+1) Sempre use o post_type correto: trilha, curso ou aula.
+2) Para relações, use meta_query com as chaves:
+   - trilha (curso → trilha)
+   - curso (aula → curso)
+3) Campos ACF esperados:
+   - curso: capa_vertical
+   - aula: embed_do_vimeo, descricao
+4) Use post_status = publish e sanitize das entradas do shortcode.
