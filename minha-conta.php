@@ -7,21 +7,43 @@ add_shortcode('minha-conta', 'render_minha_conta_shortcode');
 
 function minha_conta_convert_date_to_iso($date)
 {
-    if (empty($date))
+    if (empty($date)) {
         return '';
+    }
+
+    // Tenta formato BR (dd/mm/yyyy)
     $d = DateTime::createFromFormat('d/m/Y', $date);
-    if ($d && $d->format('d/m/Y') === $date)
+    if ($d && $d->format('d/m/Y') === $date) {
         return $d->format('Y-m-d');
+    }
+
+    // Tenta formato ISO (yyyy-mm-dd) para validar
+    $d = DateTime::createFromFormat('Y-m-d', $date);
+    if ($d && $d->format('Y-m-d') === $date) {
+        return $date;
+    }
+
     return $date;
 }
 
 function minha_conta_convert_date_to_br($date)
 {
-    if (empty($date))
+    if (empty($date)) {
         return '';
+    }
+
+    // Tenta formato ISO (yyyy-mm-dd)
     $d = DateTime::createFromFormat('Y-m-d', $date);
-    if ($d && $d->format('Y-m-d') === $date)
+    if ($d && $d->format('Y-m-d') === $date) {
         return $d->format('d/m/Y');
+    }
+
+    // Tenta formato BR (dd/mm/yyyy) para validar se já está ok
+    $d = DateTime::createFromFormat('d/m/Y', $date);
+    if ($d && $d->format('d/m/Y') === $date) {
+        return $date;
+    }
+
     return $date;
 }
 

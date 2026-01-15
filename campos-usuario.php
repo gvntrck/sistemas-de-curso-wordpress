@@ -10,6 +10,31 @@
  */
 
 // =====================================================
+// FUNÇÕES AUXILIARES
+// =====================================================
+
+function sdc_convert_date_to_iso($date)
+{
+    if (empty($date)) {
+        return '';
+    }
+
+    // Tenta formato BR (dd/mm/yyyy)
+    $d = DateTime::createFromFormat('d/m/Y', $date);
+    if ($d && $d->format('d/m/Y') === $date) {
+        return $d->format('Y-m-d');
+    }
+
+    // Tenta formato ISO (yyyy-mm-dd) para validar
+    $d = DateTime::createFromFormat('Y-m-d', $date);
+    if ($d && $d->format('Y-m-d') === $date) {
+        return $date;
+    }
+
+    return $date; // Retorna original se não conseguir converter
+}
+
+// =====================================================
 // ADICIONA CAMPOS NO FORMULÁRIO DE REGISTRO
 // =====================================================
 
@@ -161,7 +186,11 @@ function sdc_salva_campos_registro($user_id)
 
     foreach ($campos as $campo) {
         if (isset($_POST[$campo])) {
-            update_user_meta($user_id, $campo, sanitize_text_field($_POST[$campo]));
+            $value = sanitize_text_field($_POST[$campo]);
+            if ($campo === 'aniversario') {
+                $value = sdc_convert_date_to_iso($value);
+            }
+            update_user_meta($user_id, $campo, $value);
         }
     }
 }
@@ -336,7 +365,11 @@ function sdc_salva_campos_edicao_perfil($user_id)
 
     foreach ($campos as $campo) {
         if (isset($_POST[$campo])) {
-            update_user_meta($user_id, $campo, sanitize_text_field($_POST[$campo]));
+            $value = sanitize_text_field($_POST[$campo]);
+            if ($campo === 'aniversario') {
+                $value = sdc_convert_date_to_iso($value);
+            }
+            update_user_meta($user_id, $campo, $value);
         }
     }
 }
