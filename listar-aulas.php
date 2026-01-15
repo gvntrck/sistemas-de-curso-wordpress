@@ -501,6 +501,26 @@ add_shortcode('lista-aulas', function ($atts) {
             <div class="lista-aulas__sidebar-header">
                 <div class="lista-aulas__curso-label">Aulas do curso</div>
                 <div class="lista-aulas__curso-titulo"><?php echo esc_html(get_the_title($cursoId)); ?></div>
+
+                <?php
+                // Cálculo de progresso
+                $totalAulas = count($aulas);
+                $qtdConcluidas = 0;
+                foreach ($aulas as $a) {
+                    if (in_array((int) $a->ID, $aulasConcluidas, true)) {
+                        $qtdConcluidas++;
+                    }
+                }
+                $progressoPercent = $totalAulas > 0 ? min(100, round(($qtdConcluidas / $totalAulas) * 100)) : 0;
+                ?>
+                <div class="lista-aulas__progresso-wrapper">
+                    <div class="lista-aulas__progresso-bar">
+                        <div class="lista-aulas__progresso-fill" style="width: <?php echo $progressoPercent; ?>%"></div>
+                    </div>
+                    <div class="lista-aulas__progresso-texto">
+                        <?php echo $progressoPercent; ?>%
+                    </div>
+                </div>
             </div>
 
             <nav class="lista-aulas__lista" role="list">
@@ -659,6 +679,35 @@ add_shortcode('lista-aulas', function ($atts) {
             line-height: 1.25;
         }
 
+        .lista-aulas__progresso-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .lista-aulas__progresso-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .lista-aulas__progresso-fill {
+            height: 100%;
+            background: #22c55e;
+            transition: width 0.4s ease;
+        }
+
+        .lista-aulas__progresso-texto {
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+            min-width: 40px;
+            text-align: right;
+        }
+
         /* Botão de marcar como concluído */
         #<?php echo esc_attr($uid); ?> .lista-aulas__btn-concluir {
             display: inline-flex;
@@ -750,10 +799,22 @@ add_shortcode('lista-aulas', function ($atts) {
 
             // Mapa de aulas concluídas (carregado do servidor)
             var aulasConcluidas = <?php echo json_encode(array_values($aulasConcluidas)); ?>;
+            var totalAulas = <?php echo (int)(isset($totalAulas) ? $totalAulas : 0); ?>;
 
             // Função para verificar se aula está concluída
             function isAulaConcluida(aulaId) {
                 return aulasConcluidas.indexOf(parseInt(aulaId)) !== -1;
+            }
+
+            function atualizarBarraProgresso() {
+                var qtd = aulasConcluidas.length;
+                var pct = totalAulas > 0 ? Math.min(100, Math.round((qtd / totalAulas) * 100)) : 0;
+                
+                var fill = container.querySelector('.lista-aulas__progresso-fill');
+                var txt = container.querySelector('.lista-aulas__progresso-texto');
+                
+                if (fill) fill.style.width = pct + '%';
+                if (txt) txt.textContent = pct + '%';
             }
 
             // Função para atualizar visual do botão
@@ -826,6 +887,7 @@ add_shortcode('lista-aulas', function ($atts) {
                                     btn.querySelector('.lista-aulas__btn-texto').textContent = 'Marcar como concluído';
                                 }
                                 atualizarItemLista(aulaId, concluida);
+                                atualizarBarraProgresso();
                             } else {
                                 alert(data.data.message || 'Erro ao atualizar.');
                             }
