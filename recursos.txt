@@ -4,7 +4,7 @@
  • Continuar Assistindo na home
  • Materiais Complementares na aula - feito
  • Log de Atividades
- • tela de cadastro de aluno
+ • tela de cadastro de aluno - feito
  • aulas em ordem depende do curso
- • tela minha conta
- 
+ • tela minha conta - feito
+ •
