@@ -218,6 +218,42 @@ function cadastro_usuario_shortcode()
             <input type="submit" name="submit_cadastro_usuario" class="shortcode-submit-btn" value="Cadastrar">
         </div>
     </form>
+    <script>
+        // CPF mask (format 000.000.000-00)
+        document.addEventListener('DOMContentLoaded', function () {
+            var cpfInput = document.getElementById('cpf');
+            if (cpfInput) {
+                cpfInput.addEventListener('input', function (e) {
+                    var v = e.target.value.replace(/\D/g, '').slice(0, 11);
+                    v = v.replace(/^(\d{3})(\d)/, '$1.$2');
+                    v = v.replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+                    v = v.replace(/\.(\d{3})(\d)/, '.$1-$2');
+                    e.target.value = v;
+                });
+            }
+
+            // CEP auto-fill using ViaCEP API
+            var cepInput = document.getElementById('cep');
+            if (cepInput) {
+                cepInput.addEventListener('blur', function () {
+                    var cep = cepInput.value.replace(/\D/g, '').slice(0, 8);
+                    if (cep.length === 8) {
+                        fetch('https://viacep.com.br/ws/' + cep + '/json/')
+                            .then(function (response) { return response.json(); })
+                            .then(function (data) {
+                                if (!data.erro) {
+                                    if (document.getElementById('rua')) document.getElementById('rua').value = data.logradouro || '';
+                                    if (document.getElementById('bairro')) document.getElementById('bairro').value = data.bairro || '';
+                                    if (document.getElementById('cidade')) document.getElementById('cidade').value = data.localidade || '';
+                                    if (document.getElementById('estado')) document.getElementById('estado').value = data.uf || '';
+                                }
+                            })
+                            .catch(function (err) { console.error('Erro ao buscar CEP:', err); });
+                    }
+                });
+            }
+        });
+    </script>
     <?php
     $output .= ob_get_clean();
 
