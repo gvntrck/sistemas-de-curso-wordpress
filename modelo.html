@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelo Visual - UI Kit</title>
+    <style>
+        /* =========================================
+           Variaveis Globais (Baseadas em minha-conta.php)
+           ========================================= */
+        :root {
+            --bg-color: #121212;
+            --bg-card: #121212;
+            --bg-header: linear-gradient(180deg, #1f1f1f 0%, #161616 100%);
+            --bg-input-hover: #1a1a1a;
+            --bg-input-focus: #222;
+            --bg-footer: #161616;
+
+            --text-color: #e0e0e0;
+            --text-heading: #fff;
+            --text-muted: #888;
+            --text-label: #666;
+
+            --border-color: #2a2a2a;
+            --border-input: #333;
+            --border-input-hover: #444;
+
+            --accent-color: #FDC110;
+            --accent-shadow: rgba(108, 92, 231, 0.2);
+            /* Mantido do original, roxo sutil */
+
+            --success-bg: rgba(46, 213, 115, 0.15);
+            --success-text: #2ed573;
+            --success-border: rgba(46, 213, 115, 0.2);
+
+            --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --radius-card: 12px;
+            --radius-btn: 6px;
+        }
+
+        body {
+            background-color: #000;
+            /* Fundo geral da pagina de demo */
+            color: var(--text-color);
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 40px;
+            line-height: 1.6;
+        }
+
+        /* =========================================
+           Componentes Visuais (Extraidos de minha-conta.php)
+           ========================================= */
+
+        /* Container Card */
+        .mc-container {
+            max-width: 900px;
+            margin: 0 auto 40px;
+            background-color: var(--bg-card);
+            color: var(--text-color);
+            border-radius: var(--radius-card);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .mc-header {
+            background: var(--bg-header);
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .mc-body {
+            padding: 40px;
+        }
+
+        .mc-footer {
+            background-color: var(--bg-footer);
+            padding: 20px 40px;
+            text-align: right;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        /* Tipografia */
+        h1,
+        h2,
+        h3,
+        h4 {
+            margin-top: 0;
+            color: var(--text-heading);
+        }
+
+        .mc-section-title {
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            margin-top: 40px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        .mc-section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        .demo-title {
+            color: var(--accent-color);
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Inputs */
+        .mc-field-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        .mc-field-label {
+            font-size: 0.75rem;
+            color: var(--text-label);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .mc-input {
+            background-color: transparent;
+            border: 1px solid transparent;
+            border-bottom: 1px solid var(--border-input);
+            color: #fff;
+            padding: 10px 0;
+            font-size: 1.1rem;
+            width: 100%;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            outline: none;
+            border-radius: 4px;
+        }
+
+        .mc-input:hover {
+            background-color: var(--bg-input-hover);
+            border-color: var(--border-input-hover);
+            padding-left: 10px;
+        }
+
+        .mc-input:focus {
+            background-color: var(--bg-input-focus);
+            border-color: var(--accent-color);
+            padding-left: 10px;
+            box-shadow: 0 0 0 3px var(--accent-shadow);
+        }
+
+        .mc-input::placeholder {
+            color: #444;
+        }
+
+        /* Botoes */
+        .mc-btn-save {
+            background-color: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--radius-btn);
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 10px var(--accent-shadow);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .mc-btn-save:hover {
+            transform: translateY(-1px);
+        }
+
+        .mc-btn-save:active {
+            transform: translateY(1px);
+        }
+
+        /* Grid System */
+        .mc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        /* Avatars */
+        .mc-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent-color);
+            box-shadow: 0 0 20px var(--accent-shadow);
+            margin-bottom: 15px;
+        }
+
+        /* Alerts */
+        .mc-alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .mc-success {
+            background-color: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid var(--success-border);
+        }
+
+        /* =========================================
+           Estilos Demo (Para apresentacao da pagina modelo)
+           ========================================= */
+        .color-swatches {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .swatch {
+            width: 100px;
+            height: 100px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            flex-direction: column;
+            text-align: center;
+            font-weight: bold;
+            color: #fff;
+            background-color: #000;
+            position: relative;
+        }
+
+        .swatch span {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        /* Lista de Cursos (Baseado em cursos-trilha.php) */
+        .cursos-da-trilha {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .curso-item {
+            flex: 0 0 auto;
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        .curso-link {
+            display: block;
+            text-decoration: none;
+            color: #fff;
+        }
+
+        .curso-item img {
+            display: block;
+            width: 220px;
+            height: 300px;
+            /* Placeholder aspect ratio */
+            object-fit: cover;
+            background: #333;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .curso-title {
+            display: block;
+            text-align: center;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1 class="demo-title">Guia de Estilos & Componentes</h1>
+
+    <!-- SECTION 1: PALETA DE CORES -->
+    <div class="mc-container">
+        <div class="mc-header" style="padding: 20px;">
+            <h3>Paleta de Cores</h3>
+        </div>
+        <div class="mc-body">
+            <div class="color-swatches">
+                <div class="swatch" style="background: #121212;"><span>BG Main<br>#121212</span></div>
+                <div class="swatch" style="background: linear-gradient(180deg, #1f1f1f 0%, #161616 100%);"><span>Header
+                        Gradient</span></div>
+                <div class="swatch" style="background: #FDC110; color: #000;"><span>Accent<br>#FDC110</span></div>
+                <div class="swatch" style="background: #e0e0e0; color: #000;"><span>Text Body<br>#e0e0e0</span></div>
+                <div class="swatch" style="background: #666;"><span>Label<br>#666</span></div>
+                <div class="swatch" style="background: #2a2a2a;"><span>Border<br>#2a2a2a</span></div>
+                <div class="swatch"
+                    style="background: rgba(46, 213, 115, 0.15); border: 1px solid rgba(46, 213, 115, 0.2); color: #2ed573;">
+                    <span>Success</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 2: TIPOGRAFIA E ELEMENTOS BASICO -->
+    <div class="mc-container">
+        <div class="mc-header">
+            <h3>Tipografia & Elementos</h3>
+        </div>
+        <div class="mc-body">
+            <h1>Heading 1 (Título Principal)</h1>
+            <h2>Heading 2 (Subtítulo)</h2>
+            <h3>Heading 3 (Seção)</h3>
+            <h4 style="color:var(--text-muted)">Heading 4 (Muted/Sublabel)</h4>
+
+            <p>Parágrafo de texto padrão. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                Nullam non urna er. <strong>Texto em negrito</strong> serve para destaque.</p>
+
+            <p style="color: var(--text-muted);">
+                Texto secundário ou "muted" (cor #888), usado para descrições auxiliares.
+            </p>
+
+            <h3 class="mc-section-title">Alertas</h3>
+            <div class="mc-alert mc-success">
+                Operação realizada com sucesso! (Estilo .mc-success)
+            </div>
+
+            <h3 class="mc-section-title">Botões</h3>
+            <button class="mc-btn-save">Botão Primário</button>
+            <button class="mc-btn-save"
+                style="background-color: transparent; border: 1px solid var(--accent-color); color: var(--accent-color);">Outline
+                Button (Variação)</button>
+        </div>
+    </div>
+
+    <!-- SECTION 3: FORMULÁRIOS (ESTILO MINHA CONTA) -->
+    <div class="mc-container">
+        <div class="mc-header">
+            <!-- Avatar Example -->
+            <div style="width: 120px; height: 120px; background: #333; margin: 0 auto 15px auto; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #666;"
+                class="mc-avatar">
+                Img
+            </div>
+            <h2 style="margin:0; color:#fff;">Formulários</h2>
+            <p style="color:#888; margin-top:5px;">Estilo "Minha Conta"</p>
+        </div>
+
+        <div class="mc-body">
+            <h3 class="mc-section-title">Dados de Exemplo</h3>
+            <div class="mc-grid">
+                <div class="mc-field-group">
+                    <label class="mc-field-label">Texto Simples</label>
+                    <input type="text" class="mc-input" placeholder="Digite algo...">
+                </div>
+                <div class="mc-field-group">
+                    <label class="mc-field-label">Com Valor Preenchido</label>
+                    <input type="text" class="mc-input" value="Valor Exemplo">
+                </div>
+                <div class="mc-field-group">
+                    <label class="mc-field-label">Data</label>
+                    <input type="text" class="mc-input" placeholder="DD/MM/AAAA">
+                </div>
+                <div class="mc-field-group">
+                    <label class="mc-field-label">CPF (Mask Example)</label>
+                    <input type="text" class="mc-input" placeholder="000.000.000-00">
+                </div>
+            </div>
+
+            <h3 class="mc-section-title">Layout de Endereço (Grid)</h3>
+            <div class="mc-grid">
+                <div class="mc-field-group">
+                    <label class="mc-field-label">CEP</label>
+                    <input type="text" class="mc-input" placeholder="00000-000">
+                </div>
+                <div class="mc-field-group" style="grid-column: span 2;">
+                    <label class="mc-field-label">Rua</label>
+                    <input type="text" class="mc-input" placeholder="Nome da Rua">
+                </div>
+                <div class="mc-field-group">
+                    <label class="mc-field-label">Número</label>
+                    <input type="text" class="mc-input" placeholder="123">
+                </div>
+            </div>
+        </div>
+        <div class="mc-footer">
+            <button class="mc-btn-save">Salvar Alterações</button>
+        </div>
+    </div>
+
+    <!-- SECTION 4: LISTA DE CURSOS (ESTILO TRILHA) -->
+    <div class="mc-container">
+        <div class="mc-header">
+            <h3>Lista de Cursos (Visual Trilha)</h3>
+        </div>
+        <div class="mc-body">
+            <div class="cursos-da-trilha">
+                <!-- Item 1 -->
+                <div class="curso-item">
+                    <a href="#" class="curso-link">
+                        <img src="https://via.placeholder.com/220x300/333/FDC110?text=Capa+Curso" alt="Curso 1">
+                        <span class="curso-title">Curso de Exemplo 1</span>
+                    </a>
+                </div>
+                <!-- Item 2 -->
+                <div class="curso-item">
+                    <a href="#" class="curso-link">
+                        <img src="https://via.placeholder.com/220x300/333/FDC110?text=Capa+Curso" alt="Curso 2">
+                        <span class="curso-title">WordPress Avançado</span>
+                    </a>
+                </div>
+                <!-- Item 3 -->
+                <div class="curso-item">
+                    <a href="#" class="curso-link">
+                        <img src="https://via.placeholder.com/220x300/333/FDC110?text=Capa+Curso" alt="Curso 3">
+                        <span class="curso-title">PHP Moderno</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
