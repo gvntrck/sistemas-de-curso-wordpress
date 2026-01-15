@@ -300,6 +300,50 @@ function lista_aulas_kses_embed($html)
 add_action('wp_ajax_lista_aulas_get_aula', 'lista_aulas_ajax_get_aula');
 add_action('wp_ajax_nopriv_lista_aulas_get_aula', 'lista_aulas_ajax_get_aula');
 
+/**
+ * Helper para renderizar HTML dos anexos
+ */
+function lista_aulas_get_anexos_html($aulaId)
+{
+    // Repeater: "arquivos"
+    // Sub-field: "anexos" (retorna URL conforme informado)
+    $arquivos = get_field('arquivos', $aulaId);
+
+    if (empty($arquivos) || !is_array($arquivos)) {
+        return '';
+    }
+
+    ob_start();
+    ?>
+    <div class="lista-aulas__anexos">
+        <h3>Materiais de Apoio</h3>
+        <ul class="lista-aulas__anexos-lista">
+            <?php foreach ($arquivos as $item):
+                $url = $item['anexos'] ?? '';
+
+                if (!$url)
+                    continue;
+
+                $nome = basename($url);
+                ?>
+                <li>
+                    <a href="<?php echo esc_url($url); ?>" target="_blank" download class="lista-aulas__btn-anexo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <?php echo esc_html($nome); ?>
+                    </a>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+    <?php
+    return ob_get_clean();
+}
+
 function lista_aulas_ajax_get_aula()
 {
     $aulaId = isset($_POST['aula_id']) ? (int) $_POST['aula_id'] : 0;
@@ -326,6 +370,7 @@ function lista_aulas_ajax_get_aula()
         'titulo' => esc_html(get_the_title($aulaId)),
         'embed' => $embed ? lista_aulas_kses_embed($embed) : '<div class="lista-aulas__placeholder">Vídeo não disponível.</div>',
         'descricao' => $descricao ? wp_kses_post($descricao) : '',
+        'anexos' => lista_aulas_get_anexos_html($aulaId),
     ]);
 }
 
@@ -450,6 +495,7 @@ add_shortcode('lista-aulas', function ($atts) {
     $titulo = esc_html(get_the_title($aulaId));
     $descricaoHtml = $descricao ? wp_kses_post($descricao) : '';
     $embedHtml = $embed ? lista_aulas_kses_embed($embed) : '<div class="lista-aulas__placeholder">Vídeo não disponível.</div>';
+    $anexosHtml = lista_aulas_get_anexos_html($aulaId);
 
     // URL base preservando querystring do contexto, mas controlando a aula via ?aula=
     $baseUrl = get_permalink($cursoId);
@@ -494,6 +540,10 @@ add_shortcode('lista-aulas', function ($atts) {
                 <div class="lista-aulas__descricao">
                     <?php echo $descricaoHtml; ?>
                 </div>
+            <?php endif; ?>
+
+            <?php if (!empty($anexosHtml)): ?>
+                <?php echo $anexosHtml; ?>
             <?php endif; ?>
         </div>
 
@@ -689,7 +739,7 @@ add_shortcode('lista-aulas', function ($atts) {
         .lista-aulas__progresso-bar {
             flex: 1;
             height: 4px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 4px;
             overflow: hidden;
         }
@@ -702,7 +752,7 @@ add_shortcode('lista-aulas', function ($atts) {
 
         .lista-aulas__progresso-texto {
             font-size: 13px;
-            color: rgba(255,255,255,0.7);
+            color: rgba(255, 255, 255, 0.7);
             font-weight: 500;
             min-width: 40px;
             text-align: right;
@@ -782,6 +832,66 @@ add_shortcode('lista-aulas', function ($atts) {
                 min-height: 40vh;
             }
         }
+
+        /* Anexos */
+        #<?php echo esc_attr($uid); ?> .lista-aulas__anexos {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, .1);
+            width: 100%;
+        }
+
+        #<?php echo esc_attr($uid); ?> .lista-aulas__anexos h3 {
+            font-size: 16px;
+            margin: 0 0 12px;
+            color: rgba(255, 255, 255, .8);
+        }
+
+        #<?php echo esc_attr($uid); ?> .lista-aulas__anexos-lista {
+            list-style: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 12px !important;
+            flex-direction: row !important;
+        }
+
+        #<?php echo esc_attr($uid); ?> .lista-aulas__btn-anexo {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            padding: 10px 16px !important;
+            background: #1a1a1a !important;
+            border: 1px solid #333 !important;
+            border-radius: 6px !important;
+            color: #fff !important;
+            text-decoration: none !important;
+            font-size: 14px !important;
+            line-height: 1.4 !important;
+            transition: all 0.2s !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        #<?php echo esc_attr($uid); ?> .lista-aulas__btn-anexo:hover {
+            background: #2a2a2a !important;
+            border-color: #444 !important;
+        }
+
+        #<?php echo esc_attr($uid); ?> .lista-aulas__btn-anexo svg {
+            width: 20px !important;
+            height: 20px !important;
+            min-width: 20px !important;
+            min-height: 20px !important;
+            margin: 0 10px 0 0 !important;
+            opacity: 0.9 !important;
+            fill: none !important;
+            stroke: currentColor !important;
+            display: inline-block !important;
+            vertical-align: middle !important;
+            max-width: none !important; /* Prevent theme overrides that might set max-width: 100% */
+        }
     </style>
 
     <script>
@@ -793,13 +903,14 @@ add_shortcode('lista-aulas', function ($atts) {
             var videoContainer = container.querySelector('.lista-aulas__video');
             var tituloEl = container.querySelector('.lista-aulas__titulo');
             var descricaoEl = container.querySelector('.lista-aulas__descricao');
+            var anexosEl = container.querySelector('.lista-aulas__anexos');
             var mainEl = container.querySelector('.lista-aulas__main');
             var btnConcluir = container.querySelector('.lista-aulas__btn-concluir');
             var ajaxUrl = '<?php echo esc_js(admin_url('admin-ajax.php')); ?>';
 
             // Mapa de aulas concluídas (carregado do servidor)
             var aulasConcluidas = <?php echo json_encode(array_values($aulasConcluidas)); ?>;
-            var totalAulas = <?php echo (int)(isset($totalAulas) ? $totalAulas : 0); ?>;
+            var totalAulas = <?php echo (int) (isset($totalAulas) ? $totalAulas : 0); ?>;
 
             // Função para verificar se aula está concluída
             function isAulaConcluida(aulaId) {
@@ -809,10 +920,10 @@ add_shortcode('lista-aulas', function ($atts) {
             function atualizarBarraProgresso() {
                 var qtd = aulasConcluidas.length;
                 var pct = totalAulas > 0 ? Math.min(100, Math.round((qtd / totalAulas) * 100)) : 0;
-                
+
                 var fill = container.querySelector('.lista-aulas__progresso-fill');
                 var txt = container.querySelector('.lista-aulas__progresso-texto');
-                
+
                 if (fill) fill.style.width = pct + '%';
                 if (txt) txt.textContent = pct + '%';
             }
@@ -954,6 +1065,27 @@ add_shortcode('lista-aulas', function ($atts) {
                                 } else {
                                     if (descricaoEl) {
                                         descricaoEl.style.display = 'none';
+                                    }
+                                }
+
+                                // Atualiza anexos
+                                if (data.data.anexos) {
+                                    if (anexosEl) {
+                                        anexosEl.outerHTML = data.data.anexos;
+                                        // Re-query após replace
+                                        anexosEl = container.querySelector('.lista-aulas__anexos');
+                                    } else {
+                                        // Insere após descrição ou após título se não houver descrição
+                                        var target = descricaoEl || tituloEl;
+                                        if (target) {
+                                            target.insertAdjacentHTML('afterend', data.data.anexos);
+                                            anexosEl = container.querySelector('.lista-aulas__anexos');
+                                        }
+                                    }
+                                } else {
+                                    if (anexosEl) {
+                                        anexosEl.remove();
+                                        anexosEl = null;
                                     }
                                 }
                                 // Scroll para o topo do vídeo
