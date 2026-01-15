@@ -1,7 +1,7 @@
 <?php
 /**
  * Controle de Acesso a Cursos
- * Versão: 1.0.5
+ * Versão: 1.0.6
  *
  * Sistema de permissões para cursos com:
  * - Tabela própria no banco de dados
@@ -1113,6 +1113,21 @@ function acesso_cursos_aluno_detalhes() {
     // Meta do usuário
     $last_login = get_user_meta($user_id, 'last_login', true) ?: get_user_meta($user_id, '_last_login', true);
     $phone = get_user_meta($user_id, 'billing_phone', true) ?: get_user_meta($user_id, 'phone', true);
+    $cpf = get_user_meta($user_id, 'cpf', true);
+    $aniversario = get_user_meta($user_id, 'aniversario', true);
+    $instagram = get_user_meta($user_id, 'instagram', true);
+    $cep = get_user_meta($user_id, 'cep', true);
+    $rua = get_user_meta($user_id, 'rua', true);
+    $numero = get_user_meta($user_id, 'numero', true);
+    $complemento = get_user_meta($user_id, 'complemento', true);
+    $bairro = get_user_meta($user_id, 'bairro', true);
+    $cidade = get_user_meta($user_id, 'cidade', true);
+    $estado = get_user_meta($user_id, 'estado', true);
+    $empty_placeholder = '<em style="color:#999;">Não informado</em>';
+    $format_meta = function ($value) use ($empty_placeholder) {
+        $value = is_string($value) ? trim($value) : $value;
+        return ($value !== '' && $value !== null) ? esc_html((string) $value) : $empty_placeholder;
+    };
     
     ?>
     <div class="wrap">
@@ -1230,6 +1245,59 @@ function acesso_cursos_aluno_detalhes() {
                         </span>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 20px; margin: 20px 0; flex-wrap: wrap;">
+            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; flex: 1; min-width: 260px;">
+                <h3 style="margin-top: 0;">Documentos e Contato</h3>
+                <table class="form-table" style="margin: 0;">
+                    <tr>
+                        <th style="padding: 6px 0; width: 120px;">CPF</th>
+                        <td style="padding: 6px 0;"><?php echo $format_meta($cpf); ?></td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 6px 0;">Aniversário</th>
+                        <td style="padding: 6px 0;"><?php echo $format_meta($aniversario); ?></td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 6px 0;">Instagram</th>
+                        <td style="padding: 6px 0;"><?php echo $format_meta($instagram); ?></td>
+                    </tr>
+                </table>
+            </div>
+            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; flex: 2; min-width: 320px;">
+                <h3 style="margin-top: 0;">Endereço</h3>
+                <table class="form-table" style="margin: 0;">
+                    <tr>
+                        <th style="padding: 6px 0; width: 120px;">CEP</th>
+                        <td style="padding: 6px 0;"><?php echo $format_meta($cep); ?></td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 6px 0;">Rua</th>
+                        <td style="padding: 6px 0;"><?php echo $format_meta($rua); ?></td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 6px 0;">Número</th>
+                        <td style="padding: 6px 0;"><?php echo $format_meta($numero); ?></td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 6px 0;">Complemento</th>
+                        <td style="padding: 6px 0;"><?php echo $format_meta($complemento); ?></td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 6px 0;">Bairro</th>
+                        <td style="padding: 6px 0;"><?php echo $format_meta($bairro); ?></td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 6px 0;">Cidade</th>
+                        <td style="padding: 6px 0;"><?php echo $format_meta($cidade); ?></td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 6px 0;">Estado</th>
+                        <td style="padding: 6px 0;"><?php echo $format_meta($estado); ?></td>
+                    </tr>
+                </table>
             </div>
         </div>
         
