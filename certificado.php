@@ -336,26 +336,33 @@ function certificado_shortcode($atts)
 
     // --- MODO LISTAGEM: Se não tem curso_id, listar disponíveis ---
     if ($curso_id <= 0) {
-        // Obter cursos do usuário
-        $curso_ids = [];
-        if (function_exists('acesso_cursos_get_user_cursos')) {
-            $curso_ids = acesso_cursos_get_user_cursos($user_id);
-        } else {
-            // Fallback se a função não existir: busca todos os cursos públicos
-            $cursos_query = get_posts(['post_type' => 'curso', 'numberposts' => -1, 'fields' => 'ids']);
-            $curso_ids = $cursos_query;
-        }
+        // Busca direta no banco para garantir acesso vitalício (independente de matrícula ativa)
+        global $wpdb;
+        $tabela_usermeta = $wpdb->usermeta;
 
-        if (empty($curso_ids)) {
-            return '<div class="mc-alert" style="color: #fff; text-align: center;">Você ainda não possui cursos.</div>';
-        }
+        // Query para encontrar todos os metais de progresso = 100 deste usuário
+        // O meta_key é 'progresso_curso_ID'
+        $query = $wpdb->prepare(
+            "SELECT meta_key FROM $tabela_usermeta 
+             WHERE user_id = %d 
+             AND meta_key LIKE 'progresso_curso_%%' 
+             AND meta_value >= 100",
+            $user_id
+        );
 
-        // Filtrar apenas 100% concluídos
+        $resultados = $wpdb->get_col($query);
+
         $certificados_disponiveis = [];
-        foreach ($curso_ids as $id) {
-            $progresso = (int) get_user_meta($user_id, "progresso_curso_{$id}", true);
-            if ($progresso >= 100) {
-                $certificados_disponiveis[] = $id;
+
+        if ($resultados) {
+            foreach ($resultados as $meta_key) {
+                // Extrair ID do curso da string 'progresso_curso_123'
+                $id_curso = str_replace('progresso_curso_', '', $meta_key);
+
+                // Validar se é um curso existente e publicado
+                if (get_post_status($id_curso) === 'publish') {
+                    $certificados_disponiveis[] = intval($id_curso);
+                }
             }
         }
 
@@ -390,10 +397,7 @@ function certificado_shortcode($atts)
                 transition: transform 0.2s, border-color 0.2s;
             }
 
-            .cert-card:hover {
-                transform: translateY(-5px);
-                border-color: #FDC110;
-            }
+            .cert-card:hover { transform: translateY(-5px); border-color: #FDC110; color: #FDC110; }
 
             .cert-card h4 {
                 margin: 15px 0 10px;
