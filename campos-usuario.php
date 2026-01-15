@@ -176,6 +176,14 @@ function sdc_campos_edicao_perfil($user)
 {
     $cpf = get_user_meta($user->ID, 'cpf', true);
     $aniversario = get_user_meta($user->ID, 'aniversario', true);
+
+    // Converte formato d/m/Y para Y-m-d para o input html5
+    if ($aniversario && strpos($aniversario, '/') !== false) {
+        $date = DateTime::createFromFormat('d/m/Y', $aniversario);
+        if ($date) {
+            $aniversario = $date->format('Y-m-d');
+        }
+    }
     $instagram = get_user_meta($user->ID, 'instagram', true);
     $cep = get_user_meta($user->ID, 'cep', true);
     $rua = get_user_meta($user->ID, 'rua', true);
