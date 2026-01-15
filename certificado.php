@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: Sistema de Certificados
- * Description: Gera certificados de conclusão de curso.
- * Version: 1.0.0
- * Author: Antigravity
+ * Plugin Name: Sistema de Certificados Avançado
+ * Description: Gera certificados personalizados por curso via CPT.
+ * Version: 2.0.0
+ * Author: gvntrck
  */
 
 if (!defined('ABSPATH')) {
@@ -11,173 +11,309 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * 1. ADMINISTRAÇÃO
- * Adiciona menu e página de configurações
+ * 1. REGISTRO DO CPT 'CERTIFICADO'
  */
-add_action('admin_menu', 'certificado_admin_menu');
-function certificado_admin_menu()
+add_action('init', 'certificado_register_cpt');
+function certificado_register_cpt()
 {
-    add_menu_page(
-        'Configurar Certificados',
-        'Certificados',
-        'manage_options',
-        'config-certificado',
-        'certificado_render_admin_page',
-        'dashicons-awards',
-        52 // Posição menu
+    $labels = [
+        'name' => 'Certificados',
+        'singular_name' => 'Certificado',
+        'menu_name' => 'Certificados',
+        'add_new' => 'Novo Modelo',
+        'add_new_item' => 'Adicionar Novo Modelo',
+        'edit_item' => 'Editar Modelo',
+        'new_item' => 'Novo Modelo',
+        'view_item' => 'Ver Modelo',
+        'all_items' => 'Todos os Modelos',
+        'search_items' => 'Buscar Modelos',
+        'not_found' => 'Nenhum modelo encontrado',
+        'not_found_in_trash' => 'Nenhum modelo na lixeira'
+    ];
+
+    $args = [
+        'labels' => $labels,
+        'public' => false, // Não precisa de URL frontend
+        'show_ui' => true,  // Mostra no admin
+        'show_in_menu' => true,
+        'menu_icon' => 'dashicons-awards',
+        'supports' => ['title'], // Apenas título, o resto é meta
+        'capability_type' => 'post',
+        'map_meta_cap' => true,
+    ];
+
+    register_post_type('certificado', $args);
+}
+
+/**
+ * 2. META BOXES PARA CONFIGURAÇÃO DO CERTIFICADO
+ */
+add_action('add_meta_boxes', 'certificado_add_metaboxes');
+function certificado_add_metaboxes()
+{
+    // Metabox no CPT 'certificado' para configurar layout
+    add_meta_box(
+        'certificado_config',
+        'Configurações do Layout',
+        'certificado_render_metabox_config',
+        'certificado',
+        'normal',
+        'high'
+    );
+
+    // Metabox no CPT 'curso' para selecionar o certificado
+    add_meta_box(
+        'curso_certificado_select',
+        'Certificado de Conclusão',
+        'certificado_render_metabox_curso',
+        'curso',
+        'side',
+        'default'
     );
 }
 
 /**
- * Enqueue Media Uploader scripts no admin
+ * Scripts para Upload de Mídia no Admin
  */
 add_action('admin_enqueue_scripts', 'certificado_admin_scripts');
 function certificado_admin_scripts($hook)
 {
-    if ($hook === 'toplevel_page_config-certificado') {
-        wp_enqueue_media();
+    global $post_type;
+
+    // Carrega apenas na edição do CPT certificado
+    if ('certificado' !== $post_type) {
+        return;
     }
+
+    wp_enqueue_media();
+
+    // Injeta o script diretamente no footer para garantir funcionamento
+    add_action('admin_print_footer_scripts', function () {
+        ?>
+        <script>
+            jQuery(document).ready(function ($) {
+                var mediaUploader;
+                $('#btn_upload_bg').on('click', function (e) {
+                    e.preventDefault();
+                    if (mediaUploader) {
+                        mediaUploader.open();
+                        return;
+                    }
+                    mediaUploader = wp.media.frames.file_frame = wp.media({
+                        title: 'Escolher Imagem de Fundo',
+                        button: { text: 'Usar esta imagem' },
+                        multiple: false
+                    });
+                    mediaUploader.on('select', function () {
+                        var attachment = mediaUploader.state().get('selection').first().toJSON();
+                        $('#certificado_bg_url').val(attachment.url);
+                        $('#preview_bg').attr('src', attachment.url).show();
+                    });
+                    mediaUploader.open();
+                });
+            });
+        </script>
+        <?php
+    });
 }
 
 /**
- * Renderiza página de admin
+ * Renderiza Metabox de Configuração (CPT Certificado)
  */
-function certificado_render_admin_page()
+function certificado_render_metabox_config($post)
 {
-    // Salvar configurações
-    if (isset($_POST['certificado_submit']) && check_admin_referer('certificado_save_options')) {
-        update_option('certificado_bg_url', sanitize_url($_POST['certificado_bg_url']));
+    wp_nonce_field('certificado_save_config', 'certificado_nonce');
 
-        // Posições (Top/Left em % ou px)
-        update_option('certificado_nome_top', sanitize_text_field($_POST['certificado_nome_top']));
-        update_option('certificado_nome_left', sanitize_text_field($_POST['certificado_nome_left']));
+    // Recuperar valores salvos
+    $bg_url = get_post_meta($post->ID, '_cert_bg_url', true);
 
-        update_option('certificado_curso_top', sanitize_text_field($_POST['certificado_curso_top']));
-        update_option('certificado_curso_left', sanitize_text_field($_POST['certificado_curso_left']));
+    $nome_top = get_post_meta($post->ID, '_cert_nome_top', true) ?: '40%';
+    $nome_left = get_post_meta($post->ID, '_cert_nome_left', true) ?: '50%';
 
-        update_option('certificado_data_top', sanitize_text_field($_POST['certificado_data_top']));
-        update_option('certificado_data_left', sanitize_text_field($_POST['certificado_data_left']));
+    $curso_top = get_post_meta($post->ID, '_cert_curso_top', true) ?: '55%';
+    $curso_left = get_post_meta($post->ID, '_cert_curso_left', true) ?: '50%';
 
-        // Estilos
-        update_option('certificado_color', sanitize_hex_color($_POST['certificado_color']));
-        update_option('certificado_font_size', sanitize_text_field($_POST['certificado_font_size']));
+    $data_top = get_post_meta($post->ID, '_cert_data_top', true) ?: '70%';
+    $data_left = get_post_meta($post->ID, '_cert_data_left', true) ?: '50%';
 
-        echo '<div class="notice notice-success is-dismissible"><p>Configurações salvas com sucesso!</p></div>';
-    }
+    $color = get_post_meta($post->ID, '_cert_color', true) ?: '#000000';
+    $font_size = get_post_meta($post->ID, '_cert_font_size', true) ?: '24px';
 
-    // Carregar valores
-    $bg_url = get_option('certificado_bg_url', '');
-    $nome_top = get_option('certificado_nome_top', '40%');
-    $nome_left = get_option('certificado_nome_left', '50%');
-    $curso_top = get_option('certificado_curso_top', '55%');
-    $curso_left = get_option('certificado_curso_left', '50%');
-    $data_top = get_option('certificado_data_top', '70%');
-    $data_left = get_option('certificado_data_left', '50%');
-    $color = get_option('certificado_color', '#000000');
-    $font_size = get_option('certificado_font_size', '24px');
+    // Novos campos de visibilidade (Padrão: desligado/vazio se não salvo, mas queremos explícito)
+    $show_curso = get_post_meta($post->ID, '_cert_show_curso', true);
+    $show_data = get_post_meta($post->ID, '_cert_show_data', true);
+
     ?>
-    <div class="wrap">
-        <h1>Configuração de Certificado</h1>
-        <p>Defina a imagem de fundo e a posição dos elementos no certificado.</p>
+    <style>
+        .cert-row {
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
 
-        <form method="post" action="">
-            <?php wp_nonce_field('certificado_save_options'); ?>
+        .cert-label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
 
-            <table class="form-table">
-                <!-- Imagem de Fundo -->
-                <tr>
-                    <th scope="row">Imagem de Fundo</th>
-                    <td>
-                        <input type="text" name="certificado_bg_url" id="certificado_bg_url"
-                            value="<?php echo esc_attr($bg_url); ?>" class="regular-text">
-                        <button type="button" class="button" id="btn_upload_bg">Selecionar Imagem</button>
-                        <p class="description">Recomendado: Formato A4 Paisagem (ex: 3508x2480 px ou proporcional).</p>
-                        <?php if ($bg_url): ?>
-                            <div style="margin-top: 10px;">
-                                <img src="<?php echo esc_url($bg_url); ?>" style="max-width: 300px; border: 1px solid #ccc;">
-                            </div>
-                        <?php endif; ?>
-                    </td>
-                </tr>
+        .cert-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
 
-                <!-- Cor e Fonte -->
-                <tr>
-                    <th scope="row">Estilo do Texto</th>
-                    <td>
-                        <label>Cor: <input type="color" name="certificado_color"
-                                value="<?php echo esc_attr($color); ?>"></label><br><br>
-                        <label>Tamanho Base da Fonte: <input type="text" name="certificado_font_size"
-                                value="<?php echo esc_attr($font_size); ?>" class="small-text"> (ex: 24px, 2rem)</label>
-                    </td>
-                </tr>
-
-                <!-- Posições -->
-                <tr>
-                    <th scope="row">Posição do Nome do Aluno</th>
-                    <td>
-                        Top: <input type="text" name="certificado_nome_top" value="<?php echo esc_attr($nome_top); ?>"
-                            class="small-text">
-                        Left: <input type="text" name="certificado_nome_left" value="<?php echo esc_attr($nome_left); ?>"
-                            class="small-text">
-                        <p class="description">Use % para melhor responsividade ou px para fixo.</p>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row">Posição do Nome do Curso</th>
-                    <td>
-                        Top: <input type="text" name="certificado_curso_top" value="<?php echo esc_attr($curso_top); ?>"
-                            class="small-text">
-                        Left: <input type="text" name="certificado_curso_left" value="<?php echo esc_attr($curso_left); ?>"
-                            class="small-text">
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row">Posição da Data de Conclusão</th>
-                    <td>
-                        Top: <input type="text" name="certificado_data_top" value="<?php echo esc_attr($data_top); ?>"
-                            class="small-text">
-                        Left: <input type="text" name="certificado_data_left" value="<?php echo esc_attr($data_left); ?>"
-                            class="small-text">
-                    </td>
-                </tr>
-            </table>
-
-            <p class="submit">
-                <input type="submit" name="certificado_submit" id="submit" class="button button-primary"
-                    value="Salvar Alterações">
-            </p>
-        </form>
+    <div class="cert-row">
+        <span class="cert-label">Imagem de Fundo</span>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" name="cert_bg_url" id="certificado_bg_url" value="<?php echo esc_attr($bg_url); ?>"
+                class="large-text">
+            <button type="button" class="button" id="btn_upload_bg">Selecionar Imagem</button>
+        </div>
+        <div style="margin-top: 10px;">
+            <img id="preview_bg" src="<?php echo esc_url($bg_url); ?>"
+                style="max-width: 100%; height: auto; border: 1px solid #ccc; <?php echo $bg_url ? '' : 'display:none;'; ?>">
+        </div>
     </div>
 
-    <!-- Script Media Uploader -->
-    <script>
-        jQuery(document).ready(function ($) {
-            var mediaUploader;
-            $('#btn_upload_bg').click(function (e) {
-                e.preventDefault();
-                if (mediaUploader) {
-                    mediaUploader.open();
-                    return;
-                }
-                mediaUploader = wp.media.frames.file_frame = wp.media({
-                    title: 'Escolher Imagem do Certificado',
-                    button: { text: 'Usar Imagem' },
-                    multiple: false
-                });
-                mediaUploader.on('select', function () {
-                    var attachment = mediaUploader.state().get('selection').first().toJSON();
-                    $('#certificado_bg_url').val(attachment.url);
-                });
-                mediaUploader.open();
-            });
-        });
-    </script>
+    <div class="cert-row">
+        <span class="cert-label">Estilos Globais</span>
+        <div class="cert-inputs">
+            <label>Cor do Texto: <input type="color" name="cert_color" value="<?php echo esc_attr($color); ?>"></label>
+            <label>Tamanho da Fonte: <input type="text" name="cert_font_size" value="<?php echo esc_attr($font_size); ?>"
+                    class="tiny-text"> (ex: 24px)</label>
+        </div>
+    </div>
+
+    <div class="cert-row">
+        <span class="cert-label">Posição: Nome do Aluno</span>
+        <div class="cert-inputs">
+            <label>Top: <input type="text" name="cert_nome_top" value="<?php echo esc_attr($nome_top); ?>"
+                    class="tiny-text"></label>
+            <label>Left: <input type="text" name="cert_nome_left" value="<?php echo esc_attr($nome_left); ?>"
+                    class="tiny-text"></label>
+        </div>
+    </div>
+
+    <div class="cert-row">
+        <div class="cert-inputs" style="margin-bottom: 10px;">
+            <label style="font-weight: bold;">
+                <input type="checkbox" name="cert_show_curso" value="1" <?php checked($show_curso, '1'); ?>>
+                Exibir Nome do Curso?
+            </label>
+        </div>
+        <div class="cert-inputs">
+            <label>Top: <input type="text" name="cert_curso_top" value="<?php echo esc_attr($curso_top); ?>"
+                    class="tiny-text"></label>
+            <label>Left: <input type="text" name="cert_curso_left" value="<?php echo esc_attr($curso_left); ?>"
+                    class="tiny-text"></label>
+        </div>
+    </div>
+
+    <div class="cert-row">
+        <div class="cert-inputs" style="margin-bottom: 10px;">
+            <label style="font-weight: bold;">
+                <input type="checkbox" name="cert_show_data" value="1" <?php checked($show_data, '1'); ?>>
+                Exibir Data de Conclusão?
+            </label>
+        </div>
+        <div class="cert-inputs">
+            <label>Top: <input type="text" name="cert_data_top" value="<?php echo esc_attr($data_top); ?>"
+                    class="tiny-text"></label>
+            <label>Left: <input type="text" name="cert_data_left" value="<?php echo esc_attr($data_left); ?>"
+                    class="tiny-text"></label>
+        </div>
+    </div>
+
+    <p class="description">Utilize valores em porcentagem (%) para posicionamento relativo ao tamanho da imagem. Padrão: Nome do Curso e Data desligados.</p>
     <?php
 }
 
 /**
- * 2. SHORTCODE E FRONTEND
- * Shortcode [certificado]
+ * Renderiza Metabox de Seleção (CPT Curso)
+ */
+function certificado_render_metabox_curso($post)
+{
+    wp_nonce_field('curso_certificado_save', 'curso_certificado_nonce');
+
+    $selected = get_post_meta($post->ID, '_curso_certificado_id', true);
+
+    // Buscar todos os modelos de certificado
+    $certificados = get_posts([
+        'post_type' => 'certificado',
+        'numberposts' => -1,
+        'post_status' => 'publish'
+    ]);
+
+    if (empty($certificados)) {
+        echo '<p>Nenhum modelo de certificado encontrado. <a href="' . admin_url('post-new.php?post_type=certificado') . '">Crie um modelo primeiro</a>.</p>';
+        return;
+    }
+
+    echo '<label for="curso_certificado_id" style="display:block; margin-bottom:5px;">Selecione o modelo:</label>';
+    echo '<select name="curso_certificado_id" id="curso_certificado_id" style="width:100%;">';
+    echo '<option value="">-- Nenhum --</option>';
+
+    foreach ($certificados as $cert) {
+        $is_selected = ($selected == $cert->ID) ? 'selected' : '';
+        echo '<option value="' . $cert->ID . '" ' . $is_selected . '>' . esc_html($cert->post_title) . '</option>';
+    }
+
+    echo '</select>';
+    echo '<p class="description">Este modelo será usado para gerar o certificado deste curso.</p>';
+}
+
+/**
+ * Salvar Meta Data
+ */
+add_action('save_post', 'certificado_save_meta');
+function certificado_save_meta($post_id)
+{
+    // 1. Salvar Config do Certificado
+    if (isset($_POST['certificado_nonce']) && wp_verify_nonce($_POST['certificado_nonce'], 'certificado_save_config')) {
+        $fields = [
+            '_cert_bg_url',
+            '_cert_nome_top',
+            '_cert_nome_left',
+            '_cert_curso_top',
+            '_cert_curso_left',
+            '_cert_data_top',
+            '_cert_data_left',
+            '_cert_color',
+            '_cert_font_size'
+        ];
+
+        foreach ($fields as $field) {
+            $key = substr($field, 1); // remove _
+            if (isset($_POST[$key])) {
+                update_post_meta($post_id, $field, sanitize_text_field($_POST[$key]));
+            }
+        }
+
+        // Checkboxes (se não vier no POST, é false/delete)
+        $checkboxes = ['_cert_show_curso', '_cert_show_data'];
+        foreach ($checkboxes as $cb) {
+            $key = substr($cb, 1);
+            if (isset($_POST[$key])) {
+                update_post_meta($post_id, $cb, '1');
+            } else {
+                delete_post_meta($post_id, $cb); // Ou update para '0'
+            }
+        }
+    }
+
+    // 2. Salvar Seleção no Curso
+    if (isset($_POST['curso_certificado_nonce']) && wp_verify_nonce($_POST['curso_certificado_nonce'], 'curso_certificado_save')) {
+        if (isset($_POST['curso_certificado_id'])) {
+            update_post_meta($post_id, '_curso_certificado_id', sanitize_text_field($_POST['curso_certificado_id']));
+        }
+    }
+}
+
+
+/**
+ * 3. SHORTCODE ATUALIZADO
  */
 add_shortcode('certificado', 'certificado_shortcode');
 function certificado_shortcode($atts)
@@ -185,27 +321,146 @@ function certificado_shortcode($atts)
     if (!defined('ABSPATH'))
         return;
 
-    // Recupera configurações
-    $bg_url = get_option('certificado_bg_url', '');
-    $nome_top = get_option('certificado_nome_top', '40%');
-    $nome_left = get_option('certificado_nome_left', '50%');
-    $curso_top = get_option('certificado_curso_top', '55%');
-    $curso_left = get_option('certificado_curso_left', '50%');
-    $data_top = get_option('certificado_data_top', '70%');
-    $data_left = get_option('certificado_data_left', '50%');
-    $color = get_option('certificado_color', '#000000');
-    $font_size = get_option('certificado_font_size', '24px');
-
-    // Recupera parâmetros
     $atts = shortcode_atts([], $atts, 'certificado');
-    $curso_id = isset($_GET['curso_id']) ? intval($_GET['curso_id']) : 0;
 
     // Verifica Login
     if (!is_user_logged_in()) {
         return '<div class="mc-alert mc-error" style="color: #fff; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.2); padding: 15px; border-radius: 6px; text-align: center;">
-            Você precisa estar logado para acessar seu certificado. <a href="' . wp_login_url(get_permalink()) . '" style="color: inherit; text-decoration: underline;">Fazer login</a>
+            Você precisa estar logado para acessar seus certificados. <a href="' . wp_login_url(get_permalink()) . '" style="color: inherit; text-decoration: underline;">Fazer login</a>
         </div>';
     }
+
+    $user_id = get_current_user_id();
+    $curso_id = isset($_GET['curso_id']) ? intval($_GET['curso_id']) : 0;
+
+    // --- MODO LISTAGEM: Se não tem curso_id, listar disponíveis ---
+    if ($curso_id <= 0) {
+        // Obter cursos do usuário
+        $curso_ids = [];
+        if (function_exists('acesso_cursos_get_user_cursos')) {
+            $curso_ids = acesso_cursos_get_user_cursos($user_id);
+        } else {
+            // Fallback se a função não existir: busca todos os cursos públicos
+            $cursos_query = get_posts(['post_type' => 'curso', 'numberposts' => -1, 'fields' => 'ids']);
+            $curso_ids = $cursos_query;
+        }
+
+        if (empty($curso_ids)) {
+            return '<div class="mc-alert" style="color: #fff; text-align: center;">Você ainda não possui cursos.</div>';
+        }
+
+        // Filtrar apenas 100% concluídos
+        $certificados_disponiveis = [];
+        foreach ($curso_ids as $id) {
+            $progresso = (int) get_user_meta($user_id, "progresso_curso_{$id}", true);
+            if ($progresso >= 100) {
+                $certificados_disponiveis[] = $id;
+            }
+        }
+
+        if (empty($certificados_disponiveis)) {
+            return '<div class="mc-container" style="text-align: center; padding: 40px; background: #121212; color: #fff; border-radius: 12px;">
+                <h3 style="margin-top:0;">Nenhum certificado disponível</h3>
+                <p style="color: #888;">Complete 100% de um curso para desbloquear seu certificado.</p>
+             </div>';
+        }
+
+        // Renderizar Grid
+        ob_start();
+        ?>
+        <style>
+            .cert-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 20px;
+            }
+
+            .cert-card {
+                background: #1a1a1a;
+                border: 1px solid #333;
+                border-radius: 12px;
+                padding: 20px;
+                text-decoration: none;
+                color: #fff;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                transition: transform 0.2s, border-color 0.2s;
+            }
+
+            .cert-card:hover {
+                transform: translateY(-5px);
+                border-color: #FDC110;
+            }
+
+            .cert-card h4 {
+                margin: 15px 0 10px;
+                font-size: 1.1rem;
+            }
+
+            .cert-icon {
+                color: #FDC110;
+                width: 48px;
+                height: 48px;
+            }
+
+            .cert-btn-mini {
+                margin-top: auto;
+                background: #2a2a2a;
+                color: #fff;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-size: 0.9rem;
+            }
+
+            .cert-card:hover .cert-btn-mini {
+                background: #FDC110;
+                color: #000;
+            }
+        </style>
+        <div class="cert-grid">
+            <?php foreach ($certificados_disponiveis as $id):
+                $titulo = get_the_title($id);
+                $link = add_query_arg('curso_id', $id, get_permalink());
+                ?>
+                <a href="<?php echo esc_url($link); ?>" class="cert-card">
+                    <svg class="cert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 15l-2 5l-7-4.14l0 -6.86l9 -5l9 5l0 6.86l-7 4.14z" />
+                        <circle cx="12" cy="9" r="3" />
+                    </svg>
+                    <h4><?php echo esc_html($titulo); ?></h4>
+                    <span class="cert-btn-mini">Ver Certificado</span>
+                </a>
+            <?php endforeach; ?>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    // --- MODO VISUALIZAÇÃO: Se tem curso_id, exibir certificado ---
+
+    // Busca o modelo de certificado associado ao curso
+    $cert_id = get_post_meta($curso_id, '_curso_certificado_id', true);
+    if (!$cert_id) {
+        // Fallback: tentar pegar o primeiro ou exibir erro
+        return '<div class="mc-alert" style="color:red; text-align:center;">Certificado não configurado para este curso. Contate o suporte.</div>';
+    }
+
+    // Carrega configurações do modelo $cert_id
+    $bg_url = get_post_meta($cert_id, '_cert_bg_url', true);
+    $nome_top = get_post_meta($cert_id, '_cert_nome_top', true) ?: '40%';
+    $nome_left = get_post_meta($cert_id, '_cert_nome_left', true) ?: '50%';
+    $curso_top = get_post_meta($cert_id, '_cert_curso_top', true) ?: '55%';
+    $curso_left = get_post_meta($cert_id, '_cert_curso_left', true) ?: '50%';
+    $data_top = get_post_meta($cert_id, '_cert_data_top', true) ?: '70%';
+    $data_left = get_post_meta($cert_id, '_cert_data_left', true) ?: '50%';
+    $color = get_post_meta($cert_id, '_cert_color', true) ?: '#000000';
+    $font_size = get_post_meta($cert_id, '_cert_font_size', true) ?: '24px';
+    
+    // Visibilidade
+    $show_curso = get_post_meta($cert_id, '_cert_show_curso', true);
+    $show_data = get_post_meta($cert_id, '_cert_show_data', true);
 
     $user_id = get_current_user_id();
     $user_data = get_userdata($user_id);
@@ -216,17 +471,13 @@ function certificado_shortcode($atts)
         $nome_aluno = $user_data->display_name;
     }
 
-    // Verifica Curso
-    if ($curso_id <= 0) {
-        return '<div class="mc-alert" style="color:red; text-align:center;">Curso não especificado.</div>';
-    }
-
     // Verifica Conclusão
-    // Baseado na lógica de listar-aulas.php
     $progresso = (int) get_user_meta($user_id, "progresso_curso_{$curso_id}", true);
 
-    // Se for admin, permite visualizar mesmo sem completar
-    if ($progresso < 100 && !current_user_can('manage_options')) {
+    // Verifica se admin (preview)
+    $is_admin = current_user_can('manage_options');
+
+    if ($progresso < 100 && !$is_admin) {
         return '<div class="mc-container" style="text-align: center; padding: 40px;">
             <h3 style="color: var(--text-heading, #fff);">Curso em andamento</h3>
             <p style="color: var(--text-muted, #888);">Conclua todas as aulas para desbloquear seu certificado. Progresso atual: ' . $progresso . '%</p>
@@ -237,17 +488,13 @@ function certificado_shortcode($atts)
     }
 
     $curso_titulo = get_the_title($curso_id);
-    // Data de "hoje" ou data de conclusão real se tivesse salvando timestamp de conclusão do curso.
-    // Como listar-aulas.php não parece salvar a data exata de conclusão do *curso* (apenas aulas), usaremos a data atual na emissão.
     $data_conclusao = date_i18n(get_option('date_format'), current_time('timestamp'));
 
     ob_start();
     ?>
     <style>
-        /* CSS Específico para o Certificado em Tela */
         .cert-wrapper {
             background: #121212;
-            /* Dark theme wrapper */
             padding: 40px;
             text-align: center;
             font-family: 'Segoe UI', sans-serif;
@@ -258,15 +505,17 @@ function certificado_shortcode($atts)
         .cert-container {
             position: relative;
             max-width: 1000px;
-            /* Largura base para visualização */
             margin: 0 auto 30px auto;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             background: #fff;
-            color: <?php echo $color; ?>;
+            color:
+                <?php echo esc_attr($color); ?>
+            ;
             overflow: hidden;
-            /* Mantém aspect ratio A4 aproximado */
             aspect-ratio: 297/210;
-            font-size: <?php echo $font_size; ?>;
+            font-size:
+                <?php echo esc_attr($font_size); ?>
+            ;
             user-select: none;
         }
 
@@ -280,7 +529,6 @@ function certificado_shortcode($atts)
         .cert-element {
             position: absolute;
             transform: translate(-50%, -50%);
-            /* Centraliza no ponto X,Y */
             white-space: nowrap;
             text-align: center;
             font-weight: bold;
@@ -297,7 +545,10 @@ function certificado_shortcode($atts)
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .cert-print-btn:hover {
@@ -305,7 +556,6 @@ function certificado_shortcode($atts)
             box-shadow: 0 4px 15px rgba(253, 193, 16, 0.4);
         }
 
-        /* ESTILOS DE IMPRESSÃO */
         @media print {
             @page {
                 size: landscape;
@@ -335,7 +585,6 @@ function certificado_shortcode($atts)
                 aspect-ratio: auto;
             }
 
-            /* Esconde botões na impressão */
             .cert-actions,
             .site-header,
             .site-footer,
@@ -346,12 +595,10 @@ function certificado_shortcode($atts)
     </style>
 
     <div class="cert-wrapper">
-        <h2 style="margin-bottom: 20px; color: #fff;">Parabéns,
-            <?php echo esc_html($user_data->first_name); ?>!
-        </h2>
-        <p style="margin-bottom: 30px; color: #aaa;">Aqui está o seu certificado de conclusão do curso <strong>
-                <?php echo esc_html($curso_titulo); ?>
-            </strong>.</p>
+        <h2 style="margin-bottom: 20px; color: #fff;">Parabéns, <?php echo esc_html($user_data->first_name); ?>!</h2>
+        <p style="margin-bottom: 30px; color: #aaa;">Aqui está o seu certificado de conclusão do curso
+            <strong><?php echo esc_html($curso_titulo); ?></strong>.
+        </p>
 
         <div class="cert-container" id="printable-cert">
             <?php if ($bg_url): ?>
@@ -359,29 +606,32 @@ function certificado_shortcode($atts)
             <?php else: ?>
                 <div
                     style="width:100%; height:100%; background:#f0f0f0; display:flex; align-items:center; justify-content:center; color:#333;">
-                    Configure a imagem de fundo no admin
+                    Fundo não configurado.
                 </div>
             <?php endif; ?>
 
-            <div class="cert-element"
-                style="top: <?php echo esc_attr($nome_top); ?>; left: <?php echo esc_attr($nome_left); ?>;">
+            <!-- Nome do Aluno (Sempre visível) -->
+            <div class="cert-element" style="top: <?php echo esc_attr($nome_top); ?>; left: <?php echo esc_attr($nome_left); ?>;">
                 <?php echo esc_html($nome_aluno); ?>
             </div>
-
-            <div class="cert-element"
-                style="top: <?php echo esc_attr($curso_top); ?>; left: <?php echo esc_attr($curso_left); ?>;">
+            
+            <?php if ($show_curso === '1'): ?>
+            <div class="cert-element" style="top: <?php echo esc_attr($curso_top); ?>; left: <?php echo esc_attr($curso_left); ?>;">
                 <?php echo esc_html($curso_titulo); ?>
             </div>
-
-            <div class="cert-element"
-                style="top: <?php echo esc_attr($data_top); ?>; left: <?php echo esc_attr($data_left); ?>;">
+            <?php endif; ?>
+            
+            <?php if ($show_data === '1'): ?>
+            <div class="cert-element" style="top: <?php echo esc_attr($data_top); ?>; left: <?php echo esc_attr($data_left); ?>;">
                 <?php echo esc_html($data_conclusao); ?>
             </div>
+            <?php endif; ?>
         </div>
 
         <div class="cert-actions">
-            <button onclick="window.print();" class="cert-print-btn" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button onclick="window.print();" class="cert-print-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="6 9 6 2 18 2 18 9"></polyline>
                     <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
                     <rect x="6" y="14" width="12" height="8"></rect>
@@ -389,8 +639,13 @@ function certificado_shortcode($atts)
                 Imprimir / Salvar PDF
             </button>
             <br><br>
-            <a href="<?php echo get_permalink($curso_id); ?>" style="color: #888; text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 5px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <a href="<?php echo get_permalink($curso_id); ?>"
+                style="color: #888; text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 5px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
                 Voltar ao curso
             </a>
         </div>
