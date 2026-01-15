@@ -34,6 +34,27 @@ function cadastro_usuario_handle_csv_download()
     }
 }
 
+function cadastro_usuario_convert_date_to_iso($date)
+{
+    if (empty($date))
+        return '';
+
+    // Tenta formato BR (dd/mm/yyyy)
+    $d = DateTime::createFromFormat('d/m/Y', $date);
+    if ($d && $d->format('d/m/Y') === $date) {
+        return $d->format('Y-m-d');
+    }
+
+    // Tenta formato ISO (yyyy-mm-dd) para validar
+    $d = DateTime::createFromFormat('Y-m-d', $date);
+    if ($d && $d->format('Y-m-d') === $date) {
+        return $date;
+    }
+
+    return $date; // Retorna original se não conseguir converter
+}
+
+
 function cadastro_usuario_shortcode()
 {
     $output = '';
@@ -48,6 +69,8 @@ function cadastro_usuario_shortcode()
         $email = sanitize_email($_POST['email']);
         $cpf = sanitize_text_field($_POST['cpf']);
         $aniversario = sanitize_text_field($_POST['aniversario']);
+        $aniversario = cadastro_usuario_convert_date_to_iso($aniversario);
+
         $instagram = sanitize_text_field($_POST['instagram']);
         $cep = sanitize_text_field($_POST['cep']);
         $rua = sanitize_text_field($_POST['rua']);
@@ -142,6 +165,10 @@ function cadastro_usuario_shortcode()
 
                         // Lista de meta keys esperadas
                         $meta_keys = ['cpf', 'aniversario', 'instagram', 'cep', 'rua', 'numero', 'complemento', 'bairro', 'cidade', 'estado'];
+
+                        if (isset($user_data['aniversario'])) {
+                            $user_data['aniversario'] = cadastro_usuario_convert_date_to_iso($user_data['aniversario']);
+                        }
 
                         foreach ($meta_keys as $key) {
                             if (isset($user_data[$key])) {

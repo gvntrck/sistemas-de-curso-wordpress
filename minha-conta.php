@@ -5,6 +5,27 @@
 
 add_shortcode('minha-conta', 'render_minha_conta_shortcode');
 
+function minha_conta_convert_date_to_iso($date)
+{
+    if (empty($date))
+        return '';
+    $d = DateTime::createFromFormat('d/m/Y', $date);
+    if ($d && $d->format('d/m/Y') === $date)
+        return $d->format('Y-m-d');
+    return $date;
+}
+
+function minha_conta_convert_date_to_br($date)
+{
+    if (empty($date))
+        return '';
+    $d = DateTime::createFromFormat('Y-m-d', $date);
+    if ($d && $d->format('Y-m-d') === $date)
+        return $d->format('d/m/Y');
+    return $date;
+}
+
+
 function render_minha_conta_shortcode()
 {
     // 1. Verificar Login
@@ -25,8 +46,11 @@ function render_minha_conta_shortcode()
             update_user_meta($user_id, 'last_name', sanitize_text_field($_POST['last_name']));
         if (isset($_POST['cpf']))
             update_user_meta($user_id, 'cpf', sanitize_text_field($_POST['cpf']));
-        if (isset($_POST['aniversario']))
-            update_user_meta($user_id, 'aniversario', sanitize_text_field($_POST['aniversario']));
+        if (isset($_POST['aniversario'])) {
+            $data_iso = minha_conta_convert_date_to_iso(sanitize_text_field($_POST['aniversario']));
+            update_user_meta($user_id, 'aniversario', $data_iso);
+        }
+
         if (isset($_POST['instagram']))
             update_user_meta($user_id, 'instagram', sanitize_text_field($_POST['instagram']));
 
@@ -57,6 +81,8 @@ function render_minha_conta_shortcode()
     $nickname = $user_data->user_email;
     $cpf = get_user_meta($user_id, 'cpf', true);
     $aniversario = get_user_meta($user_id, 'aniversario', true);
+    $aniversario = minha_conta_convert_date_to_br($aniversario);
+
     $instagram = get_user_meta($user_id, 'instagram', true);
 
     $cep = get_user_meta($user_id, 'cep', true);
@@ -303,13 +329,13 @@ function render_minha_conta_shortcode()
                     </div>
                     <div class="mc-field-group">
                         <label class="mc-field-label">CPF</label>
-                        <input type="text" name="cpf" class="mc-input" value="<?php echo esc_attr($cpf); ?>"
+                        <input type="text" name="cpf" id="mc_cpf" class="mc-input" value="<?php echo esc_attr($cpf); ?>"
                             placeholder="000.000.000-00">
                     </div>
                     <div class="mc-field-group">
                         <label class="mc-field-label">Data de Nascimento</label>
-                        <input type="text" name="aniversario" class="mc-input" value="<?php echo esc_attr($aniversario); ?>"
-                            placeholder="DD/MM/AAAA">
+                        <input type="text" name="aniversario" id="mc_aniversario" class="mc-input"
+                            value="<?php echo esc_attr($aniversario); ?>" placeholder="DD/MM/AAAA">
                     </div>
                     <div class="mc-field-group">
                         <label class="mc-field-label">Instagram</label>
@@ -323,7 +349,7 @@ function render_minha_conta_shortcode()
                 <div class="mc-grid">
                     <div class="mc-field-group">
                         <label class="mc-field-label">CEP</label>
-                        <input type="text" name="cep" class="mc-input" value="<?php echo esc_attr($cep); ?>"
+                        <input type="text" name="cep" id="mc_cep" class="mc-input" value="<?php echo esc_attr($cep); ?>"
                             placeholder="00000-000">
                     </div>
                     <div class="mc-field-group">
@@ -364,6 +390,52 @@ function render_minha_conta_shortcode()
             </div>
         </form>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const cpfInput = document.getElementById('mc_cpf');
+            const dataInput = document.getElementById('mc_aniversario');
+            const cepInput = document.getElementById('mc_cep');
+
+            const applyMask = (input, maskFunc) => {
+                input.addEventListener('input', (e) => {
+                    let value = e.target.value;
+                    e.target.value = maskFunc(value);
+                });
+            };
+
+            // Máscara CPF: 000.000.000-00
+            const maskCPF = (v) => {
+                v = v.replace(/\D/g, "");
+                if (v.length > 11) v = v.substring(0, 11);
+                v = v.replace(/(\d{3})(\d)/, "$1.$2");
+                v = v.replace(/(\d{3})(\d)/, "$1.$2");
+                v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+                return v;
+            };
+
+            // Máscara Data: 00/00/0000
+            const maskDate = (v) => {
+                v = v.replace(/\D/g, "");
+                if (v.length > 8) v = v.substring(0, 8);
+                v = v.replace(/(\d{2})(\d)/, "$1/$2");
+                v = v.replace(/(\d{2})(\d)/, "$1/$2");
+                return v;
+            };
+
+            // Máscara CEP: 00000-000
+            const maskCEP = (v) => {
+                v = v.replace(/\D/g, "");
+                if (v.length > 8) v = v.substring(0, 8);
+                v = v.replace(/(\d{5})(\d)/, "$1-$2");
+                return v;
+            };
+
+            if (cpfInput) applyMask(cpfInput, maskCPF);
+            if (dataInput) applyMask(dataInput, maskDate);
+            if (cepInput) applyMask(cepInput, maskCEP);
+        });
+    </script>
 
     <?php
     return ob_get_clean();
