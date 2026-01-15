@@ -226,7 +226,8 @@ function certificado_render_metabox_config($post)
         </div>
     </div>
 
-    <p class="description">Utilize valores em porcentagem (%) para posicionamento relativo ao tamanho da imagem. Padrão: Nome do Curso e Data desligados.</p>
+    <p class="description">Utilize valores em porcentagem (%) para posicionamento relativo ao tamanho da imagem. Padrão:
+        Nome do Curso e Data desligados.</p>
     <?php
 }
 
@@ -457,7 +458,7 @@ function certificado_shortcode($atts)
     $data_left = get_post_meta($cert_id, '_cert_data_left', true) ?: '50%';
     $color = get_post_meta($cert_id, '_cert_color', true) ?: '#000000';
     $font_size = get_post_meta($cert_id, '_cert_font_size', true) ?: '24px';
-    
+
     // Visibilidade
     $show_curso = get_post_meta($cert_id, '_cert_show_curso', true);
     $show_data = get_post_meta($cert_id, '_cert_show_data', true);
@@ -562,34 +563,55 @@ function certificado_shortcode($atts)
                 margin: 0;
             }
 
+            html,
+            body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                /* Evita paginas extras */
+            }
+
+            /* Esconde tudo */
             body * {
                 visibility: hidden;
             }
 
+            /* Garante que o container do certificado e seus filhos sejam visíveis */
             .cert-container,
             .cert-container * {
                 visibility: visible;
             }
 
+            /* Oculta áreas específicas para garantir que não ocupem espaço */
+            .site-header,
+            .site-footer,
+            #wpadminbar,
+            .cert-actions,
+            .cert-wrapper>h2,
+            .cert-wrapper>p {
+                display: none !important;
+            }
+
             .cert-container {
                 position: fixed;
+                /* Fixed garante que fique na tela de impressão independente da posição no DOM */
                 left: 0;
                 top: 0;
                 width: 100%;
                 height: 100%;
                 margin: 0;
+                padding: 0;
                 box-shadow: none;
                 border: none;
-                z-index: 9999;
+                z-index: 99999;
                 max-width: none;
                 aspect-ratio: auto;
-            }
-
-            .cert-actions,
-            .site-header,
-            .site-footer,
-            #wpadminbar {
-                display: none !important;
+                background: white;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+                display: block !important;
             }
         }
     </style>
@@ -611,20 +633,23 @@ function certificado_shortcode($atts)
             <?php endif; ?>
 
             <!-- Nome do Aluno (Sempre visível) -->
-            <div class="cert-element" style="top: <?php echo esc_attr($nome_top); ?>; left: <?php echo esc_attr($nome_left); ?>;">
+            <div class="cert-element"
+                style="top: <?php echo esc_attr($nome_top); ?>; left: <?php echo esc_attr($nome_left); ?>;">
                 <?php echo esc_html($nome_aluno); ?>
             </div>
-            
+
             <?php if ($show_curso === '1'): ?>
-            <div class="cert-element" style="top: <?php echo esc_attr($curso_top); ?>; left: <?php echo esc_attr($curso_left); ?>;">
-                <?php echo esc_html($curso_titulo); ?>
-            </div>
+                <div class="cert-element"
+                    style="top: <?php echo esc_attr($curso_top); ?>; left: <?php echo esc_attr($curso_left); ?>;">
+                    <?php echo esc_html($curso_titulo); ?>
+                </div>
             <?php endif; ?>
-            
+
             <?php if ($show_data === '1'): ?>
-            <div class="cert-element" style="top: <?php echo esc_attr($data_top); ?>; left: <?php echo esc_attr($data_left); ?>;">
-                <?php echo esc_html($data_conclusao); ?>
-            </div>
+                <div class="cert-element"
+                    style="top: <?php echo esc_attr($data_top); ?>; left: <?php echo esc_attr($data_left); ?>;">
+                    <?php echo esc_html($data_conclusao); ?>
+                </div>
             <?php endif; ?>
         </div>
 
@@ -638,15 +663,6 @@ function certificado_shortcode($atts)
                 </svg>
                 Imprimir / Salvar PDF
             </button>
-            <br><br>
-            <a href="<?php echo get_permalink($curso_id); ?>"
-                style="color: #888; text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 5px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"></line>
-                    <polyline points="12 19 5 12 12 5"></polyline>
-                </svg>
-                Voltar ao curso
             </a>
         </div>
     </div>
