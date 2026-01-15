@@ -84,7 +84,7 @@ function render_minha_conta_shortcode()
         .mc-container {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             max_width: 800px;
-            margin: 40px auto;
+            margin: 0px auto;
             background-color: #121212;
             color: #e0e0e0;
             border-radius: 12px;
