@@ -1,12 +1,12 @@
 <?php
 /**
  * Controle de Acesso a Cursos
- * Versão: 1.0.6
+ * Versão: 1.0.7
  *
  * Sistema de permissões para cursos com:
  * - Tabela própria no banco de dados
  * - Funções de verificação e gerenciamento de acesso
- * - Painel administrativo com CRUD e ações em lote
+ * - Painel administrativo focado na Lista de Alunos (gerenciamento individual)
  *
  * Uso por outros snippets:
  * - Verificar acesso: acesso_cursos_has($user_id, $curso_id)
@@ -695,7 +695,8 @@ function acesso_cursos_aluno_detalhes()
                         <tr>
                             <th style="padding: 8px 0;">Nome Completo</th>
                             <td style="padding: 8px 0;">
-                                <?php echo esc_html(trim($user->first_name . ' ' . $user->last_name)); ?></td>
+                                <?php echo esc_html(trim($user->first_name . ' ' . $user->last_name)); ?>
+                            </td>
                         </tr>
                     <?php endif; ?>
                     <?php if ($phone): ?>
