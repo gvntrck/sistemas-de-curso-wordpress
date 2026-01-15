@@ -1,7 +1,7 @@
 <?php
 /**
  * Controle de Acesso a Cursos
- * Versão: 1.0.1
+ * Versão: 1.0.3
  *
  * Sistema de permissões para cursos com:
  * - Tabela própria no banco de dados
@@ -335,47 +335,57 @@ function acesso_cursos_admin_process() {
     
     // Salvar acesso
     if (isset($_POST['acesso_cursos_save']) && wp_verify_nonce($_POST['_wpnonce'], 'acesso_cursos_save')) {
-        $user_id = (int) $_POST['user_id'];
-        $curso_id = (int) $_POST['curso_id'];
+        $user_id = isset($_POST['user_id']) ? (int) $_POST['user_id'] : 0;
+        $curso_ids = [];
+        if (isset($_POST['curso_id'])) {
+            $curso_ids = is_array($_POST['curso_id'])
+                ? array_map('intval', $_POST['curso_id'])
+                : [(int) $_POST['curso_id']];
+        }
+        $curso_ids = array_values(array_unique(array_filter($curso_ids, function ($curso_id) {
+            return $curso_id > 0;
+        })));
         $status = sanitize_text_field($_POST['status']);
         $data_fim = !empty($_POST['data_fim']) ? sanitize_text_field($_POST['data_fim']) : null;
         
-        if ($user_id > 0 && $curso_id > 0) {
+        if ($user_id > 0 && !empty($curso_ids)) {
             global $wpdb;
             $table_name = $wpdb->prefix . 'acesso_cursos';
             
-            $existing = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM $table_name WHERE user_id = %d AND curso_id = %d",
-                $user_id,
-                $curso_id
-            ));
-            
-            if ($existing) {
-                $wpdb->update(
-                    $table_name,
-                    [
-                        'status' => $status,
-                        'data_fim' => $data_fim,
-                        'updated_at' => current_time('mysql')
-                    ],
-                    ['id' => $existing],
-                    ['%s', '%s', '%s'],
-                    ['%d']
-                );
-            } else {
-                $wpdb->insert(
-                    $table_name,
-                    [
-                        'user_id' => $user_id,
-                        'curso_id' => $curso_id,
-                        'status' => $status,
-                        'data_fim' => $data_fim,
-                        'created_at' => current_time('mysql'),
-                        'updated_at' => current_time('mysql'),
-                        'created_by' => get_current_user_id()
-                    ],
-                    ['%d', '%d', '%s', '%s', '%s', '%s', '%d']
-                );
+            foreach ($curso_ids as $curso_id) {
+                $existing = $wpdb->get_var($wpdb->prepare(
+                    "SELECT id FROM $table_name WHERE user_id = %d AND curso_id = %d",
+                    $user_id,
+                    $curso_id
+                ));
+                
+                if ($existing) {
+                    $wpdb->update(
+                        $table_name,
+                        [
+                            'status' => $status,
+                            'data_fim' => $data_fim,
+                            'updated_at' => current_time('mysql')
+                        ],
+                        ['id' => $existing],
+                        ['%s', '%s', '%s'],
+                        ['%d']
+                    );
+                } else {
+                    $wpdb->insert(
+                        $table_name,
+                        [
+                            'user_id' => $user_id,
+                            'curso_id' => $curso_id,
+                            'status' => $status,
+                            'data_fim' => $data_fim,
+                            'created_at' => current_time('mysql'),
+                            'updated_at' => current_time('mysql'),
+                            'created_by' => get_current_user_id()
+                        ],
+                        ['%d', '%d', '%s', '%s', '%s', '%s', '%d']
+                    );
+                }
             }
             
             wp_redirect(admin_url('admin.php?page=acesso-cursos&msg=saved'));
@@ -467,6 +477,12 @@ function acesso_cursos_admin_list() {
     $total_pages = ceil($total / $per_page);
     
     // Buscar cursos e usuários para os selects
+    $users = get_users([
+        'fields' => ['ID', 'display_name', 'user_email', 'user_login'],
+        'orderby' => 'display_name',
+        'order' => 'ASC'
+    ]);
+    
     $cursos = get_posts([
         'post_type' => 'curso',
         'posts_per_page' => -1,
@@ -650,6 +666,12 @@ function acesso_cursos_admin_form() {
         $item = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $id));
     }
     
+    $users = get_users([
+        'fields' => ['ID', 'display_name', 'user_email', 'user_login'],
+        'orderby' => 'display_name',
+        'order' => 'ASC'
+    ]);
+    
     $cursos = get_posts([
         'post_type' => 'curso',
         'posts_per_page' => -1,
@@ -666,32 +688,55 @@ function acesso_cursos_admin_form() {
             
             <table class="form-table">
                 <tr>
-                    <th><label for="user_id">Usuário (ID)</label></th>
+                    <th><label for="user_id">Usuário</label></th>
                     <td>
-                        <input type="number" name="user_id" id="user_id" class="regular-text" 
-                               value="<?php echo $item ? $item->user_id : ''; ?>" required 
-                               <?php echo $id ? 'readonly' : ''; ?>>
-                        <?php if ($id && $item) :
+                        <input type="text" id="user_search" class="regular-text" placeholder="Buscar por nome, email ou ID" autocomplete="off" <?php echo $id ? 'disabled' : ''; ?>>
+                        <select name="user_id" id="user_id" class="regular-text" required <?php echo $id ? 'disabled' : ''; ?>>
+                            <option value="">Selecione...</option>
+                            <?php foreach ($users as $user_item) : ?>
+                                <option value="<?php echo esc_attr($user_item->ID); ?>" 
+                                    data-name="<?php echo esc_attr($user_item->display_name); ?>"
+                                    data-email="<?php echo esc_attr($user_item->user_email); ?>"
+                                    data-id="<?php echo esc_attr($user_item->ID); ?>"
+                                    <?php echo $item && $item->user_id == $user_item->ID ? 'selected' : ''; ?>>
+                                    <?php echo esc_html(sprintf('%s (%s) - #%d', $user_item->display_name, $user_item->user_email, $user_item->ID)); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?php if ($id && $item) : ?>
+                            <input type="hidden" name="user_id" value="<?php echo esc_attr($item->user_id); ?>">
+                            <?php
                             $user = get_user_by('ID', $item->user_id);
                             if ($user) : ?>
                                 <p class="description"><?php echo esc_html($user->display_name . ' - ' . $user->user_email); ?></p>
-                            <?php endif;
-                        endif; ?>
+                            <?php endif; ?>
+                        <?php else : ?>
+                            <p class="description">Digite para filtrar em tempo real.</p>
+                        <?php endif; ?>
                     </td>
                 </tr>
                 <tr>
                     <th><label for="curso_id">Curso</label></th>
                     <td>
-                        <select name="curso_id" id="curso_id" required <?php echo $id ? 'disabled' : ''; ?>>
-                            <option value="">Selecione...</option>
-                            <?php foreach ($cursos as $curso) : ?>
-                                <option value="<?php echo $curso->ID; ?>" <?php echo $item && $item->curso_id == $curso->ID ? 'selected' : ''; ?>>
-                                    <?php echo esc_html($curso->post_title); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
                         <?php if ($id) : ?>
-                            <input type="hidden" name="curso_id" value="<?php echo $item->curso_id; ?>">
+                            <select name="curso_id" id="curso_id" required disabled>
+                                <option value="">Selecione...</option>
+                                <?php foreach ($cursos as $curso) : ?>
+                                    <option value="<?php echo esc_attr($curso->ID); ?>" <?php echo $item && $item->curso_id == $curso->ID ? 'selected' : ''; ?>>
+                                        <?php echo esc_html($curso->post_title); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <input type="hidden" name="curso_id" value="<?php echo esc_attr($item->curso_id); ?>">
+                        <?php else : ?>
+                            <select name="curso_id[]" id="curso_id" required multiple size="6" style="min-width: 320px;">
+                                <?php foreach ($cursos as $curso) : ?>
+                                    <option value="<?php echo esc_attr($curso->ID); ?>">
+                                        <?php echo esc_html($curso->post_title); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <p class="description">Segure Ctrl (Windows) ou Command (Mac) para selecionar múltiplos cursos.</p>
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -721,5 +766,47 @@ function acesso_cursos_admin_form() {
             </p>
         </form>
     </div>
+    <script>
+    (function() {
+        var searchInput = document.getElementById('user_search');
+        var userSelect = document.getElementById('user_id');
+
+        if (!searchInput || !userSelect || searchInput.disabled) {
+            return;
+        }
+
+        function normalize(text) {
+            return (text || '')
+                .toString()
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function filterUsers() {
+            var term = normalize(searchInput.value.trim());
+            var options = userSelect.options;
+
+            for (var i = 0; i < options.length; i++) {
+                var option = options[i];
+                if (!option.value) {
+                    option.hidden = false;
+                    continue;
+                }
+
+                var haystack = [
+                    option.dataset.name,
+                    option.dataset.email,
+                    option.dataset.id,
+                    option.text
+                ].join(' ');
+
+                option.hidden = term ? normalize(haystack).indexOf(term) === -1 : false;
+            }
+        }
+
+        searchInput.addEventListener('input', filterUsers);
+    })();
+    </script>
     <?php
 }
