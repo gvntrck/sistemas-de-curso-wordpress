@@ -1,0 +1,6 @@
+ • Emissão de Certificados
+ • Barra de Progresso
+ • Painel Meus Cursos
+ • Continuar Assistindo na home
+ • Materiais Complementares na aula
+ • Log de Atividades
