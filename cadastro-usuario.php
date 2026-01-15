@@ -89,7 +89,7 @@ function cadastro_usuario_shortcode()
             $user_id = wp_create_user($email, $password, $email);
 
             if (!is_wp_error($user_id)) {
-                wp_update_user(['ID' => $user_id, 'first_name' => $nome, 'last_name' => $sobrenome]);
+                wp_update_user(['ID' => $user_id, 'first_name' => $nome, 'last_name' => $sobrenome, 'role' => 'aluno']);
 
                 update_user_meta($user_id, 'cpf', $cpf);
                 update_user_meta($user_id, 'aniversario', $aniversario);
@@ -161,6 +161,7 @@ function cadastro_usuario_shortcode()
                             'ID' => $new_user_id,
                             'first_name' => isset($user_data['nome']) ? $user_data['nome'] : '',
                             'last_name' => isset($user_data['sobrenome']) ? $user_data['sobrenome'] : '',
+                            'role' => 'aluno'
                         ]);
 
                         // Lista de meta keys esperadas
