@@ -5,7 +5,8 @@
 
 add_shortcode('minha-conta', 'render_minha_conta_shortcode');
 
-function render_minha_conta_shortcode() {
+function render_minha_conta_shortcode()
+{
     // 1. Verificar Login
     if (!is_user_logged_in()) {
         return '<p style="color: #fff; text-align: center;">Você precisa estar logado para ver esta página.</p>';
@@ -16,32 +17,44 @@ function render_minha_conta_shortcode() {
 
     // 2. Processar Salvamento (Formulário enviado)
     if (isset($_POST['mc_submit']) && wp_verify_nonce($_POST['mc_nonce'], 'save_minha_conta')) {
-        
+
         // Dados Pessoais
-        if (isset($_POST['first_name'])) update_user_meta($user_id, 'first_name', sanitize_text_field($_POST['first_name']));
-        if (isset($_POST['last_name'])) update_user_meta($user_id, 'last_name', sanitize_text_field($_POST['last_name']));
-        if (isset($_POST['cpf'])) update_user_meta($user_id, 'cpf', sanitize_text_field($_POST['cpf']));
-        if (isset($_POST['aniversario'])) update_user_meta($user_id, 'aniversario', sanitize_text_field($_POST['aniversario']));
-        if (isset($_POST['instagram'])) update_user_meta($user_id, 'instagram', sanitize_text_field($_POST['instagram']));
+        if (isset($_POST['first_name']))
+            update_user_meta($user_id, 'first_name', sanitize_text_field($_POST['first_name']));
+        if (isset($_POST['last_name']))
+            update_user_meta($user_id, 'last_name', sanitize_text_field($_POST['last_name']));
+        if (isset($_POST['cpf']))
+            update_user_meta($user_id, 'cpf', sanitize_text_field($_POST['cpf']));
+        if (isset($_POST['aniversario']))
+            update_user_meta($user_id, 'aniversario', sanitize_text_field($_POST['aniversario']));
+        if (isset($_POST['instagram']))
+            update_user_meta($user_id, 'instagram', sanitize_text_field($_POST['instagram']));
 
         // Endereço
-        if (isset($_POST['cep'])) update_user_meta($user_id, 'cep', sanitize_text_field($_POST['cep']));
-        if (isset($_POST['rua'])) update_user_meta($user_id, 'rua', sanitize_text_field($_POST['rua']));
-        if (isset($_POST['numero'])) update_user_meta($user_id, 'numero', sanitize_text_field($_POST['numero']));
-        if (isset($_POST['complemento'])) update_user_meta($user_id, 'complemento', sanitize_text_field($_POST['complemento']));
-        if (isset($_POST['bairro'])) update_user_meta($user_id, 'bairro', sanitize_text_field($_POST['bairro']));
-        if (isset($_POST['cidade'])) update_user_meta($user_id, 'cidade', sanitize_text_field($_POST['cidade']));
-        if (isset($_POST['estado'])) update_user_meta($user_id, 'estado', sanitize_text_field($_POST['estado']));
+        if (isset($_POST['cep']))
+            update_user_meta($user_id, 'cep', sanitize_text_field($_POST['cep']));
+        if (isset($_POST['rua']))
+            update_user_meta($user_id, 'rua', sanitize_text_field($_POST['rua']));
+        if (isset($_POST['numero']))
+            update_user_meta($user_id, 'numero', sanitize_text_field($_POST['numero']));
+        if (isset($_POST['complemento']))
+            update_user_meta($user_id, 'complemento', sanitize_text_field($_POST['complemento']));
+        if (isset($_POST['bairro']))
+            update_user_meta($user_id, 'bairro', sanitize_text_field($_POST['bairro']));
+        if (isset($_POST['cidade']))
+            update_user_meta($user_id, 'cidade', sanitize_text_field($_POST['cidade']));
+        if (isset($_POST['estado']))
+            update_user_meta($user_id, 'estado', sanitize_text_field($_POST['estado']));
 
         $message = '<div class="mc-alert mc-success">Dados atualizados com sucesso!</div>';
     }
 
     // 3. Recuperar Dados (Recarrega após salvar para mostrar atualizado)
     $user_data = get_userdata($user_id);
-    
+
     $first_name = get_user_meta($user_id, 'first_name', true);
     $last_name = get_user_meta($user_id, 'last_name', true);
-    $nickname = $user_data->user_email; 
+    $nickname = $user_data->user_email;
     $cpf = get_user_meta($user_id, 'cpf', true);
     $aniversario = get_user_meta($user_id, 'aniversario', true);
     $instagram = get_user_meta($user_id, 'instagram', true);
@@ -59,7 +72,7 @@ function render_minha_conta_shortcode() {
     $avatar_url = '';
     if ($avatar_id) {
         $avatar_url = wp_get_attachment_image_url($avatar_id, 'medium');
-    } 
+    }
     if (empty($avatar_url)) {
         $avatar_url = get_avatar_url($user_id);
     }
@@ -75,7 +88,7 @@ function render_minha_conta_shortcode() {
             background-color: #121212;
             color: #e0e0e0;
             border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
             overflow: hidden;
             border: 1px solid #2a2a2a;
         }
@@ -93,7 +106,8 @@ function render_minha_conta_shortcode() {
             height: 120px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #6c5ce7; /* Distinctive purple/blue */
+            border: 3px solid #FDC110;
+            /* Distinctive purple/blue */
             box-shadow: 0 0 20px rgba(108, 92, 231, 0.2);
             margin-bottom: 15px;
         }
@@ -118,7 +132,7 @@ function render_minha_conta_shortcode() {
 
         .mc-section-title {
             font-size: 1.1rem;
-            color: #6c5ce7;
+            color: #FDC110;
             border-bottom: 2px solid #2a2a2a;
             padding-bottom: 10px;
             margin-bottom: 25px;
@@ -127,7 +141,7 @@ function render_minha_conta_shortcode() {
             letter-spacing: 1.5px;
             font-weight: 600;
         }
-        
+
         .mc-section-title:not(:first-child) {
             margin-top: 40px;
         }
@@ -155,8 +169,10 @@ function render_minha_conta_shortcode() {
 
         .mc-input {
             background-color: transparent;
-            border: 1px solid transparent; /* Invisible border by default */
-            border-bottom: 1px solid #333; /* Subtle line */
+            border: 1px solid transparent;
+            /* Invisible border by default */
+            border-bottom: 1px solid #333;
+            /* Subtle line */
             color: #fff;
             padding: 10px 0;
             font-size: 1.1rem;
@@ -171,12 +187,13 @@ function render_minha_conta_shortcode() {
         .mc-input:hover {
             background-color: #1a1a1a;
             border-color: #444;
-            padding-left: 10px; /* Slight shift to indicate interactivity */
+            padding-left: 10px;
+            /* Slight shift to indicate interactivity */
         }
 
         .mc-input:focus {
             background-color: #222;
-            border-color: #6c5ce7;
+            border-color: #FDC110;
             padding-left: 10px;
             box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
         }
@@ -189,7 +206,8 @@ function render_minha_conta_shortcode() {
         .mc-footer {
             background-color: #161616;
             padding: 20px 40px;
-            text-align: right; /* Button on the right */
+            text-align: right;
+            /* Button on the right */
             border-top: 1px solid #2a2a2a;
             display: flex;
             justify-content: flex-end;
@@ -197,7 +215,7 @@ function render_minha_conta_shortcode() {
         }
 
         .mc-btn-save {
-            background-color: #6c5ce7;
+            background-color: #FDC110;
             color: #fff;
             border: none;
             padding: 12px 30px;
@@ -210,7 +228,7 @@ function render_minha_conta_shortcode() {
         }
 
         .mc-btn-save:hover {
-            background-color: #5b4cc4;
+            background-color: #FDC110;
             transform: translateY(-1px);
         }
 
@@ -226,6 +244,7 @@ function render_minha_conta_shortcode() {
             text-align: center;
             font-weight: 500;
         }
+
         .mc-success {
             background-color: rgba(46, 213, 115, 0.15);
             color: #2ed573;
@@ -234,15 +253,26 @@ function render_minha_conta_shortcode() {
 
         /* Responsive */
         @media (max-width: 600px) {
-            .mc-container { margin: 15px; }
-            .mc-body { padding: 25px; }
-            .mc-footer { justify-content: center; }
-            .mc-btn-save { width: 100%; }
+            .mc-container {
+                margin: 15px;
+            }
+
+            .mc-body {
+                padding: 25px;
+            }
+
+            .mc-footer {
+                justify-content: center;
+            }
+
+            .mc-btn-save {
+                width: 100%;
+            }
         }
     </style>
 
     <div class="mc-container">
-        
+
         <!-- Header Statico -->
         <div class="mc-header">
             <img src="<?php echo esc_url($avatar_url); ?>" alt="Avatar" class="mc-avatar">
@@ -253,9 +283,9 @@ function render_minha_conta_shortcode() {
         <!-- Form de Edição -->
         <form method="post" action="">
             <?php wp_nonce_field('save_minha_conta', 'mc_nonce'); ?>
-            
+
             <div class="mc-body">
-                
+
                 <?php echo $message; ?>
 
                 <!-- Dados Pessoais -->
@@ -263,23 +293,28 @@ function render_minha_conta_shortcode() {
                 <div class="mc-grid">
                     <div class="mc-field-group">
                         <label class="mc-field-label">Nome</label>
-                        <input type="text" name="first_name" class="mc-input" value="<?php echo esc_attr($first_name); ?>" placeholder="Seu nome">
+                        <input type="text" name="first_name" class="mc-input" value="<?php echo esc_attr($first_name); ?>"
+                            placeholder="Seu nome">
                     </div>
                     <div class="mc-field-group">
                         <label class="mc-field-label">Sobrenome</label>
-                        <input type="text" name="last_name" class="mc-input" value="<?php echo esc_attr($last_name); ?>" placeholder="Seu sobrenome">
+                        <input type="text" name="last_name" class="mc-input" value="<?php echo esc_attr($last_name); ?>"
+                            placeholder="Seu sobrenome">
                     </div>
                     <div class="mc-field-group">
                         <label class="mc-field-label">CPF</label>
-                        <input type="text" name="cpf" class="mc-input" value="<?php echo esc_attr($cpf); ?>" placeholder="000.000.000-00">
+                        <input type="text" name="cpf" class="mc-input" value="<?php echo esc_attr($cpf); ?>"
+                            placeholder="000.000.000-00">
                     </div>
                     <div class="mc-field-group">
                         <label class="mc-field-label">Data de Nascimento</label>
-                        <input type="text" name="aniversario" class="mc-input" value="<?php echo esc_attr($aniversario); ?>" placeholder="DD/MM/AAAA">
+                        <input type="text" name="aniversario" class="mc-input" value="<?php echo esc_attr($aniversario); ?>"
+                            placeholder="DD/MM/AAAA">
                     </div>
                     <div class="mc-field-group">
                         <label class="mc-field-label">Instagram</label>
-                        <input type="text" name="instagram" class="mc-input" value="<?php echo esc_attr($instagram); ?>" placeholder="@seu.insta">
+                        <input type="text" name="instagram" class="mc-input" value="<?php echo esc_attr($instagram); ?>"
+                            placeholder="@seu.insta">
                     </div>
                 </div>
 
@@ -288,31 +323,38 @@ function render_minha_conta_shortcode() {
                 <div class="mc-grid">
                     <div class="mc-field-group">
                         <label class="mc-field-label">CEP</label>
-                        <input type="text" name="cep" class="mc-input" value="<?php echo esc_attr($cep); ?>" placeholder="00000-000">
+                        <input type="text" name="cep" class="mc-input" value="<?php echo esc_attr($cep); ?>"
+                            placeholder="00000-000">
                     </div>
                     <div class="mc-field-group">
                         <label class="mc-field-label">Rua / Logradouro</label>
-                        <input type="text" name="rua" class="mc-input" value="<?php echo esc_attr($rua); ?>" placeholder="Av. Principal">
+                        <input type="text" name="rua" class="mc-input" value="<?php echo esc_attr($rua); ?>"
+                            placeholder="Av. Principal">
                     </div>
                     <div class="mc-field-group">
                         <label class="mc-field-label">Número</label>
-                        <input type="text" name="numero" class="mc-input" value="<?php echo esc_attr($numero); ?>" placeholder="123">
+                        <input type="text" name="numero" class="mc-input" value="<?php echo esc_attr($numero); ?>"
+                            placeholder="123">
                     </div>
                     <div class="mc-field-group">
                         <label class="mc-field-label">Complemento</label>
-                        <input type="text" name="complemento" class="mc-input" value="<?php echo esc_attr($complemento); ?>" placeholder="Apto 101">
+                        <input type="text" name="complemento" class="mc-input" value="<?php echo esc_attr($complemento); ?>"
+                            placeholder="Apto 101">
                     </div>
                     <div class="mc-field-group">
                         <label class="mc-field-label">Bairro</label>
-                        <input type="text" name="bairro" class="mc-input" value="<?php echo esc_attr($bairro); ?>" placeholder="Centro">
+                        <input type="text" name="bairro" class="mc-input" value="<?php echo esc_attr($bairro); ?>"
+                            placeholder="Centro">
                     </div>
                     <div class="mc-field-group">
                         <label class="mc-field-label">Cidade</label>
-                        <input type="text" name="cidade" class="mc-input" value="<?php echo esc_attr($cidade); ?>" placeholder="São Paulo">
+                        <input type="text" name="cidade" class="mc-input" value="<?php echo esc_attr($cidade); ?>"
+                            placeholder="São Paulo">
                     </div>
                     <div class="mc-field-group">
                         <label class="mc-field-label">Estado (UF)</label>
-                        <input type="text" name="estado" class="mc-input" value="<?php echo esc_attr($estado); ?>" placeholder="SP" maxlength="2">
+                        <input type="text" name="estado" class="mc-input" value="<?php echo esc_attr($estado); ?>"
+                            placeholder="SP" maxlength="2">
                     </div>
                 </div>
             </div>
