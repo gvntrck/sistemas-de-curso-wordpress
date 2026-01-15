@@ -1,5 +1,5 @@
  • Emissão de Certificados
- • Barra de Progresso
+ • Barra de Progresso na aula - feito
  • Painel Meus Cursos
  • Continuar Assistindo na home
  • Materiais Complementares na aula
