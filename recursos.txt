@@ -4,3 +4,5 @@
  • Continuar Assistindo na home
  • Materiais Complementares na aula
  • Log de Atividades
+ • tela de cadastro de aluno
+ • aulas em ordem depende do curso
