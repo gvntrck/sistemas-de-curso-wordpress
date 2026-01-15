@@ -1,10 +1,9 @@
 <?php
 /**
- * Plugin Name: Sistema de Certificados Avançado
+ * Snippet para Sistema de Certificados Avançado
  * Description: Gera certificados personalizados por curso via CPT.
- * Version: 2.0.0
- * Author: gvntrck
- */
+ * 
+ *  */
 
 if (!defined('ABSPATH')) {
     exit;
@@ -397,7 +396,11 @@ function certificado_shortcode($atts)
                 transition: transform 0.2s, border-color 0.2s;
             }
 
-            .cert-card:hover { transform: translateY(-5px); border-color: #FDC110; color: #FDC110; }
+            .cert-card:hover {
+                transform: translateY(-5px);
+                border-color: #FDC110;
+                color: #FDC110;
+            }
 
             .cert-card h4 {
                 margin: 15px 0 10px;
