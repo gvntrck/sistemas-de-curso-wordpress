@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sistema de Cursos Personalizado
  * Description: Plugin que unifica todos os snippets do sistema de cursos (Cadastro, Certificados, Aulas, Trilhas, Controle de Acesso, etc) em um único local.
- * Version: 1.0.3
+ * Version: 1.0.8
  * Author: Equipe de Desenvolvimento
  * Text Domain: sistema-cursos
  */
@@ -11,34 +11,55 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-// Array com os nomes dos arquivos (snippets) que compõem o sistema.
-// A ordem pode importar se houver dependências entre eles, mas snippets costumam ser independentes ou hook-based.
-$arquivos_snippets = [
-    'barra-progresso-geral.php',
-    'cadastro-usuario.php',
-    'campos-usuario.php',
-    'certificado.php',
-    'controle-acesso.php',
-    'cursos-trilha.php',
-    'filtro-listagem-aulas.php',
-    'listar-aulas.php',
-    'meus-cursos.php',
-    'minha-conta.php',
-    'resultado-busca.php',
-    'single-aula.php',
-    'single-trilha.php',
-];
+/**
+ * sistema-cursos-plugin.php
+ *
+ * Arquivo principal do plugin Sistema de Cursos Personalizado.
+ * Responsável por inicializar todas as classes, shortcodes e funcionalidades do sistema.
+ * Carrega dependências, define hooks de ativação e configura o menu de documentação no admin.
+ *
+ * @package SistemaCursos
+ * @version 1.0.8
+ */
 
-foreach ($arquivos_snippets as $arquivo) {
-    $caminho_arquivo = plugin_dir_path(__FILE__) . $arquivo;
+// 1. Carregar Classes do Core
+require_once plugin_dir_path(__FILE__) . 'includes/class-config.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-assets.php';
+require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-minha-conta.php';
+require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-cadastro-usuario.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-access-control.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-user-fields.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-admin-filters.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-course-progress.php';
+require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-listar-aulas.php';
+require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-meus-cursos.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-certificates.php';
+require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-certificado.php';
+require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-resultado-busca.php';
+require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-barra-progresso.php';
+require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-cursos-trilha.php';
+require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-single-trilha.php';
+require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-redireciona-aula.php';
 
-    if (file_exists($caminho_arquivo)) {
-        require_once $caminho_arquivo;
-    } else {
-        // Opcional: Logar erro se arquivo faltar
-        error_log("Sistema de Cursos: Arquivo não encontrado - " . $arquivo);
-    }
-}
+// 2. Inicializar Assets Globais
+new System_Cursos_Assets();
+new System_Cursos_Shortcode_Minha_Conta();
+new System_Cursos_Shortcode_Cadastro();
+new System_Cursos_Access_Control();
+new System_Cursos_User_Fields();
+new System_Cursos_Admin_Filters();
+new System_Cursos_Progress();
+new System_Cursos_Shortcode_Listar_Aulas();
+new System_Cursos_Shortcode_Meus_Cursos();
+new System_Cursos_Certificates();
+new System_Cursos_Shortcode_Certificado();
+new System_Cursos_Shortcode_Resultado_Busca();
+new System_Cursos_Shortcode_Barra_Progresso();
+new System_Cursos_Shortcode_Cursos_Trilha();
+new System_Cursos_Shortcode_Single_Trilha();
+new System_Cursos_Shortcode_Redireciona_Aula();
+
+
 
 /**
  * Adiciona página de Documentação no Menu Admin
@@ -228,7 +249,8 @@ function sistema_cursos_render_admin_page()
                                 <strong>Parâmetros Opcionais:</strong>
                                 <ul>
                                     <li><code>curso_id</code>: ID do curso para forçar a exibição (ex:
-                                        <code>[certificado curso_id="123"]</code>).</li>
+                                        <code>[certificado curso_id="123"]</code>).
+                                    </li>
                                 </ul>
                             </div>
                         </td>
@@ -407,7 +429,8 @@ function sistema_cursos_render_admin_page()
                 <tbody>
                     <tr>
                         <td>Este Post Type serve primariamente como agrupador. Os cursos são ligados à trilha através do campo
-                            <code>trilha</code> no CPT Curso.</td>
+                            <code>trilha</code> no CPT Curso.
+                        </td>
                     </tr>
                 </tbody>
             </table>
