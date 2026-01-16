@@ -13,12 +13,32 @@ class System_Cursos_Shortcode_Cadastro
      * Suporta cadastro manual e importação em massa via arquivo CSV (exclusivo para administradores/gestores).
      *
      * @package SistemaCursos
-     * @version 1.0.9
+     * @version 1.1.0
      */
     public function __construct()
     {
         add_shortcode('cadastro-usuario', [$this, 'render_shortcode']);
         add_action('init', [$this, 'handle_csv_download']);
+    }
+
+    /**
+     * Verifica se o usuário atual tem permissão de administrador
+     */
+    private function user_can_access()
+    {
+        return is_user_logged_in() && current_user_can('administrator');
+    }
+
+    /**
+     * Renderiza mensagem de acesso negado
+     */
+    private function render_access_denied()
+    {
+        return '<div class="mc-container">
+            <div class="mc-alert mc-error" style="margin: 20px 0;">
+                <strong>Acesso Negado!</strong> Você não tem permissão para acessar esta página.
+            </div>
+        </div>';
     }
 
     public function handle_csv_download()
@@ -70,6 +90,11 @@ class System_Cursos_Shortcode_Cadastro
 
     public function render_shortcode()
     {
+        // Verificar permissão de administrador
+        if (!$this->user_can_access()) {
+            return $this->render_access_denied();
+        }
+
         $output = '';
         $message = '';
         $import_message = '';
