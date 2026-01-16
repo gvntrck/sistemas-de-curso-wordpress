@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sistema de Cursos Personalizado
  * Description: Plugin que unifica todos os snippets do sistema de cursos (Cadastro, Certificados, Aulas, Trilhas, Controle de Acesso, etc) em um único local.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Equipe de Desenvolvimento
  * Text Domain: sistema-cursos
  */
@@ -69,185 +69,248 @@ function sistema_cursos_render_admin_page()
         <hr>
 
         <style>
-            .sc-card {
+            .sc-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
                 background: #fff;
-                border: 1px solid #ccd0d4;
-                border-left: 4px solid #2271b1;
+                border: 1px solid #c3c4c7;
                 box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
-                margin-bottom: 20px;
-                padding: 15px 20px;
-                max-width: 900px;
             }
 
-            .sc-card h3 {
-                margin-top: 0;
+            .sc-table th,
+            .sc-table td {
+                padding: 12px 15px;
+                text-align: left;
+                border-bottom: 1px solid #c3c4c7;
+                vertical-align: top;
+            }
+
+            .sc-table th {
+                background: #f0f0f1;
+                font-weight: 600;
                 color: #1d2327;
-                display: flex;
-                align-items: center;
-                gap: 10px;
+                border-bottom: 2px solid #c3c4c7;
+            }
+
+            .sc-table tr:last-child td {
+                border-bottom: none;
+            }
+
+            .sc-table tr:nth-child(even) {
+                background-color: #f6f7f7;
+            }
+
+            /* Coluna do Shortcode */
+            .sc-col-code {
+                width: 250px;
+                white-space: nowrap;
             }
 
             .sc-tag {
                 background: #f0f0f1;
                 color: #2271b1;
-                padding: 2px 8px;
+                padding: 4px 8px;
                 border-radius: 4px;
                 font-family: monospace;
                 font-size: 1.1em;
                 font-weight: bold;
                 border: 1px solid #c3c4c7;
+                display: inline-block;
             }
 
-            .sc-desc {
+            /* Coluna da Descrição */
+            .sc-col-desc {}
+
+            .sc-desc-text {
                 font-size: 14px;
-                line-height: 1.5;
                 color: #50575e;
-                margin-bottom: 15px;
+                margin-bottom: 10px;
             }
 
             .sc-params {
-                background: #f6f7f7;
+                background: #fff;
+                border: 1px solid #dcdcde;
                 padding: 10px;
                 border-radius: 4px;
                 font-size: 13px;
+                margin-top: 8px;
             }
 
             .sc-params strong {
                 display: block;
-                margin-bottom: 5px;
+                margin-bottom: 4px;
+                color: #1d2327;
             }
 
             .sc-params code {
-                background: #fff;
+                background: #f6f7f7;
+                padding: 2px 4px;
+                margin: 0 2px;
+            }
+
+            .sc-params ul {
+                margin: 5px 0 5px 20px;
+                list-style-type: disc;
+            }
+
+            .sc-params li {
+                margin-bottom: 3px;
             }
         </style>
 
         <h2>Shortcodes Disponíveis</h2>
 
-        <!-- [barra-progresso-geral] -->
-        <div class="sc-card">
-            <h3><span class="sc-tag">[barra-progresso-geral]</span></h3>
-            <p class="sc-desc">Exibe uma barra de progresso visual mostrando a porcentagem geral de conclusão de todos os
-                cursos que o aluno tem acesso.</p>
-            <div class="sc-params">
-                <strong>Uso:</strong>
-                <code>[barra-progresso-geral]</code>
-            </div>
-        </div>
+        <table class="sc-table">
+            <thead>
+                <tr>
+                    <th class="sc-col-code">Shortcode</th>
+                    <th class="sc-col-desc">Descrição e Uso</th>
+                </tr>
+            </thead>
+            <tbody>
 
-        <!-- [cadastro-usuario] -->
-        <div class="sc-card">
-            <h3><span class="sc-tag">[cadastro-usuario]</span></h3>
-            <p class="sc-desc">Renderiza o formulário de cadastro de novos alunos. Inclui abas para cadastro manual e
-                importação via CSV.</p>
-            <div class="sc-params">
-                <strong>Uso:</strong>
-                <code>[cadastro-usuario]</code>
-            </div>
-        </div>
+                <!-- [barra-progresso-geral] -->
+                <tr>
+                    <td><span class="sc-tag">[barra-progresso-geral]</span></td>
+                    <td class="sc-col-desc">
+                        <div class="sc-desc-text">Exibe uma barra de progresso visual mostrando a porcentagem geral de
+                            conclusão de todos os cursos que o aluno tem acesso.</div>
+                        <div class="sc-params">
+                            <strong>Uso:</strong> <code>[barra-progresso-geral]</code>
+                        </div>
+                    </td>
+                </tr>
 
-        <!-- [certificado] -->
-        <div class="sc-card">
-            <h3><span class="sc-tag">[certificado]</span></h3>
-            <p class="sc-desc">Gerencia a exibição e geração de certificados. Se usado sem parâmetros, lista os certificados
-                disponíveis para o aluno. Se usado com parametros ou no contexto de conclusão, exibe o certificado
-                específico.</p>
-            <div class="sc-params">
-                <strong>Parâmetros Opcionais:</strong>
-                <ul>
-                    <li><code>curso_id</code>: ID do curso para forçar a exibição de um certificado específico (ex:
-                        <code>[certificado curso_id="123"]</code>).</li>
-                </ul>
-            </div>
-        </div>
+                <!-- [cadastro-usuario] -->
+                <tr>
+                    <td><span class="sc-tag">[cadastro-usuario]</span></td>
+                    <td class="sc-col-desc">
+                        <div class="sc-desc-text">Renderiza o formulário de cadastro de novos alunos. Inclui abas para
+                            cadastro manual e importação via CSV.</div>
+                        <div class="sc-params">
+                            <strong>Uso:</strong> <code>[cadastro-usuario]</code>
+                        </div>
+                    </td>
+                </tr>
 
-        <!-- [lista-aulas] -->
-        <div class="sc-card">
-            <h3><span class="sc-tag">[lista-aulas]</span></h3>
-            <p class="sc-desc">Exibe o player de vídeo, descrição e lista de aulas lateral (sidebar). É o coração da
-                experiência de assistir aulas.</p>
-            <div class="sc-params">
-                <strong>Parâmetros:</strong>
-                <ul>
-                    <li><code>curso_id</code>: (Obrigatório se fora do loop) ID do curso.</li>
-                    <li><code>aula_id</code>: (Opcional) ID da aula inicial.</li>
-                    <li><code>limite</code>: (Opcional) Quantidade máxima de aulas. Padrão 200.</li>
-                </ul>
-                <strong>Exemplo:</strong> <code>[lista-aulas curso_id="10"]</code>
-            </div>
-        </div>
+                <!-- [certificado] -->
+                <tr>
+                    <td><span class="sc-tag">[certificado]</span></td>
+                    <td class="sc-col-desc">
+                        <div class="sc-desc-text">Gerencia a exibição e geração de certificados.</div>
+                        <div class="sc-params">
+                            <strong>Funcionalidade:</strong> Sem parâmetros, lista os certificados disponíveis. No contexto
+                            de conclusão, exibe o certificado.
+                            <br><br>
+                            <strong>Parâmetros Opcionais:</strong>
+                            <ul>
+                                <li><code>curso_id</code>: ID do curso para forçar a exibição (ex:
+                                    <code>[certificado curso_id="123"]</code>).</li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
 
-        <!-- [meus-cursos] -->
-        <div class="sc-card">
-            <h3><span class="sc-tag">[meus-cursos]</span></h3>
-            <p class="sc-desc">Lista todos os cursos em que o usuário logado está matriculado, mostrando uma barra de
-                progresso individual para cada um.</p>
-            <div class="sc-params">
-                <strong>Uso:</strong>
-                <code>[meus-cursos]</code>
-            </div>
-        </div>
+                <!-- [lista-aulas] -->
+                <tr>
+                    <td><span class="sc-tag">[lista-aulas]</span></td>
+                    <td class="sc-col-desc">
+                        <div class="sc-desc-text">Exibe o player de vídeo, descrição e lista de aulas lateral (sidebar). É o
+                            coração da experiência de assistir aulas.</div>
+                        <div class="sc-params">
+                            <strong>Parâmetros:</strong>
+                            <ul>
+                                <li><code>curso_id</code>: (Obrigatório se fora do loop) ID do curso.</li>
+                                <li><code>aula_id</code>: (Opcional) ID da aula inicial.</li>
+                                <li><code>limite</code>: (Opcional) Padrão 200.</li>
+                            </ul>
+                            <strong>Exemplo:</strong> <code>[lista-aulas curso_id="10"]</code>
+                        </div>
+                    </td>
+                </tr>
 
-        <!-- [minha-conta] -->
-        <div class="sc-card">
-            <h3><span class="sc-tag">[minha-conta]</span></h3>
-            <p class="sc-desc">Exibe um painel para o usuário editar seus dados pessoais (Nome, CPF, Data de Nascimento,
-                Endereço, etc).</p>
-            <div class="sc-params">
-                <strong>Uso:</strong>
-                <code>[minha-conta]</code>
-            </div>
-        </div>
+                <!-- [meus-cursos] -->
+                <tr>
+                    <td><span class="sc-tag">[meus-cursos]</span></td>
+                    <td class="sc-col-desc">
+                        <div class="sc-desc-text">Lista todos os cursos em que o usuário logado está matriculado, mostrando
+                            uma barra de progresso individual para cada um.</div>
+                        <div class="sc-params">
+                            <strong>Uso:</strong> <code>[meus-cursos]</code>
+                        </div>
+                    </td>
+                </tr>
 
-        <!-- [redireciona-aula] -->
-        <div class="sc-card">
-            <h3><span class="sc-tag">[redireciona-aula]</span></h3>
-            <p class="sc-desc">Utilitário para usar no modelo <em>Single Aula</em>. Ele redireciona automaticamente o acesso
-                direto à aula para a visualização dentro do player do curso.</p>
-            <div class="sc-params">
-                <strong>Uso:</strong>
-                <code>[redireciona-aula]</code>
-            </div>
-        </div>
+                <!-- [minha-conta] -->
+                <tr>
+                    <td><span class="sc-tag">[minha-conta]</span></td>
+                    <td class="sc-col-desc">
+                        <div class="sc-desc-text">Exibe um painel para o usuário editar seus dados pessoais (Nome, CPF, Data
+                            de Nascimento, Endereço, etc).</div>
+                        <div class="sc-params">
+                            <strong>Uso:</strong> <code>[minha-conta]</code>
+                        </div>
+                    </td>
+                </tr>
 
-        <!-- [resultado-busca] -->
-        <div class="sc-card">
-            <h3><span class="sc-tag">[resultado-busca]</span></h3>
-            <p class="sc-desc">Exibe os resultados da pesquisa do site utilizando o design system do projeto (Cards para
-                cursos, Lista para outros tipos).</p>
-            <div class="sc-params">
-                <strong>Uso:</strong>
-                <code>[resultado-busca]</code>
-            </div>
-        </div>
+                <!-- [redireciona-aula] -->
+                <tr>
+                    <td><span class="sc-tag">[redireciona-aula]</span></td>
+                    <td class="sc-col-desc">
+                        <div class="sc-desc-text">Utilitário para usar no modelo <em>Single Aula</em>. Redireciona o acesso
+                            direto à aula para a visualização dentro do player do curso.</div>
+                        <div class="sc-params">
+                            <strong>Uso:</strong> <code>[redireciona-aula]</code>
+                        </div>
+                    </td>
+                </tr>
 
-        <!-- [single-trilha] -->
-        <div class="sc-card">
-            <h3><span class="sc-tag">[single-trilha]</span></h3>
-            <p class="sc-desc">Usado na página de uma Trilha. Lista todos os cursos que pertencem a essa trilha visualmente.
-            </p>
-            <div class="sc-params">
-                <strong>Uso:</strong>
-                <code>[single-trilha]</code>
-            </div>
-        </div>
+                <!-- [resultado-busca] -->
+                <tr>
+                    <td><span class="sc-tag">[resultado-busca]</span></td>
+                    <td class="sc-col-desc">
+                        <div class="sc-desc-text">Exibe os resultados da pesquisa do site utilizando o design system do
+                            projeto.</div>
+                        <div class="sc-params">
+                            <strong>Uso:</strong> <code>[resultado-busca]</code>
+                        </div>
+                    </td>
+                </tr>
 
-        <!-- [cursos_da_trilha] -->
-        <div class="sc-card">
-            <h3><span class="sc-tag">[cursos_da_trilha]</span></h3>
-            <p class="sc-desc">Similar ao <code>[single-trilha]</code>, mas com mais opções de controle de layout e
-                ordenação. Focado em listar cursos associados ao ID da trilha atual.</p>
-            <div class="sc-params">
-                <strong>Parâmetros:</strong>
-                <ul>
-                    <li><code>orderby</code>: Campo de ordenação (ex: title). Padrão 'title'.</li>
-                    <li><code>order</code>: 'ASC' ou 'DESC'. Padrão 'ASC'.</li>
-                    <li><code>limit</code>: Limite de itens. Padrão -1 (todos).</li>
-                    <li><code>image_width</code>: Largura da imagem em px. Padrão 220.</li>
-                </ul>
-                <strong>Exemplo:</strong> <code>[cursos_da_trilha limit="4" order="DESC"]</code>
-            </div>
-        </div>
+                <!-- [single-trilha] -->
+                <tr>
+                    <td><span class="sc-tag">[single-trilha]</span></td>
+                    <td class="sc-col-desc">
+                        <div class="sc-desc-text">Usado na página de uma Trilha. Lista todos os cursos que pertencem a essa
+                            trilha visualmente.</div>
+                        <div class="sc-params">
+                            <strong>Uso:</strong> <code>[single-trilha]</code>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- [cursos_da_trilha] -->
+                <tr>
+                    <td><span class="sc-tag">[cursos_da_trilha]</span></td>
+                    <td class="sc-col-desc">
+                        <div class="sc-desc-text">Similar ao <code>[single-trilha]</code>, mas com mais opções de controle.
+                            Lista cursos associados ao ID da trilha atual.</div>
+                        <div class="sc-params">
+                            <strong>Parâmetros:</strong>
+                            <ul>
+                                <li><code>orderby</code>: Padrão 'title'.</li>
+                                <li><code>order</code>: 'ASC' ou 'DESC'.</li>
+                                <li><code>limit</code>: Padrão -1 (todos).</li>
+                                <li><code>image_width</code>: Padrão 220.</li>
+                            </ul>
+                            <strong>Exemplo:</strong> <code>[cursos_da_trilha limit="4" order="DESC"]</code>
+                        </div>
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
 
     </div>
     <?php
