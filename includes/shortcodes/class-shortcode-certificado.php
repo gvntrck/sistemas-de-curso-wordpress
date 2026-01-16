@@ -179,7 +179,7 @@ class System_Cursos_Shortcode_Certificado
             </div>
 
             <div class="cert-actions">
-                <button onclick="window.print();" class="mc-btn mc-btn-secondary">
+                <button onclick="imprimirCertificado();" class="mc-btn mc-btn-secondary">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="6 9 6 2 18 2 18 9"></polyline>
@@ -190,7 +190,88 @@ class System_Cursos_Shortcode_Certificado
                 </button>
             </div>
         </div>
-        <?php
-        return ob_get_clean();
+
+        <script>
+            function imprimirCertificado() {
+                var certElement = document.getElementById('printable-cert');
+                if (!certElement) {
+                    alert('Erro: Certificado não encontrado.');
+                    return;
+                }
+
+                // Cria uma nova janela para impressão
+                var printWindow = window.open('', '_blank', 'width=1200,height=800');
+
+                // Estilos inline para a janela de impressão
+                var estilos = `
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { 
+                        display: flex; 
+                        justify-content: center; 
+                        align-items: center; 
+                        min-height: 100vh;
+                        background: white;
+                    }
+                    .cert-container {
+                        position: relative;
+                        width: 100%;
+                        max-width: 1000px;
+                        aspect-ratio: 1.414 / 1;
+                    }
+                    .cert-bg {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        object-fit: contain;
+                    }
+                    .cert-element {
+                        position: absolute;
+                        transform: translateX(-50%);
+                        font-weight: bold;
+                        text-align: center;
+                        white-space: nowrap;
+                    }
+                    @media print {
+                        body { 
+                            margin: 0; 
+                            padding: 0;
+                        }
+                        .cert-container {
+                            max-width: none;
+                            width: 100vw;
+                            height: 100vh;
+                        }
+                        .cert-bg {
+                            -webkit-print-color-adjust: exact;
+                            print-color-adjust: exact;
+                        }
+                    }
+                    @page {
+                        size: landscape;
+                        margin: 0;
+                    }
+                </style>
+            `;
+
+        // Monta o HTML da janela de impressão
+        printWindow.document.write('<!DOCTYPE html><html><head><title>Certificado</title>' + estilos + '</head><body>');
+        printWindow.document.write(certElement.outerHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+
+        // Aguarda a imagem carregar antes de imprimir
+        printWindow.onload = function () {
+            setTimeout(function () {
+                printWindow.focus();
+                printWindow.print();
+            }, 500);
+        };
+    }
+</script>
+<?php
+                return ob_get_clean();
     }
 }
