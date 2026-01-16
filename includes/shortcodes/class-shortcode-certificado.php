@@ -14,7 +14,7 @@ class System_Cursos_Shortcode_Certificado
      * Se houver ID, renderiza o certificado visualmente usando o modelo configurado.
      *
      * @package SistemaCursos
-     * @version 1.1.6
+     * @version 1.1.8
      */
     public function __construct()
     {
@@ -113,8 +113,12 @@ class System_Cursos_Shortcode_Certificado
         $data_left = get_post_meta($cert_id, '_cert_data_left', true) ?: '50%';
         $color = get_post_meta($cert_id, '_cert_color', true) ?: '#000000';
         $font_size = get_post_meta($cert_id, '_cert_font_size', true) ?: '24px';
+        $font_family = get_post_meta($cert_id, '_cert_font_family', true) ?: 'Roboto';
         $show_curso = get_post_meta($cert_id, '_cert_show_curso', true);
         $show_data = get_post_meta($cert_id, '_cert_show_data', true);
+
+        // URL da fonte Google Fonts
+        $font_url = 'https://fonts.googleapis.com/css2?family=' . urlencode(str_replace(' ', '+', $font_family)) . ':wght@400;700&display=swap';
 
         $user_data = get_userdata($user_id);
         $nome_aluno = $user_data->first_name . ' ' . $user_data->last_name;
@@ -140,6 +144,9 @@ class System_Cursos_Shortcode_Certificado
 
         ob_start();
         ?>
+        <!-- Carrega a fonte do Google Fonts -->
+        <link href="<?php echo esc_url($font_url); ?>" rel="stylesheet">
+
         <div class="cert-wrapper">
             <h2 style="margin-bottom: 20px; color: #fff;">Parabéns,
                 <?php echo esc_html($user_data->first_name); ?>!
@@ -148,7 +155,8 @@ class System_Cursos_Shortcode_Certificado
                     <?php echo esc_html($curso_titulo); ?>
                 </strong>.</p>
 
-            <div class="cert-container" id="printable-cert">
+            <div class="cert-container" id="printable-cert" data-font="<?php echo esc_attr($font_family); ?>"
+                data-font-url="<?php echo esc_attr($font_url); ?>">
                 <?php if ($bg_url): ?>
                     <img src="<?php echo esc_url($bg_url); ?>" class="cert-bg" alt="Fundo Certificado">
                 <?php else: ?>
@@ -159,20 +167,20 @@ class System_Cursos_Shortcode_Certificado
                 <?php endif; ?>
 
                 <div class="cert-element"
-                    style="top: <?php echo esc_attr($nome_top); ?>; left: <?php echo esc_attr($nome_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>;">
+                    style="top: <?php echo esc_attr($nome_top); ?>; left: <?php echo esc_attr($nome_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>; font-family: '<?php echo esc_attr($font_family); ?>', sans-serif;">
                     <?php echo esc_html($nome_aluno); ?>
                 </div>
 
                 <?php if ($show_curso === '1'): ?>
                     <div class="cert-element"
-                        style="top: <?php echo esc_attr($curso_top); ?>; left: <?php echo esc_attr($curso_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>;">
+                        style="top: <?php echo esc_attr($curso_top); ?>; left: <?php echo esc_attr($curso_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>; font-family: '<?php echo esc_attr($font_family); ?>', sans-serif;">
                         <?php echo esc_html($curso_titulo); ?>
                     </div>
                 <?php endif; ?>
 
                 <?php if ($show_data === '1'): ?>
                     <div class="cert-element"
-                        style="top: <?php echo esc_attr($data_top); ?>; left: <?php echo esc_attr($data_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>;">
+                        style="top: <?php echo esc_attr($data_top); ?>; left: <?php echo esc_attr($data_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>; font-family: '<?php echo esc_attr($font_family); ?>', sans-serif;">
                         <?php echo esc_html($data_conclusao); ?>
                     </div>
                 <?php endif; ?>
@@ -199,11 +207,16 @@ class System_Cursos_Shortcode_Certificado
                     return;
                 }
 
+                // Obtém a fonte configurada do atributo data
+                var fontFamily = certElement.getAttribute('data-font') || 'Roboto';
+                var fontUrl = certElement.getAttribute('data-font-url') || '';
+
                 // Cria uma nova janela para impressão
                 var printWindow = window.open('', '_blank', 'width=1200,height=800');
 
-                // Estilos inline para a janela de impressão
+                // Estilos inline para a janela de impressão (incluindo a fonte)
                 var estilos = `
+                <link href="${fontUrl}" rel="stylesheet">
                 <style>
                     * { margin: 0; padding: 0; box-sizing: border-box; }
                     body { 
@@ -262,12 +275,12 @@ class System_Cursos_Shortcode_Certificado
         printWindow.document.write('</body></html>');
         printWindow.document.close();
 
-        // Aguarda a imagem carregar antes de imprimir
+        // Aguarda a fonte e imagem carregar antes de imprimir
         printWindow.onload = function () {
             setTimeout(function () {
                 printWindow.focus();
                 printWindow.print();
-            }, 500);
+            }, 800); // Aumentado para dar tempo da fonte carregar
         };
     }
 </script>

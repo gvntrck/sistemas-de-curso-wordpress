@@ -12,7 +12,7 @@ class System_Cursos_Certificates
      * Adiciona metaboxes para configuração visual dos certificados (imagem de fundo, posições, cores) e permite vincular um modelo de certificado a um curso específico.
      *
      * @package SistemaCursos
-     * @version 1.1.6
+     * @version 1.1.8
      */
     public function __construct()
     {
@@ -129,8 +129,33 @@ class System_Cursos_Certificates
         $data_left = get_post_meta($post->ID, '_cert_data_left', true) ?: '50%';
         $color = get_post_meta($post->ID, '_cert_color', true) ?: '#000000';
         $font_size = get_post_meta($post->ID, '_cert_font_size', true) ?: '24px';
+        $font_family = get_post_meta($post->ID, '_cert_font_family', true) ?: 'Roboto';
         $show_curso = get_post_meta($post->ID, '_cert_show_curso', true);
         $show_data = get_post_meta($post->ID, '_cert_show_data', true);
+
+        // Lista de fontes do Google Fonts populares para certificados
+        $google_fonts = [
+            'Roboto' => 'Roboto',
+            'Open Sans' => 'Open Sans',
+            'Lato' => 'Lato',
+            'Montserrat' => 'Montserrat',
+            'Playfair Display' => 'Playfair Display',
+            'Merriweather' => 'Merriweather',
+            'Dancing Script' => 'Dancing Script',
+            'Great Vibes' => 'Great Vibes',
+            'Pacifico' => 'Pacifico',
+            'Lobster' => 'Lobster',
+            'Cinzel' => 'Cinzel',
+            'Cormorant Garamond' => 'Cormorant Garamond',
+            'Libre Baskerville' => 'Libre Baskerville',
+            'Crimson Text' => 'Crimson Text',
+            'Josefin Sans' => 'Josefin Sans',
+            'Raleway' => 'Raleway',
+            'Poppins' => 'Poppins',
+            'Nunito' => 'Nunito',
+            'Quicksand' => 'Quicksand',
+            'Sacramento' => 'Sacramento',
+        ];
         ?>
         <style>
             .cert-row {
@@ -172,7 +197,37 @@ class System_Cursos_Certificates
                 <label>Tamanho da Fonte: <input type="text" name="cert_font_size" value="<?php echo esc_attr($font_size); ?>"
                         class="tiny-text"> (ex: 24px)</label>
             </div>
+            <div class="cert-inputs" style="margin-top: 10px;">
+                <label>Fonte (Google Fonts):
+                    <select name="cert_font_family" id="cert_font_family" style="min-width: 200px;">
+                        <?php foreach ($google_fonts as $value => $label): ?>
+                            <option value="<?php echo esc_attr($value); ?>" <?php selected($font_family, $value); ?>>
+                                <?php echo esc_html($label); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <span id="font_preview" style="margin-left: 15px; font-size: 18px;">Prévia da Fonte</span>
+            </div>
         </div>
+
+        <script>
+            jQuery(document).ready(function ($) {
+                function loadFontPreview(fontName) {
+                    var fontUrl = 'https://fonts.googleapis.com/css2?family=' + fontName.replace(/ /g, '+') + '&display=swap';
+                    $('head').append('<link rel="stylesheet" href="' + fontUrl + '" type="text/css">');
+                    $('#font_preview').css('font-family', '"' + fontName + '", sans-serif');
+                }
+
+                // Carregar fonte inicial
+                loadFontPreview($('#cert_font_family').val());
+
+                // Atualizar ao mudar
+                $('#cert_font_family').on('change', function () {
+                    loadFontPreview($(this).val());
+                });
+            });
+        </script>
 
         <div class="cert-row">
             <span class="cert-label">Posição: Nome do Aluno</span>
@@ -260,7 +315,8 @@ class System_Cursos_Certificates
                 '_cert_data_top',
                 '_cert_data_left',
                 '_cert_color',
-                '_cert_font_size'
+                '_cert_font_size',
+                '_cert_font_family'
             ];
 
             foreach ($fields as $field) {
