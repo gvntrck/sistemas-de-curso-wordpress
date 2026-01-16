@@ -30,7 +30,7 @@ class System_Cursos_Assets
             'sistema-cursos-style',
             $plugin_url . 'assets/css/style.css',
             [],
-            '1.1.0' // Bump version to force refresh
+            '1.1.1' // Bump version to force refresh
         );
 
         // JS Principal
