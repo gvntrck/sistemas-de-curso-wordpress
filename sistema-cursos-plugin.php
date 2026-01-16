@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
  * Carrega dependências, define hooks de ativação e configura o menu de documentação no admin.
  *
  * @package SistemaCursos
- * @version 1.1.3
+ * @version 1.1.4
  */
 
 // 1. Carregar Classes do Core
