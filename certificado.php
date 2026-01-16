@@ -1,9 +1,11 @@
 <?php
 /**
- * Snippet para Sistema de Certificados Avançado
- * Description: Gera certificados personalizados por curso via CPT.
- * 
- *  */
+ * Sistema de Certificados Avançado
+ * Shortcode: [certificado]
+ * Descrição: Este snippet gerencia todo o sistema de certificados. Ele registra o Post Type 'Certificado' para criação de modelos visuais e adiciona um shortcode que funciona em dois modos:
+ * 1. Listagem: Sem parâmetros, exibe uma galeria dos cursos concluídos pelo aluno onde o certificado está disponível.
+ * 2. Visualização: Quando acessado com ?curso_id=X, gera o certificado visualmente baseando-se no modelo configurado para aquele curso, permitindo impressão/download se o aluno tiver 100% de progresso.
+ */
 
 if (!defined('ABSPATH')) {
     exit;
