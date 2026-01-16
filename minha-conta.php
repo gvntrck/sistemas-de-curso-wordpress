@@ -52,7 +52,9 @@ function render_minha_conta_shortcode()
 {
     // 1. Verificar Login
     if (!is_user_logged_in()) {
-        return '<p style="color: #fff; text-align: center;">Você precisa estar logado para ver esta página.</p>';
+        return '<div class="mc-alert mc-error" style="color: #fff; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.2); padding: 15px; border-radius: 6px; text-align: center;">
+            Você precisa estar logado para ver esta página. <a href="' . wp_login_url(get_permalink()) . '" style="color: inherit; text-decoration: underline;">Fazer login</a>
+        </div>';
     }
 
     $user_id = get_current_user_id();
