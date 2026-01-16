@@ -12,7 +12,7 @@ class System_Cursos_Assets
      * Registra e enfileira os assets necessários para o funcionamento correto do frontend e do painel administrativo.
      *
      * @package SistemaCursos
-     * @version 1.0.8
+     * @version 1.0.9
      */
     public function __construct()
     {
@@ -30,7 +30,7 @@ class System_Cursos_Assets
             'sistema-cursos-style',
             $plugin_url . 'assets/css/style.css',
             [],
-            '1.0.6' // Bump version to force refresh
+            '1.1.0' // Bump version to force refresh
         );
 
         // JS Principal
@@ -38,7 +38,7 @@ class System_Cursos_Assets
             'sistema-cursos-script',
             $plugin_url . 'assets/js/script.js',
             [],
-            '1.0.6',
+            '1.1.0',
             true
         );
     }

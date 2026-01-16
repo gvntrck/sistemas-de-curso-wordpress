@@ -84,10 +84,7 @@ class System_Cursos_Shortcode_Certificado
                 $link = add_query_arg('curso_id', $id, get_permalink());
                 ?>
                 <a href="<?php echo esc_url($link); ?>" class="cert-card">
-                    <svg class="cert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M12 15l-2 5l-7-4.14l0 -6.86l9 -5l9 5l0 6.86l-7 4.14z" />
-                        <circle cx="12" cy="9" r="3" />
-                    </svg>
+                    <i class="fas fa-certificate cert-icon"></i>
                     <h4>
                         <?php echo esc_html($titulo); ?>
                     </h4>
