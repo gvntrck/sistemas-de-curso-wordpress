@@ -13,7 +13,7 @@ class System_Cursos_Shortcode_Cadastro
      * Suporta cadastro manual e importação em massa via arquivo CSV (exclusivo para administradores/gestores).
      *
      * @package SistemaCursos
-     * @version 1.0.8
+     * @version 1.0.9
      */
     public function __construct()
     {
@@ -302,7 +302,7 @@ class System_Cursos_Shortcode_Cadastro
                             </div>
                             <div class="mc-field-group">
                                 <label class="mc-field-label">Data de Nascimento</label>
-                                <input type="date" name="aniversario" class="mc-input"
+                                <input type="date" name="aniversario" class="mc-input" max="9999-12-31"
                                     value="<?php echo isset($_POST['aniversario']) ? esc_attr($_POST['aniversario']) : ''; ?>">
                             </div>
                         </div>

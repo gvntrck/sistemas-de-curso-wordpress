@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sistema de Cursos Personalizado
  * Description: Plugin que unifica todos os snippets do sistema de cursos (Cadastro, Certificados, Aulas, Trilhas, Controle de Acesso, etc) em um único local.
- * Version: 1.1.2
+ * Version: 1.1.4
  * Author: Equipe de Desenvolvimento
  * Text Domain: sistema-cursos
  */
@@ -19,10 +19,11 @@ if (!defined('ABSPATH')) {
  * Carrega dependências, define hooks de ativação e configura o menu de documentação no admin.
  *
  * @package SistemaCursos
- * @version 1.0.8
+ * @version 1.1.3
  */
 
 // 1. Carregar Classes do Core
+require_once plugin_dir_path(__FILE__) . 'includes/role-aluno.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-config.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-assets.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-minha-conta.php';
