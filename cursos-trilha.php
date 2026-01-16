@@ -1,7 +1,7 @@
 <?php
 /**
  * Shortcode: [cursos_da_trilha]
- * Versao: 1.0.0
+ * Versao: 1.0.1
  *
  * O que faz:
  * - Lista cursos relacionados a trilha atual (post em contexto).
@@ -31,53 +31,57 @@
  * Observacao:
  * - Deve ser usado dentro do contexto da trilha (get_the_ID()).
  */
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH'))
+    exit;
 
-add_shortcode('cursos_da_trilha', function($atts) {
+add_shortcode('cursos_da_trilha', function ($atts) {
     $atts = shortcode_atts([
         'orderby' => 'title',
-        'order'   => 'ASC',
-        'limit'   => -1,
-        'link'    => 1,
+        'order' => 'ASC',
+        'limit' => -1,
+        'link' => 1,
         'image_width' => 220,
     ], $atts, 'cursos_da_trilha');
 
     $trilha_id = get_the_ID();
-    if (!$trilha_id) return '';
+    if (!$trilha_id)
+        return '';
 
     $q = new WP_Query([
-        'post_type'      => 'curso',
-        'post_status'    => 'publish',
+        'post_type' => 'curso',
+        'post_status' => 'publish',
         'posts_per_page' => (int) $atts['limit'],
-        'orderby'        => sanitize_key($atts['orderby']),
-        'order'          => ($atts['order'] === 'DESC') ? 'DESC' : 'ASC',
-        'meta_query'     => [
+        'orderby' => sanitize_key($atts['orderby']),
+        'order' => ($atts['order'] === 'DESC') ? 'DESC' : 'ASC',
+        'meta_query' => [
             [
-                'key'     => 'trilha',   // ACF field name no Curso
-                'value'   => (string) $trilha_id,
+                'key' => 'trilha',   // ACF field name no Curso
+                'value' => (string) $trilha_id,
                 'compare' => '=',
             ]
         ],
-        'no_found_rows'  => true,
+        'no_found_rows' => true,
     ]);
 
-    if (!$q->have_posts()) return '';
+    if (!$q->have_posts())
+        return '';
 
-    $use_link = (int)$atts['link'] === 1;
+    $use_link = (int) $atts['link'] === 1;
     $image_width = max(1, (int) $atts['image_width']);
 
     ob_start();
     echo '<style>'
-        .'.cursos-da-trilha{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;}'
-        .'.cursos-da-trilha .curso-item{flex:0 0 auto;}'
-        .'.cursos-da-trilha .curso-link,.cursos-da-trilha .curso-title{display:block;}'
-        .'.cursos-da-trilha img{display:block;width:'.(int) $image_width.'px;height:auto;max-width:100%;}'
-    .'</style>';
+        . '.cursos-da-trilha{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;}'
+        . '.cursos-da-trilha .curso-item{flex:0 0 auto;}'
+        . '.cursos-da-trilha .curso-link,.cursos-da-trilha .curso-title{display:block;}'
+        . '.cursos-da-trilha img{display:block;width:' . (int) $image_width . 'px;height:auto;max-width:100%;}'
+        . '@media(max-width:768px){.cursos-da-trilha{justify-content:center;}}'
+        . '</style>';
     echo '<div class="cursos-da-trilha">';
     while ($q->have_posts()) {
         $q->the_post();
         $title = esc_html(get_the_title());
-        $url   = esc_url(get_permalink());
+        $url = esc_url(get_permalink());
         $cover = get_field('capa_vertical');
         $cover_html = '';
 
@@ -105,9 +109,9 @@ add_shortcode('cursos_da_trilha', function($atts) {
 
         echo '<div class="curso-item">';
         if ($use_link) {
-            echo '<a class="curso-link" href="'.$url.'">'.($cover_html ?: $title).'</a>';
+            echo '<a class="curso-link" href="' . $url . '">' . ($cover_html ?: $title) . '</a>';
         } else {
-            echo '<span class="curso-title">'.($cover_html ?: $title).'</span>';
+            echo '<span class="curso-title">' . ($cover_html ?: $title) . '</span>';
         }
         echo '</div>';
     }
