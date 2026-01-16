@@ -14,7 +14,7 @@ class System_Cursos_Shortcode_Certificado
      * Se houver ID, renderiza o certificado visualmente usando o modelo configurado.
      *
      * @package SistemaCursos
-     * @version 1.1.9
+     * @version 1.1.8
      */
     public function __construct()
     {
@@ -156,9 +156,7 @@ class System_Cursos_Shortcode_Certificado
                 </strong>.</p>
 
             <div class="cert-container" id="printable-cert" data-font="<?php echo esc_attr($font_family); ?>"
-                data-font-url="<?php echo esc_attr($font_url); ?>"
-                data-nome-aluno="<?php echo esc_attr($nome_aluno); ?>"
-                data-curso="<?php echo esc_attr($curso_titulo); ?>">
+                data-font-url="<?php echo esc_attr($font_url); ?>">
                 <?php if ($bg_url): ?>
                     <img src="<?php echo esc_url($bg_url); ?>" class="cert-bg" alt="Fundo Certificado">
                 <?php else: ?>
@@ -212,11 +210,6 @@ class System_Cursos_Shortcode_Certificado
                 // Obtém a fonte configurada do atributo data
                 var fontFamily = certElement.getAttribute('data-font') || 'Roboto';
                 var fontUrl = certElement.getAttribute('data-font-url') || '';
-                var nomeAluno = certElement.getAttribute('data-nome-aluno') || 'Aluno';
-                var nomeCurso = certElement.getAttribute('data-curso') || 'Curso';
-                
-                // Título do documento para o nome do PDF
-                var tituloDocumento = 'Certificado - ' + nomeCurso + ' - ' + nomeAluno;
 
                 // Cria uma nova janela para impressão
                 var printWindow = window.open('', '_blank', 'width=1200,height=800');
@@ -276,8 +269,8 @@ class System_Cursos_Shortcode_Certificado
                 </style>
             `;
 
-        // Monta o HTML da janela de impressão com título dinâmico
-        printWindow.document.write('<!DOCTYPE html><html><head><title>' + tituloDocumento + '</title>' + estilos + '</head><body>');
+        // Monta o HTML da janela de impressão
+        printWindow.document.write('<!DOCTYPE html><html><head><title>Certificado</title>' + estilos + '</head><body>');
         printWindow.document.write(certElement.outerHTML);
         printWindow.document.write('</body></html>');
         printWindow.document.close();
