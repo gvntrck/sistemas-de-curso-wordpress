@@ -847,13 +847,15 @@
 
 /* Elementos de texto sobre o certificado */
 .cert-element {
-    position: absolute;
-    transform: translateX(-50%);
-    z-index: 2;
-    font-weight: bold;
-    text-align: center;
-    white-space: nowrap;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    transform: translateX(-50%) !important;
+    z-index: 2 !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Botões de ação do certificado */
