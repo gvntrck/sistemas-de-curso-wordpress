@@ -12,7 +12,7 @@ class System_Cursos_Certificates
      * Adiciona metaboxes para configuração visual dos certificados (imagem de fundo, posições, cores) e permite vincular um modelo de certificado a um curso específico.
      *
      * @package SistemaCursos
-     * @version 1.0.8
+     * @version 1.1.6
      */
     public function __construct()
     {

@@ -787,9 +787,7 @@
     margin-bottom: 15px !important;
     display: block !important;
     width: auto !important;
-    /* Reset SVG width if present */
     height: auto !important;
-    /* Reset SVG height if present */
     line-height: 1 !important;
 }
 
@@ -815,31 +813,147 @@
     background: #e6b00f;
 }
 
+/* Wrapper do Certificado */
+.cert-wrapper {
+    text-align: center;
+    padding: 20px;
+}
+
+/* Container do Certificado (área de renderização) */
+.cert-container {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    aspect-ratio: 1.414 / 1;
+    /* Proporção A4 paisagem */
+    overflow: hidden;
+    background: #f0f0f0;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Imagem de fundo do certificado */
+.cert-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+/* Elementos de texto sobre o certificado */
+.cert-element {
+    position: absolute;
+    transform: translateX(-50%);
+    z-index: 2;
+    font-weight: bold;
+    text-align: center;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Botões de ação do certificado */
+.cert-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+
 /* Modo Impressão Certificado */
 @media print {
-    body * {
-        visibility: hidden;
+
+    /* Esconder TUDO exceto o certificado */
+    html,
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: visible !important;
+        background: white !important;
     }
 
-    #certificado-print-area,
-    #certificado-print-area * {
-        visibility: visible;
-    }
-
-    #certificado-print-area {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-    }
-
-    .mc-container,
+    /* Esconder header, footer, nav e outros elementos do tema */
+    body>*:not(.cert-wrapper):not(#printable-cert),
+    header,
+    footer,
+    nav,
+    aside,
     .site-header,
-    .site-footer {
-        /* Esconder elementos do tema */
+    .site-footer,
+    .sidebar,
+    .menu,
+    .navigation,
+    .cert-wrapper>h2,
+    .cert-wrapper>p,
+    .cert-actions {
         display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Garantir que o wrapper seja visível mas transparente */
+    .cert-wrapper {
+        display: block !important;
+        visibility: visible !important;
+        position: static !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+    }
+
+    /* Container do certificado para impressão */
+    #printable-cert {
+        display: block !important;
+        visibility: visible !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        z-index: 999999 !important;
+        background: white !important;
+        aspect-ratio: auto !important;
+        overflow: visible !important;
+    }
+
+    /* Imagem de fundo do certificado na impressão */
+    #printable-cert .cert-bg {
+        display: block !important;
+        visibility: visible !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
+    /* Elementos de texto no certificado */
+    #printable-cert .cert-element {
+        display: block !important;
+        visibility: visible !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
+    /* Configuração da página */
+    @page {
+        size: A4 landscape;
+        margin: 0;
     }
 }
 

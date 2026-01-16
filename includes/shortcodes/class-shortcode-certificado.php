@@ -14,7 +14,7 @@ class System_Cursos_Shortcode_Certificado
      * Se houver ID, renderiza o certificado visualmente usando o modelo configurado.
      *
      * @package SistemaCursos
-     * @version 1.0.8
+     * @version 1.1.6
      */
     public function __construct()
     {
