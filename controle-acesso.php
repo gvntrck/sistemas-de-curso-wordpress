@@ -1,7 +1,7 @@
 <?php
 /**
  * Controle de Acesso a Cursos
- * Versão: 1.0.7
+ * Versão: 1.0.9
  *
  * Sistema de permissões para cursos com:
  * - Tabela própria no banco de dados
@@ -300,6 +300,70 @@ function acesso_cursos_get_user_cursos($user_id)
          AND (data_fim IS NULL OR data_fim >= NOW())",
         $user_id
     ));
+}
+
+/**
+ * Retorna o progresso detalhado de um usuário em um curso
+ * Retorna: [total, concluidas, percent, last_concluida_date]
+ */
+function acesso_cursos_get_progresso_detalhado($user_id, $curso_id)
+{
+    global $wpdb;
+    $table_progresso = $wpdb->prefix . 'progresso_aluno';
+    $meta_key = 'curso';
+
+    // 1. Total de aulas do curso
+    $args = [
+        'post_type' => 'aula',
+        'post_status' => 'publish',
+        'posts_per_page' => -1,
+        'fields' => 'ids',
+        'meta_query' => [
+            'relation' => 'OR',
+            [
+                'key' => $meta_key,
+                'value' => $curso_id,
+                'compare' => '=',
+            ],
+            [
+                'key' => $meta_key,
+                'value' => '"' . $curso_id . '"',
+                'compare' => 'LIKE',
+            ],
+        ],
+    ];
+
+    $query = new WP_Query($args);
+    $total_aulas = $query->found_posts;
+
+    if ($total_aulas == 0) {
+        return [
+            'total' => 0,
+            'concluidas' => 0,
+            'percent' => 0,
+            'last_date' => null
+        ];
+    }
+
+    // 2. Aulas concluídas e data da última
+    $concluidas_data = $wpdb->get_row($wpdb->prepare(
+        "SELECT COUNT(*) as qtd, MAX(data_conclusao) as last_date 
+         FROM $table_progresso 
+         WHERE user_id = %d AND curso_id = %d",
+        $user_id,
+        $curso_id
+    ));
+
+    $concluidas = (int) ($concluidas_data->qtd ?? 0);
+    $last_date = $concluidas_data->last_date ?? null;
+    $percent = min(100, round(($concluidas / $total_aulas) * 100));
+
+    return [
+        'total' => $total_aulas,
+        'concluidas' => $concluidas,
+        'percent' => $percent,
+        'last_date' => $last_date
+    ];
 }
 
 // =============================================================================
@@ -831,6 +895,64 @@ function acesso_cursos_aluno_detalhes()
                     </tr>
                 </table>
             </div>
+        </div>
+
+        <!-- Estatísticas de Formação -->
+        <h2 style="margin-top: 30px;">Formação e Progresso</h2>
+        <p class="description">Acompanhe o desenvolvimento do aluno em cada curso matriculado.</p>
+
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+            <?php
+            $cursos_com_acesso = array_filter($cursos, function ($c) use ($acessos_map) {
+                $acesso = $acessos_map[$c->ID] ?? null;
+                return $acesso && $acesso->status === 'ativo' && (!$acesso->data_fim || strtotime($acesso->data_fim) >= time());
+            });
+
+            if (empty($cursos_com_acesso)): ?>
+                <div
+                    style="grid-column: 1 / -1; background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; text-align: center; color: #666;">
+                    Nenhum curso ativo para este aluno.
+                </div>
+            <?php else:
+                foreach ($cursos_com_acesso as $c):
+                    $progresso = acesso_cursos_get_progresso_detalhado($user_id, $c->ID);
+                    ?>
+                    <div
+                        style="background: #fff; border: 1px solid #ccd0d4; border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                            <h4 style="margin: 0; font-size: 15px; color: #1d2327;"><?php echo esc_html($c->post_title); ?></h4>
+                            <span
+                                style="font-size: 18px; font-weight: 700; color: #22c55e;"><?php echo $progresso['percent']; ?>%</span>
+                        </div>
+
+                        <div style="height: 8px; background: #f0f0f1; border-radius: 4px; overflow: hidden; margin-bottom: 10px;">
+                            <div
+                                style="width: <?php echo $progresso['percent']; ?>%; height: 100%; background: #22c55e; border-radius: 4px; transition: width 0.3s ease;">
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; color: #64748b;">
+                            <span><?php echo $progresso['concluidas']; ?> de <?php echo $progresso['total']; ?> aulas</span>
+                            <span>
+                                <?php if ($progresso['percent'] >= 100): ?>
+                                    <span
+                                        style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">CONCLUÍDO</span>
+                                <?php else: ?>
+                                    EM ANDAMENTO
+                                <?php endif; ?>
+                            </span>
+                        </div>
+
+                        <?php if ($progresso['last_date']): ?>
+                            <div
+                                style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #94a3b8;">
+                                🕒 Última aula: <?php echo date('d/m/Y H:i', strtotime($progresso['last_date'])); ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach;
+            endif; ?>
         </div>
 
         <!-- Lista de Cursos e Acessos -->
