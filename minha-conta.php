@@ -129,9 +129,14 @@ function render_minha_conta_shortcode()
     ?>
     <style>
         /* Base Container */
+        .mc-container,
+        .mc-container * {
+            box-sizing: border-box;
+        }
+
         .mc-container {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            max_width: 800px;
+            max-width: 800px;
             margin: 0px auto;
             background-color: #121212;
             color: #e0e0e0;
@@ -307,6 +312,10 @@ function render_minha_conta_shortcode()
 
             .mc-body {
                 padding: 25px;
+            }
+
+            .mc-grid {
+                grid-template-columns: 1fr;
             }
 
             .mc-footer {
