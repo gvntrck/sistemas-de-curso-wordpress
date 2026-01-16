@@ -14,7 +14,7 @@ class System_Cursos_Shortcode_Certificado
      * Se houver ID, renderiza o certificado visualmente usando o modelo configurado.
      *
      * @package SistemaCursos
-     * @version 1.1.8
+     * @version 1.1.9
      */
     public function __construct()
     {
@@ -156,7 +156,8 @@ class System_Cursos_Shortcode_Certificado
                 </strong>.</p>
 
             <div class="cert-container" id="printable-cert" data-font="<?php echo esc_attr($font_family); ?>"
-                data-font-url="<?php echo esc_attr($font_url); ?>">
+                data-font-url="<?php echo esc_attr($font_url); ?>"
+                data-filename="<?php echo esc_attr($curso_titulo . ' - ' . $nome_aluno); ?>">
                 <?php if ($bg_url): ?>
                     <img src="<?php echo esc_url($bg_url); ?>" class="cert-bg" alt="Fundo Certificado">
                 <?php else: ?>
@@ -210,6 +211,7 @@ class System_Cursos_Shortcode_Certificado
                 // Obtém a fonte configurada do atributo data
                 var fontFamily = certElement.getAttribute('data-font') || 'Roboto';
                 var fontUrl = certElement.getAttribute('data-font-url') || '';
+                var filename = certElement.getAttribute('data-filename') || 'Certificado';
 
                 // Cria uma nova janela para impressão
                 var printWindow = window.open('', '_blank', 'width=1200,height=800');
@@ -270,7 +272,7 @@ class System_Cursos_Shortcode_Certificado
             `;
 
         // Monta o HTML da janela de impressão
-        printWindow.document.write('<!DOCTYPE html><html><head><title>Certificado</title>' + estilos + '</head><body>');
+        printWindow.document.write('<!DOCTYPE html><html><head><title>' + filename + '</title>' + estilos + '</head><body>');
         printWindow.document.write(certElement.outerHTML);
         printWindow.document.write('</body></html>');
         printWindow.document.close();
