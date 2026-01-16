@@ -91,7 +91,8 @@ class System_Cursos_Shortcode_Certificado
                     <h4>
                         <?php echo esc_html($titulo); ?>
                     </h4>
-                    <span class="cert-btn-mini">Ver Certificado</span>
+                    <span class="mc-btn mc-btn-primary" style="font-size: 0.8rem; padding: 6px 12px; margin-top: auto;">Ver
+                        Certificado</span>
                 </a>
             <?php endforeach; ?>
         </div>
@@ -181,7 +182,7 @@ class System_Cursos_Shortcode_Certificado
             </div>
 
             <div class="cert-actions">
-                <button onclick="window.print();" class="cert-print-btn">
+                <button onclick="window.print();" class="mc-btn mc-btn-secondary">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="6 9 6 2 18 2 18 9"></polyline>

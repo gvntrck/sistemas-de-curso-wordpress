@@ -216,6 +216,76 @@
     border: 1px solid var(--error-border);
 }
 
+/* Buttons */
+.mc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--radius-btn);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    line-height: 1.5;
+    border: none;
+    gap: 8px;
+}
+
+.mc-btn:hover {
+    transform: translateY(-1px);
+}
+
+.mc-btn:active {
+    transform: translateY(1px);
+}
+
+.mc-btn-primary {
+    background-color: var(--accent-color);
+    color: #fff;
+    box-shadow: 0 4px 10px var(--accent-shadow);
+}
+
+.mc-btn-primary:hover {
+    background-color: #e6b00f;
+}
+
+.mc-btn-secondary {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #444;
+}
+
+.mc-btn-secondary:hover {
+    background-color: #444;
+    border-color: #555;
+}
+
+/* Certificado Print Button (Mapping to Secondary) */
+.cert-print-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--radius-btn);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    gap: 8px;
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #444;
+}
+
+.cert-print-btn:hover {
+    background-color: #444;
+    border-color: #555;
+    transform: translateY(-1px);
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .mc-container {
