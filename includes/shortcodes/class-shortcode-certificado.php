@@ -118,7 +118,7 @@ class System_Cursos_Shortcode_Certificado
         $show_data = get_post_meta($cert_id, '_cert_show_data', true);
 
         // URL da fonte Google Fonts
-        $font_url = 'https://fonts.googleapis.com/css2?family=' . urlencode(str_replace(' ', '+', $font_family)) . ':wght@400;700&display=swap';
+        $font_url = 'https://fonts.googleapis.com/css2?family=' . str_replace(' ', '+', $font_family) . ':wght@400;700&display=swap';
 
         $user_data = get_userdata($user_id);
         $nome_aluno = $user_data->first_name . ' ' . $user_data->last_name;
