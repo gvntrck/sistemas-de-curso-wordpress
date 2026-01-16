@@ -13,7 +13,7 @@ class System_Cursos_Shortcode_Listar_Aulas
      * Gerencia o controle de acesso por curso, marcação de aula concluída e requisições AJAX para troca de conteúdo sem reaload.
      *
      * @package SistemaCursos
-     * @version 1.0.8
+     * @version 1.1.2
      */
     public function __construct()
     {
@@ -67,7 +67,7 @@ class System_Cursos_Shortcode_Listar_Aulas
 
         if (!$isAdmin) {
             if ($currentUserId <= 0) {
-                return System_Cursos_Config::get_message('access_denied_login');
+                return System_Cursos_Config::get_message('access_denied');
             }
 
             if (class_exists('System_Cursos_Access_Control') && !System_Cursos_Access_Control::has_access($currentUserId, $cursoId)) {
