@@ -10,11 +10,12 @@ class System_Cursos_Shortcode_Resultado_Busca
      *
      * Shortcode [resultado-busca]
      * Exibe os resultados de uma pesquisa realizada no site.
+     * Filtra os resultados para exibir apenas Cursos, Trilhas e Aulas.
      * Renderiza cards diferenciados para Cursos (com capa), Trilhas e Aulas (lista simples),
      * mantendo a consistência visual com o restante do tema.
      *
      * @package SistemaCursos
-     * @version 1.0.8
+     * @version 1.0.9
      */
     public function __construct()
     {
@@ -34,7 +35,7 @@ class System_Cursos_Shortcode_Resultado_Busca
         // Argumentos da query
         $args = array(
             's' => $search_term,
-            'post_type' => 'any',
+            'post_type' => array('trilha', 'curso', 'aula'),
             'post_status' => 'publish',
             'posts_per_page' => -1,
         );

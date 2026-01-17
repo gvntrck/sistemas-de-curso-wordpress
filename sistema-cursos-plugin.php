@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sistema de Cursos Personalizado
  * Description: Plugin que unifica todos os snippets do sistema de cursos (Cadastro, Certificados, Aulas, Trilhas, Controle de Acesso, etc) em um único local.
- * Version: 1.2.19
+ * Version: 1.2.20
  * Author: Giovani Tureck
  * Text Domain: sistema-cursos
  */
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
  * Carrega dependências, define hooks de ativação e configura o menu de documentação no admin.
  *
  * @package SistemaCursos
- * @version 1.2.19
+ * @version 1.2.20
  */
 
 // 1. Carregar Classes do Core
@@ -75,7 +75,7 @@ function sistema_cursos_activate()
     $cpt_manager->register_cpts();
 
     flush_rewrite_rules();
-    update_option('sistema_cursos_version', '1.2.19');
+    update_option('sistema_cursos_version', '1.2.20');
 }
 
 /**
@@ -87,7 +87,7 @@ add_action('init', 'sistema_cursos_check_version', 99);
 
 function sistema_cursos_check_version()
 {
-    $current_version = '1.2.19';
+    $current_version = '1.2.20';
     $db_version = get_option('sistema_cursos_version');
 
     if ($db_version !== $current_version) {
