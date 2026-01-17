@@ -7,17 +7,23 @@ jQuery(document).ready(function ($) {
 
     $('#btn_upload_capa').on('click', function (e) {
         e.preventDefault();
+
+        // Se já existe uma instância do uploader, abre ela.
         if (mediaUploader) {
             mediaUploader.open();
             return;
         }
 
-        mediaUploader = wp.media.frames.file_frame = wp.media({
+        // Cria a instância do media uploader
+        mediaUploader = wp.media({
             title: 'Escolher Capa Vertical',
-            button: { text: 'Usar esta imagem' },
+            button: {
+                text: 'Usar esta imagem'
+            },
             multiple: false
         });
 
+        // Quando uma imagem é selecionada, roda o callback
         mediaUploader.on('select', function () {
             var attachment = mediaUploader.state().get('selection').first().toJSON();
             $('#capa_vertical_input').val(attachment.id);
@@ -25,6 +31,7 @@ jQuery(document).ready(function ($) {
             $('#btn_remove_capa').show();
         });
 
+        // Abre o modal
         mediaUploader.open();
     });
 
