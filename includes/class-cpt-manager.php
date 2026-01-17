@@ -35,7 +35,7 @@ class System_Cursos_CPT_Manager
             'add_new' => 'Nova Trilha',
             'add_new_item' => 'Adicionar Nova Trilha',
             'edit_item' => 'Editar Trilha',
-            'all_items' => 'Todas as Trilhas',
+            'all_items' => 'Trilhas',
         ];
         register_post_type('trilha', [
             'labels' => $labels_trilha,
@@ -56,7 +56,7 @@ class System_Cursos_CPT_Manager
             'add_new' => 'Novo Curso',
             'add_new_item' => 'Adicionar Novo Curso',
             'edit_item' => 'Editar Curso',
-            'all_items' => 'Todos os Cursos',
+            'all_items' => 'Cursos',
         ];
         register_post_type('curso', [
             'labels' => $labels_curso,
@@ -77,7 +77,7 @@ class System_Cursos_CPT_Manager
             'add_new' => 'Nova Aula',
             'add_new_item' => 'Adicionar Nova Aula',
             'edit_item' => 'Editar Aula',
-            'all_items' => 'Todas as Aulas',
+            'all_items' => 'Aulas',
         ];
         register_post_type('aula', [
             'labels' => $labels_aula,
@@ -98,7 +98,7 @@ class System_Cursos_CPT_Manager
             'add_new' => 'Novo Grupo',
             'add_new_item' => 'Adicionar Novo Grupo',
             'edit_item' => 'Editar Grupo',
-            'all_items' => 'Todos os Grupos',
+            'all_items' => 'Grupos',
         ];
         register_post_type('grupo', [
             'labels' => $labels_grupo,
@@ -384,12 +384,12 @@ class System_Cursos_CPT_Manager
 
         <!-- Template Hidden -->
         <script type="text/template" id="tmpl-arquivo-row">
-                                                                                    <div class="repeater-item">
-                                                                                        <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
-                                                                                        <button type="button" class="button btn-upload-file">Upload</button>
-                                                                                        <button type="button" class="button button-link-delete btn-remove-row">X</button>
-                                                                                    </div>
-                                                                                </script>
+                                                                                            <div class="repeater-item">
+                                                                                                <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
+                                                                                                <button type="button" class="button btn-upload-file">Upload</button>
+                                                                                                <button type="button" class="button button-link-delete btn-remove-row">X</button>
+                                                                                            </div>
+                                                                                        </script>
 
         <?php
     }

@@ -34,7 +34,7 @@ class System_Cursos_Certificates
             'edit_item' => 'Editar Modelo',
             'new_item' => 'Novo Modelo',
             'view_item' => 'Ver Modelo',
-            'all_items' => 'Todos os Modelos',
+            'all_items' => 'Certificados',
             'search_items' => 'Buscar Modelos',
             'not_found' => 'Nenhum modelo encontrado',
             'not_found_in_trash' => 'Nenhum modelo na lixeira'

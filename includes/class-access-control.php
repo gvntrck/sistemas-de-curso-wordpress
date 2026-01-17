@@ -17,7 +17,7 @@ class System_Cursos_Access_Control
     public function __construct()
     {
         add_action('init', [$this, 'create_table']);
-        add_action('admin_menu', [$this, 'admin_menu']);
+        add_action('admin_menu', [$this, 'admin_menu'], 20);
         add_action('admin_init', [$this, 'admin_process']);
     }
 
