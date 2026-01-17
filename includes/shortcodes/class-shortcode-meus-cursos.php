@@ -74,10 +74,17 @@ class System_Cursos_Shortcode_Meus_Cursos
                     // Tenta pegar imagem destacada, se não, capa vertical, se não placeholder
                     $thumb_url = get_the_post_thumbnail_url($id, 'large');
                     if (!$thumb_url) {
-                        $capa = get_field('capa_vertical', $id);
-                        if (is_array($capa) && !empty($capa['url'])) {
+                        // Native Meta Logic replacement for get_field('capa_vertical', $id)
+                        $capa = get_post_meta($id, 'capa_vertical', true);
+
+                        // Handle native image ID or legacy URL
+                        if (is_numeric($capa) && $capa > 0) {
+                            $thumb_url = wp_get_attachment_image_url($capa, 'large'); // or 'full'
+                        } elseif (is_array($capa) && !empty($capa['url'])) {
+                            // Legacy ACF image object
                             $thumb_url = $capa['url'];
-                        } elseif (is_string($capa) && $capa) {
+                        } elseif (is_string($capa) && !empty($capa)) {
+                            // Legacy URL string
                             $thumb_url = $capa;
                         } else {
                             $thumb_url = 'https://via.placeholder.com/600x338/333/FDC110?text=' . urlencode($titulo);

@@ -118,8 +118,10 @@ class System_Cursos_Shortcode_Listar_Aulas
         }
 
         // Prepare Data
-        $embed = get_field('embed_do_vimeo', $aulaId) ?: get_post_meta($aulaId, 'embed_do_vimeo', true);
-        $descricao = get_field('descricao', $aulaId) ?: get_post_meta($aulaId, 'descricao', true);
+        // Prepare Data
+        // Native Meta replacement
+        $embed = get_post_meta($aulaId, 'embed_do_vimeo', true);
+        $descricao = get_post_meta($aulaId, 'descricao', true);
 
         $titulo = esc_html(get_the_title($aulaId));
         $descricaoHtml = $descricao ? wp_kses_post($descricao) : '';
@@ -262,8 +264,8 @@ class System_Cursos_Shortcode_Listar_Aulas
             wp_send_json_error(['message' => 'Aula não encontrada.']);
         }
 
-        $embed = get_field('embed_do_vimeo', $aulaId) ?: get_post_meta($aulaId, 'embed_do_vimeo', true);
-        $descricao = get_field('descricao', $aulaId) ?: get_post_meta($aulaId, 'descricao', true);
+        $embed = get_post_meta($aulaId, 'embed_do_vimeo', true);
+        $descricao = get_post_meta($aulaId, 'descricao', true);
 
         wp_send_json_success([
             'titulo' => esc_html(get_the_title($aulaId)),
@@ -275,7 +277,7 @@ class System_Cursos_Shortcode_Listar_Aulas
 
     private function get_anexos_html($aulaId)
     {
-        $arquivos = get_field('arquivos', $aulaId);
+        $arquivos = get_post_meta($aulaId, 'arquivos', true);
 
         if (empty($arquivos) || !is_array($arquivos)) {
             return '';

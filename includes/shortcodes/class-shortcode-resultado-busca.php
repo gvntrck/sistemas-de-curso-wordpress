@@ -67,10 +67,12 @@ class System_Cursos_Shortcode_Resultado_Busca
                                 // Lógica para Curso: Card com Imagem (Capa Vertical)
                                 $capa_vertical = get_post_meta(get_the_ID(), 'capa_vertical', true);
 
-                                // Se for ID, pega a URL
-                                if (is_numeric($capa_vertical) && $capa_vertical > 0) {
-                                    $thumb_url = wp_get_attachment_url($capa_vertical);
-                                } else {
+                                // Robust Logic for Image (ACF Array, Native ID, or URL String)
+                                if (is_array($capa_vertical) && isset($capa_vertical['url'])) {
+                                    $thumb_url = $capa_vertical['url'];
+                                } elseif (is_numeric($capa_vertical) && $capa_vertical > 0) {
+                                    $thumb_url = wp_get_attachment_image_url($capa_vertical, 'large');
+                                } elseif (is_string($capa_vertical) && !empty($capa_vertical)) {
                                     $thumb_url = $capa_vertical;
                                 }
 

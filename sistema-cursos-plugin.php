@@ -23,6 +23,7 @@ if (!defined('ABSPATH')) {
  */
 
 // 1. Carregar Classes do Core
+require_once plugin_dir_path(__FILE__) . 'includes/class-cpt-manager.php';
 require_once plugin_dir_path(__FILE__) . 'includes/role-aluno.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-config.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-assets.php';
@@ -43,6 +44,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-si
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-redireciona-aula.php';
 
 // 2. Inicializar Assets Globais
+new System_Cursos_CPT_Manager();
 new System_Cursos_Assets();
 new System_Cursos_Shortcode_Minha_Conta();
 new System_Cursos_Shortcode_Cadastro();
