@@ -180,6 +180,26 @@ class System_Cursos_CPT_Manager
             'side',
             'default'
         );
+
+        // Gerenciamento de Cursos na Trilha
+        add_meta_box(
+            'trilha_cursos_manager',
+            'Gerenciar Cursos da Trilha',
+            [$this, 'render_trilha_cursos_metabox'],
+            'trilha',
+            'normal',
+            'default'
+        );
+
+        // Gerenciamento de Aulas no Curso
+        add_meta_box(
+            'curso_aulas_manager',
+            'Gerenciar Aulas do Curso',
+            [$this, 'render_curso_aulas_metabox'],
+            'curso',
+            'normal',
+            'default'
+        );
     }
 
     public function admin_scripts($hook)
@@ -223,6 +243,54 @@ class System_Cursos_CPT_Manager
         <p class="description">Esta descrição será exibida nos cards de listagem de trilhas.</p>
         </p>
         <?php
+    }
+
+    /**
+     * Renderiza Metabox de Cursos na Trilha
+     */
+    public function render_trilha_cursos_metabox($post)
+    {
+        // Buscar todos os cursos
+        $cursos = get_posts([
+            'post_type' => 'curso',
+            'numberposts' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC',
+            'post_status' => 'publish'
+        ]);
+
+        echo '<div style="max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid #ddd; background: #fff;">';
+
+        if (empty($cursos)) {
+            echo '<p>Nenhum curso encontrado.</p>';
+        } else {
+            foreach ($cursos as $curso) {
+                // Verifica a qual trilha o curso pertence atualmente
+                $current_trilha_id = get_post_meta($curso->ID, 'trilha', true);
+
+                // Checkbox marcado se pertencer a ESTA trilha
+                $checked = ($current_trilha_id == $post->ID) ? 'checked' : '';
+
+                // Texto extra se pertencer a OUTRA trilha
+                $extra_info = '';
+                if ($current_trilha_id && $current_trilha_id != $post->ID) {
+                    $other_trilha = get_post($current_trilha_id);
+                    $trilha_name = $other_trilha ? $other_trilha->post_title : 'Outra Trilha (ID: ' . $current_trilha_id . ')';
+                    $extra_info = ' <span style="color: #d63638; font-size: 0.9em;">(Atualmente na trilha: <strong>' . esc_html($trilha_name) . '</strong>)</span>';
+                }
+
+                echo '<div style="margin-bottom: 5px;">';
+                echo '<label>';
+                echo '<input type="checkbox" name="trilha_cursos[]" value="' . esc_attr($curso->ID) . '" ' . $checked . '> ';
+                echo '<strong>' . esc_html($curso->post_title) . '</strong>';
+                echo $extra_info;
+                echo '</label>';
+                echo '</div>';
+            }
+        }
+
+        echo '</div>';
+        echo '<p class="description">Selecione os cursos que pertencem a esta trilha. Atenção: Se um curso já estiver em outra trilha, ele será movido para esta.</p>';
     }
 
     /**
@@ -274,6 +342,54 @@ class System_Cursos_CPT_Manager
             </p>
         </div>
         <?php
+    }
+
+    /**
+     * Renderiza Metabox de Aulas no Curso
+     */
+    public function render_curso_aulas_metabox($post)
+    {
+        // Buscar todas as aulas
+        $aulas = get_posts([
+            'post_type' => 'aula',
+            'numberposts' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC',
+            'post_status' => 'publish'
+        ]);
+
+        echo '<div style="max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid #ddd; background: #fff;">';
+
+        if (empty($aulas)) {
+            echo '<p>Nenhuma aula encontrada.</p>';
+        } else {
+            foreach ($aulas as $aula) {
+                // Verifica a qual curso a aula pertence atualmente
+                $current_curso_id = get_post_meta($aula->ID, 'curso', true);
+
+                // Checkbox marcado se pertencer a ESTE curso
+                $checked = ($current_curso_id == $post->ID) ? 'checked' : '';
+
+                // Texto extra se pertencer a OUTRO curso
+                $extra_info = '';
+                if ($current_curso_id && $current_curso_id != $post->ID) {
+                    $other_curso = get_post($current_curso_id);
+                    $curso_name = $other_curso ? $other_curso->post_title : 'Outro Curso (ID: ' . $current_curso_id . ')';
+                    $extra_info = ' <span style="color: #d63638; font-size: 0.9em;">(Atualmente no curso: <strong>' . esc_html($curso_name) . '</strong>)</span>';
+                }
+
+                echo '<div style="margin-bottom: 5px;">';
+                echo '<label>';
+                echo '<input type="checkbox" name="curso_aulas[]" value="' . esc_attr($aula->ID) . '" ' . $checked . '> ';
+                echo '<strong>' . esc_html($aula->post_title) . '</strong>';
+                echo $extra_info;
+                echo '</label>';
+                echo '</div>';
+            }
+        }
+
+        echo '</div>';
+        echo '<p class="description">Selecione as aulas que pertencem a este curso. Atenção: Se uma aula já estiver em outro curso, ela será movida para este.</p>';
     }
 
     /**
@@ -378,12 +494,12 @@ class System_Cursos_CPT_Manager
 
         <!-- Template Hidden -->
         <script type="text/template" id="tmpl-arquivo-row">
-                                                                                                    <div class="repeater-item">
-                                                                                                        <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
-                                                                                                        <button type="button" class="button btn-upload-file">Upload</button>
-                                                                                                        <button type="button" class="button button-link-delete btn-remove-row">X</button>
-                                                                                                    </div>
-                                                                                                </script>
+                                                                                                            <div class="repeater-item">
+                                                                                                                <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
+                                                                                                                <button type="button" class="button btn-upload-file">Upload</button>
+                                                                                                                <button type="button" class="button button-link-delete btn-remove-row">X</button>
+                                                                                                            </div>
+                                                                                                        </script>
 
         <?php
     }
@@ -406,11 +522,42 @@ class System_Cursos_CPT_Manager
             return;
         }
 
+        $post_type = get_post_type($post_id);
+
         // Salvar Campos
 
         // 1. Trilha (Post Object ID)
         if (isset($_POST['trilha'])) {
             update_post_meta($post_id, 'trilha', sanitize_text_field($_POST['trilha']));
+        }
+
+        // --- NOVO: Salvar Cursos da Trilha (Bidirecional) ---
+        if ($post_type === 'trilha') {
+            // Cursos selecionados no checkbox
+            $cursos_selecionados = isset($_POST['trilha_cursos']) ? (array) $_POST['trilha_cursos'] : [];
+            $cursos_selecionados = array_map('intval', $cursos_selecionados);
+
+            // 1. Atualizar cursos selecionados para apontarem para esta trilha
+            foreach ($cursos_selecionados as $curso_id) {
+                update_post_meta($curso_id, 'trilha', $post_id);
+            }
+
+            // 2. Encontrar cursos que estavam nesta trilha mas foram desmarcados
+            // Busca todos os cursos que tem 'trilha' = $post_id
+            $cursos_na_trilha = get_posts([
+                'post_type' => 'curso',
+                'numberposts' => -1,
+                'meta_key' => 'trilha',
+                'meta_value' => $post_id,
+                'fields' => 'ids'
+            ]);
+
+            foreach ($cursos_na_trilha as $cid) {
+                if (!in_array($cid, $cursos_selecionados)) {
+                    // Remover a trilha deste curso (orphan)
+                    delete_post_meta($cid, 'trilha');
+                }
+            }
         }
 
         // 2. Capa Vertical (ID)
@@ -421,6 +568,34 @@ class System_Cursos_CPT_Manager
         // 3. Curso (Relacionamento da Aula)
         if (isset($_POST['curso'])) {
             update_post_meta($post_id, 'curso', sanitize_text_field($_POST['curso']));
+        }
+
+        // --- NOVO: Salvar Aulas do Curso (Bidirecional) ---
+        if ($post_type === 'curso') {
+            // Aulas selecionadas no checkbox
+            $aulas_selecionadas = isset($_POST['curso_aulas']) ? (array) $_POST['curso_aulas'] : [];
+            $aulas_selecionadas = array_map('intval', $aulas_selecionadas);
+
+            // 1. Atualizar aulas selecionadas para apontarem para este curso
+            foreach ($aulas_selecionadas as $aula_id) {
+                update_post_meta($aula_id, 'curso', $post_id);
+            }
+
+            // 2. Encontrar aulas que estavam neste curso mas foram desmarcadas
+            $aulas_no_curso = get_posts([
+                'post_type' => 'aula',
+                'numberposts' => -1,
+                'meta_key' => 'curso',
+                'meta_value' => $post_id,
+                'fields' => 'ids'
+            ]);
+
+            foreach ($aulas_no_curso as $aid) {
+                if (!in_array($aid, $aulas_selecionadas)) {
+                    // Remover o curso desta aula
+                    delete_post_meta($aid, 'curso');
+                }
+            }
         }
 
         // 4. Embed Vimeo

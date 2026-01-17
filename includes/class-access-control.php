@@ -66,9 +66,19 @@ class System_Cursos_Access_Control
      */
     public static function has_access($user_id, $curso_id)
     {
+        $source = self::get_access_source($user_id, $curso_id);
+        return $source !== false;
+    }
+
+    /**
+     * Retorna a fonte do acesso (Direto, Grupo ou Trilha)
+     * Retorna array com detalhes ou false se não tiver acesso.
+     */
+    public static function get_access_source($user_id, $curso_id)
+    {
         // 1. Acesso Direto (Banco de Dados)
         if (self::check_direct_access($user_id, $curso_id)) {
-            return true;
+            return ['type' => 'direct', 'label' => 'Matrícula Direta'];
         }
 
         // 2. Verificar Grupos
@@ -79,16 +89,24 @@ class System_Cursos_Access_Control
 
         // 2a. Grupos no Curso
         $curso_grupos = get_post_meta($curso_id, '_grupos_permitidos', true);
-        if (is_array($curso_grupos) && !empty(array_intersect($user_grupos, $curso_grupos))) {
-            return true;
+        if (is_array($curso_grupos)) {
+            $intersect = array_intersect($user_grupos, $curso_grupos);
+            if (!empty($intersect)) {
+                $g_id = reset($intersect); // Pega o primeiro grupo encontrado
+                return ['type' => 'group', 'label' => 'Grupo: ' . get_the_title($g_id), 'group_id' => $g_id];
+            }
         }
 
-        // 2b. Grupos na Trilha (Pai)
+        // 2b. Grupos na Trilha (Pai) - Opcional, mantido para compatibilidade se usar Trilhas
         $trilha_id = get_post_meta($curso_id, 'trilha', true);
         if ($trilha_id) {
             $trilha_grupos = get_post_meta($trilha_id, '_grupos_permitidos', true);
-            if (is_array($trilha_grupos) && !empty(array_intersect($user_grupos, $trilha_grupos))) {
-                return true;
+            if (is_array($trilha_grupos)) {
+                $intersect = array_intersect($user_grupos, $trilha_grupos);
+                if (!empty($intersect)) {
+                    $g_id = reset($intersect);
+                    return ['type' => 'group_trilha', 'label' => 'Trilha/Grupo: ' . get_the_title($g_id), 'group_id' => $g_id];
+                }
             }
         }
 
@@ -295,13 +313,71 @@ class System_Cursos_Access_Control
         global $wpdb;
         $table_name = $wpdb->prefix . 'acesso_cursos';
 
-        return $wpdb->get_col($wpdb->prepare(
+        // 1. Acesso Direto (Banco de Dados)
+        $direct_ids = $wpdb->get_col($wpdb->prepare(
             "SELECT curso_id FROM $table_name 
              WHERE user_id = %d 
              AND status = 'ativo' 
              AND (data_fim IS NULL OR data_fim >= NOW())",
             $user_id
         ));
+
+        // 2. Acesso via Grupos (Cursos diretos e Trilhas)
+        $group_course_ids = [];
+        $user_grupos = get_user_meta($user_id, '_aluno_grupos', true);
+
+        if (!empty($user_grupos) && is_array($user_grupos)) {
+            $conteudos_ids = [];
+            foreach ($user_grupos as $g_id) {
+                // Conteúdos salvos no grupo (Curso ID ou Trilha ID)
+                $c = get_post_meta($g_id, '_grupo_conteudos', true);
+                if (is_array($c)) {
+                    $conteudos_ids = array_merge($conteudos_ids, $c);
+                }
+            }
+            $conteudos_ids = array_unique($conteudos_ids);
+
+            if (!empty($conteudos_ids)) {
+                // Verificar tipos para separar Cursos de Trilhas
+                $conteudos_objects = get_posts([
+                    'post_type' => ['curso', 'trilha'],
+                    'post__in' => $conteudos_ids,
+                    'posts_per_page' => -1,
+                ]);
+
+                $trilha_ids = [];
+                foreach ($conteudos_objects as $obj) {
+                    if ($obj->post_type === 'curso') {
+                        $group_course_ids[] = $obj->ID;
+                    } elseif ($obj->post_type === 'trilha') {
+                        $trilha_ids[] = $obj->ID;
+                    }
+                }
+
+                // Buscar cursos das trilhas encontradas (Recursividade Trilha -> Cursos)
+                if (!empty($trilha_ids)) {
+                    $child_courses = get_posts([
+                        'post_type' => 'curso',
+                        'posts_per_page' => -1,
+                        'meta_query' => [
+                            [
+                                'key' => 'trilha',
+                                'value' => $trilha_ids,
+                                'compare' => 'IN'
+                            ]
+                        ],
+                        'fields' => 'ids'
+                    ]);
+                    if (!empty($child_courses)) {
+                        $group_course_ids = array_merge($group_course_ids, $child_courses);
+                    }
+                }
+            }
+        }
+
+        // Combinar e remover duplicatas
+        $all_ids = array_merge($direct_ids, $group_course_ids);
+        return array_map('intval', array_unique($all_ids));
     }
 
     public static function get_detailed_progress($user_id, $curso_id)
@@ -993,9 +1069,8 @@ class System_Cursos_Access_Control
             <div
                 style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
                 <?php
-                $cursos_com_acesso = array_filter($cursos, function ($c) use ($acessos_map) {
-                    $acesso = $acessos_map[$c->ID] ?? null;
-                    return $acesso && $acesso->status === 'ativo' && (!$acesso->data_fim || strtotime($acesso->data_fim) >= time());
+                $cursos_com_acesso = array_filter($cursos, function ($c) use ($user_id) {
+                    return self::has_access($user_id, $c->ID);
                 });
 
                 if (empty($cursos_com_acesso)): ?>
@@ -1071,7 +1146,13 @@ class System_Cursos_Access_Control
                     <tbody>
                         <?php foreach ($cursos as $curso):
                             $acesso = isset($acessos_map[$curso->ID]) ? $acessos_map[$curso->ID] : null;
-                            $tem_acesso = $acesso && $acesso->status === 'ativo' && (!$acesso->data_fim || strtotime($acesso->data_fim) >= time());
+
+                            // Check for Group Access if no Direct Access
+                            $access_source = self::get_access_source($user->ID, $curso->ID);
+
+                            $tem_acesso = ($access_source !== false);
+                            $is_group_access = ($access_source && in_array($access_source['type'], ['group', 'group_trilha']));
+
                             $expirado = $acesso && $acesso->status === 'ativo' && $acesso->data_fim && strtotime($acesso->data_fim) < time();
                             ?>
                             <tr>
@@ -1079,20 +1160,30 @@ class System_Cursos_Access_Control
                                         <?php echo esc_html($curso->post_title); ?>
                                     </strong></td>
                                 <td>
-                                    <?php if (!$acesso): ?>
-                                        <span style="color: #9ca3af;">Sem acesso</span>
-                                    <?php elseif ($expirado): ?>
-                                        <span style="color: #f59e0b; font-weight: 600;">Expirado</span>
-                                    <?php elseif ($acesso->status === 'ativo'): ?>
-                                        <span style="color: #22c55e; font-weight: 600;">Ativo</span>
-                                    <?php elseif ($acesso->status === 'suspenso'): ?>
-                                        <span style="color: #6b7280; font-weight: 600;">Suspenso</span>
+                                    <?php if (!$tem_acesso): ?>
+                                        <?php if ($expirado): ?>
+                                            <span style="color: #f59e0b; font-weight: 600;">Expirado</span>
+                                        <?php else: ?>
+                                            <span style="color: #9ca3af;">Sem acesso</span>
+                                        <?php endif; ?>
                                     <?php else: ?>
-                                        <span style="color: #ef4444; font-weight: 600;">Revogado</span>
+                                        <?php if ($is_group_access): ?>
+                                            <span
+                                                style="color: #2563eb; font-weight: 600; background: #dbeafe; padding: 2px 8px; border-radius: 4px;">Utilizando
+                                                <?php echo esc_html($access_source['label']); ?></span>
+                                        <?php elseif ($acesso && $acesso->status === 'ativo'): ?>
+                                            <span style="color: #22c55e; font-weight: 600;">Ativo (Manual)</span>
+                                        <?php elseif ($acesso && $acesso->status === 'suspenso'): ?>
+                                            <span style="color: #6b7280; font-weight: 600;">Suspenso</span>
+                                        <?php else: ?>
+                                            <span style="color: #ef4444; font-weight: 600;">Revogado</span>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php if ($acesso && $acesso->data_fim): ?>
+                                    <?php if ($is_group_access): ?>
+                                        <em>Gerenciado pelo Grupo</em>
+                                    <?php elseif ($acesso && $acesso->data_fim): ?>
                                         <?php echo date('d/m/Y', strtotime($acesso->data_fim)); ?>
                                     <?php elseif ($acesso && $acesso->status === 'ativo'): ?>
                                         <em>Vitalício</em>
@@ -1104,7 +1195,9 @@ class System_Cursos_Access_Control
                                     <?php echo $acesso ? date('d/m/Y', strtotime($acesso->created_at)) : '—'; ?>
                                 </td>
                                 <td>
-                                    <?php if (!$acesso || $acesso->status !== 'ativo' || $expirado): ?>
+                                    <?php if ($is_group_access): ?>
+                                        <small style="color:#666;">Acesso via grupo. Edite o grupo ou remova o aluno dele.</small>
+                                    <?php elseif (!$acesso || $acesso->status !== 'ativo' || $expirado): ?>
                                         <button type="submit" name="acao_rapida" value="ativar_<?php echo $curso->ID; ?>"
                                             class="button button-primary button-small">
                                             Conceder Acesso
@@ -1119,6 +1212,7 @@ class System_Cursos_Access_Control
                                             Revogar
                                         </button>
                                     <?php endif; ?>
+
                                     <?php if ($acesso && $acesso->status === 'suspenso'): ?>
                                         <button type="submit" name="acao_rapida" value="reativar_<?php echo $curso->ID; ?>"
                                             class="button button-primary button-small">
