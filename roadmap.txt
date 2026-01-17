@@ -5,3 +5,5 @@
 
  • alterar senha do aluno no painel do aluno
  • página de primeiro acesso para criar a senha
+ 
+ • criar CPTs, remover dependencia do ACF 

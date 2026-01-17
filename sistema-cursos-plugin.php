@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sistema de Cursos Personalizado
  * Description: Plugin que unifica todos os snippets do sistema de cursos (Cadastro, Certificados, Aulas, Trilhas, Controle de Acesso, etc) em um único local.
- * Version: 1.1.12
+ * Version: 1.1.13
  * Author: Equipe de Desenvolvimento
  * Text Domain: sistema-cursos
  */

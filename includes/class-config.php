@@ -24,6 +24,9 @@ class System_Cursos_Config
             'access_denied' => '<div class="mc-alert mc-error">
                 Você precisa estar logado para ver esta página. <a href="' . wp_login_url(get_permalink()) . '" style="color: inherit; text-decoration: underline;">Fazer login</a>
             </div>',
+            'not_enrolled' => '<div class="mc-alert mc-error">
+                Você não tem permissão para acessar este curso.
+            </div>',
             'save_success' => '<div class="mc-alert mc-success">Dados atualizados com sucesso!</div>',
             'save_error' => '<div class="mc-alert mc-error">Ocorreu um erro ao salvar os dados. Tente novamente.</div>',
         ];

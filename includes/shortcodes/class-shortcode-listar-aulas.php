@@ -71,7 +71,7 @@ class System_Cursos_Shortcode_Listar_Aulas
             }
 
             if (class_exists('System_Cursos_Access_Control') && !System_Cursos_Access_Control::has_access($currentUserId, $cursoId)) {
-                return System_Cursos_Config::get_message('access_denied');
+                return System_Cursos_Config::get_message('not_enrolled');
             }
         }
 
