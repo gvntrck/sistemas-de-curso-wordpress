@@ -139,9 +139,9 @@ class System_Cursos_CPT_Manager
             wp_enqueue_media();
             wp_enqueue_script(
                 'sistema-cursos-admin',
-                plugin_dir_url(dirname(__DIR__)) . 'assets/js/admin-metaboxes.js',
+                plugins_url('assets/js/admin-metaboxes.js', dirname(__DIR__) . '/sistema-cursos-plugin.php'),
                 ['jquery'],
-                '1.0.1', // Bump version to force cache refresh
+                '1.0.2', // Bump version again
                 true
             );
 
@@ -305,12 +305,12 @@ class System_Cursos_CPT_Manager
 
         <!-- Template Hidden -->
         <script type="text/template" id="tmpl-arquivo-row">
-                            <div class="repeater-item">
-                                <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
-                                <button type="button" class="button btn-upload-file">Upload</button>
-                                <button type="button" class="button button-link-delete btn-remove-row">X</button>
-                            </div>
-                        </script>
+                                    <div class="repeater-item">
+                                        <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
+                                        <button type="button" class="button btn-upload-file">Upload</button>
+                                        <button type="button" class="button button-link-delete btn-remove-row">X</button>
+                                    </div>
+                                </script>
 
         <?php
     }
