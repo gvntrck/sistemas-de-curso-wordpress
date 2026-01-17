@@ -8,7 +8,7 @@
 
  • criar CPTs, remover dependencia do ACF 
 
- • liberar aula com agenda e mensagem de aula bloqueada até a data de liberação
+ • liberar aula e trilha com agenda e mensagem de aula bloqueada até a data de liberação
 
  • grupo de alunos
  • controle de acesso de aluno para grupo
