@@ -35,7 +35,7 @@ class System_Cursos_Shortcode_Redireciona_Aula
         if ($curso_id) {
             $curso_permalink = get_permalink($curso_id);
             if ($curso_permalink) {
-                $redirect_url = add_query_arg('aula', $aula_id, $curso_permalink);
+                $redirect_url = add_query_arg('target_aula', $aula_id, $curso_permalink);
             }
         }
 
