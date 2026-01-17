@@ -106,6 +106,27 @@ class System_Cursos_Shortcode_Minha_Conta
             if (isset($_POST['estado']))
                 update_user_meta($user_id, 'estado', sanitize_text_field($_POST['estado']));
 
+            // Foto de Perfil
+            if (isset($_FILES['profile_photo']) && !empty($_FILES['profile_photo']['name'])) {
+                require_once(ABSPATH . 'wp-admin/includes/image.php');
+                require_once(ABSPATH . 'wp-admin/includes/file.php');
+                require_once(ABSPATH . 'wp-admin/includes/media.php');
+
+                $attachment_id = media_handle_upload('profile_photo', 0);
+
+                if (!is_wp_error($attachment_id)) {
+                    update_user_meta($user_id, 'local_user_avatar_attachment_id', $attachment_id);
+                }
+            }
+
+            // Alterar Senha
+            if (!empty($_POST['new_password'])) {
+                if (!empty($_POST['confirm_password']) && $_POST['new_password'] === $_POST['confirm_password']) {
+                    wp_update_user(['ID' => $user_id, 'user_pass' => $_POST['new_password']]);
+                    // Nota: Alterar a senha faz o logout do usuário por segurança no WP.
+                }
+            }
+
             $message = System_Cursos_Config::get_message('save_success');
         }
 
@@ -158,7 +179,7 @@ class System_Cursos_Shortcode_Minha_Conta
             </div>
 
             <!-- Form de Edição -->
-            <form method="post" action="">
+            <form method="post" action="" enctype="multipart/form-data">
                 <?php wp_nonce_field('save_minha_conta', 'mc_nonce'); ?>
 
                 <div class="mc-body">
@@ -232,6 +253,27 @@ class System_Cursos_Shortcode_Minha_Conta
                             <label class="mc-field-label">Estado (UF)</label>
                             <input type="text" name="estado" class="mc-input" value="<?php echo esc_attr($estado); ?>"
                                 placeholder="SP" maxlength="2">
+                        </div>
+                    </div>
+
+                    <!-- Configurações da Conta -->
+                    <h3 class="mc-section-title">Configurações da Conta</h3>
+                    <div class="mc-grid">
+                        <div class="mc-field-group">
+                            <label class="mc-field-label">Foto de Perfil</label>
+                            <input type="file" name="profile_photo" class="mc-input" accept="image/*">
+                        </div>
+                    </div>
+
+                    <h3 class="mc-section-title">Alterar Senha</h3>
+                    <div class="mc-grid">
+                        <div class="mc-field-group">
+                            <label class="mc-field-label">Nova Senha</label>
+                            <input type="password" name="new_password" class="mc-input" placeholder="Digite a nova senha">
+                        </div>
+                        <div class="mc-field-group">
+                            <label class="mc-field-label">Confirmar Senha</label>
+                            <input type="password" name="confirm_password" class="mc-input" placeholder="Confirme a nova senha">
                         </div>
                     </div>
                 </div>
