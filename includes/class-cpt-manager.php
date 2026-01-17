@@ -89,6 +89,27 @@ class System_Cursos_CPT_Manager
             'rewrite' => ['slug' => 'aula'],
             'has_archive' => false,
         ]);
+
+        // 4. Grupo de Alunos
+        $labels_grupo = [
+            'name' => 'Grupos de Alunos',
+            'singular_name' => 'Grupo de Alunos',
+            'menu_name' => 'Grupos de Alunos',
+            'add_new' => 'Novo Grupo',
+            'add_new_item' => 'Adicionar Novo Grupo',
+            'edit_item' => 'Editar Grupo',
+            'all_items' => 'Todos os Grupos',
+        ];
+        register_post_type('grupo', [
+            'labels' => $labels_grupo,
+            'public' => false,
+            'show_ui' => true,
+            'show_in_menu' => true,
+            'menu_icon' => 'dashicons-groups',
+            'supports' => ['title'],
+            'rewrite' => false,
+            'has_archive' => false,
+        ]);
     }
 
     /**
@@ -104,6 +125,16 @@ class System_Cursos_CPT_Manager
             'curso',
             'normal',
             'high'
+        );
+
+        // Permissões de Grupo (Curso)
+        add_meta_box(
+            'curso_group_permissions',
+            'Restrições de Acesso (Grupos)',
+            [$this, 'render_group_permissions_metabox'],
+            'curso',
+            'side',
+            'default'
         );
 
         // Campos da Aula
@@ -134,6 +165,16 @@ class System_Cursos_CPT_Manager
             'trilha',
             'normal',
             'high'
+        );
+
+        // Permissões de Grupo (Trilha)
+        add_meta_box(
+            'trilha_group_permissions',
+            'Restrições de Acesso (Grupos)',
+            [$this, 'render_group_permissions_metabox'],
+            'trilha',
+            'side',
+            'default'
         );
     }
 
@@ -333,12 +374,12 @@ class System_Cursos_CPT_Manager
 
         <!-- Template Hidden -->
         <script type="text/template" id="tmpl-arquivo-row">
-                                                    <div class="repeater-item">
-                                                        <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
-                                                        <button type="button" class="button btn-upload-file">Upload</button>
-                                                        <button type="button" class="button button-link-delete btn-remove-row">X</button>
-                                                    </div>
-                                                </script>
+                                                                    <div class="repeater-item">
+                                                                        <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
+                                                                        <button type="button" class="button btn-upload-file">Upload</button>
+                                                                        <button type="button" class="button button-link-delete btn-remove-row">X</button>
+                                                                    </div>
+                                                                </script>
 
         <?php
     }
@@ -413,5 +454,51 @@ class System_Cursos_CPT_Manager
         if (isset($_POST['descricao_curta'])) {
             update_post_meta($post_id, 'descricao_curta', sanitize_textarea_field($_POST['descricao_curta']));
         }
+
+        // 8. Grupos Permitidos (Curso e Trilha)
+        // Checkbox vazio não envia valor, então precisamos verificar apenas se o nonce passou e salvar vazio se necessário
+        // Mas a lógica de save é genérica. Vamos verificar se é curso ou trilha.
+        $post_type = get_post_type($post_id);
+        if (in_array($post_type, ['curso', 'trilha'])) {
+            $grupos = isset($_POST['grupos_permitidos']) ? (array) $_POST['grupos_permitidos'] : [];
+            $grupos = array_map('intval', $grupos); // Sanitizar IDs
+            update_post_meta($post_id, '_grupos_permitidos', $grupos);
+        }
+    }
+
+    /**
+     * Renderiza Metabox de Permissões de Grupo (Curso e Trilha)
+     */
+    public function render_group_permissions_metabox($post)
+    {
+        wp_nonce_field('sistema_cursos_save_meta', 'sistema_cursos_nonce');
+
+        $grupos_selecionados = get_post_meta($post->ID, '_grupos_permitidos', true);
+        if (!is_array($grupos_selecionados)) {
+            $grupos_selecionados = [];
+        }
+
+        $grupos = get_posts([
+            'post_type' => 'grupo',
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC'
+        ]);
+
+        if (empty($grupos)) {
+            echo '<p class="description">Nenhum grupo de alunos cadastrado. Crie grupos no menu "Grupos de Alunos".</p>';
+            return;
+        }
+
+        echo '<p class="description">Selecione os grupos que terão acesso automático a este conteúdo.</p>';
+        echo '<div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fff;">';
+        foreach ($grupos as $grupo) {
+            $checked = in_array($grupo->ID, $grupos_selecionados) ? 'checked' : '';
+            echo '<label style="display:block; margin-bottom: 5px;">';
+            echo '<input type="checkbox" name="grupos_permitidos[]" value="' . esc_attr($grupo->ID) . '" ' . $checked . '> ';
+            echo esc_html($grupo->post_title);
+            echo '</label>';
+        }
+        echo '</div>';
     }
 }

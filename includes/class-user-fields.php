@@ -215,6 +215,44 @@ class System_Cursos_User_Fields
                 <td><input type="text" name="instagram" id="instagram" value="<?php echo esc_attr($instagram); ?>"
                         class="regular-text" placeholder="@seuusuario" /></td>
             </tr>
+            <!-- Grupos de Alunos -->
+            <?php if (current_user_can('manage_options')): ?>
+                <tr>
+                    <th><label>Grupos de Acesso</label></th>
+                    <td>
+                        <?php
+                        $user_grupos = get_user_meta($user->ID, '_aluno_grupos', true);
+                        if (!is_array($user_grupos)) {
+                            $user_grupos = [];
+                        }
+
+                        $grupos = get_posts([
+                            'post_type' => 'grupo',
+                            'posts_per_page' => -1,
+                            'orderby' => 'title',
+                            'order' => 'ASC'
+                        ]);
+
+                        if (!empty($grupos)):
+                            ?>
+                            <div
+                                style="max-height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fff; display: inline-block; min-width: 300px;">
+                                <?php foreach ($grupos as $grupo):
+                                    $checked = in_array($grupo->ID, $user_grupos) ? 'checked' : '';
+                                    ?>
+                                    <label style="display:block; margin-bottom: 5px;">
+                                        <input type="checkbox" name="aluno_grupos[]" value="<?php echo esc_attr($grupo->ID); ?>" <?php echo $checked; ?>>
+                                        <?php echo esc_html($grupo->post_title); ?>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                            <p class="description">Selecione os grupos aos quais este aluno pertence.</p>
+                        <?php else: ?>
+                            <p class="description">Nenhum grupo cadastrado.</p>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endif; ?>
         </table>
 
         <h3>Endereço</h3>

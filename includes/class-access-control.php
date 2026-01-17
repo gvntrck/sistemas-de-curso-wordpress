@@ -82,6 +82,69 @@ class System_Cursos_Access_Control
         return true;
     }
 
+    /**
+     * Verifica acesso considerando Grupos e Trilhas
+     * Substitui ou complementa a lógica acima.
+     * Como o método has_access acima é usado em todo o plugin, vamos modificá-lo para ser o ponto central.
+     * Mas para manter compatibilidade e clareza, vamos renomear a lógica de banco para 'check_direct_access' e chamar dentro de has_access.
+     */
+    public static function has_access($user_id, $curso_id)
+    {
+        // 1. Acesso Direto (Banco de Dados)
+        if (self::check_direct_access($user_id, $curso_id)) {
+            return true;
+        }
+
+        // 2. Verificar Grupos
+        $user_grupos = get_user_meta($user_id, '_aluno_grupos', true);
+        if (empty($user_grupos) || !is_array($user_grupos)) {
+            return false;
+        }
+
+        // 2a. Grupos no Curso
+        $curso_grupos = get_post_meta($curso_id, '_grupos_permitidos', true);
+        if (is_array($curso_grupos) && !empty(array_intersect($user_grupos, $curso_grupos))) {
+            return true;
+        }
+
+        // 2b. Grupos na Trilha (Pai)
+        $trilha_id = get_post_meta($curso_id, 'trilha', true);
+        if ($trilha_id) {
+            $trilha_grupos = get_post_meta($trilha_id, '_grupos_permitidos', true);
+            if (is_array($trilha_grupos) && !empty(array_intersect($user_grupos, $trilha_grupos))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function check_direct_access($user_id, $curso_id)
+    {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'acesso_cursos';
+
+        $result = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table_name WHERE user_id = %d AND curso_id = %d",
+            $user_id,
+            $curso_id
+        ));
+
+        if (!$result) {
+            return false;
+        }
+
+        if ($result->status !== 'ativo') {
+            return false;
+        }
+
+        if ($result->data_fim !== null && strtotime($result->data_fim) < time()) {
+            return false;
+        }
+
+        return true;
+    }
+
     public static function grant_access($user_id, $curso_id, $data_fim = null, $created_by = null)
     {
         global $wpdb;
