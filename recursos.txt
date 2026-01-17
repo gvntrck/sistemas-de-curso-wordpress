@@ -1,14 +1,7 @@
- • Emissão de Certificados - feito
- • Barra de Progresso na aula - feito
- • Painel Meus Cursos -feito
  • Continuar Assistindo na home
- • Materiais Complementares na aula - feito
  • Log de Atividades
- • tela de cadastro de aluno - feito
  • aulas em ordem depende do curso
- • tela minha conta - feito
- • resultados de busca - feito
  • nome do curso no resultado de busca de aula
 
  • alterar senha do aluno no painel do aluno
- • página de primeiro acesso para criar a senha
+ • página de primeiro acesso para criar a senharoadmap
