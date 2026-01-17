@@ -342,6 +342,38 @@ class System_Cursos_Access_Control
                 exit;
             }
         }
+
+        // Matrícula em Massa por Trilha
+        if (isset($_POST['matricular_trilha']) && wp_verify_nonce($_POST['_wpnonce'], 'aluno_matricular_trilha')) {
+            $user_id = (int) $_POST['user_id'];
+            $trilha_id = (int) $_POST['trilha_id'];
+            $data_fim = !empty($_POST['data_fim']) ? sanitize_text_field($_POST['data_fim']) . ' 23:59:59' : null;
+
+            if ($user_id > 0 && $trilha_id > 0) {
+                $cursos = get_posts([
+                    'post_type' => 'curso',
+                    'posts_per_page' => -1,
+                    'meta_query' => [
+                        [
+                            'key' => 'trilha',
+                            'value' => (string) $trilha_id,
+                            'compare' => '=',
+                        ]
+                    ],
+                    'fields' => 'ids'
+                ]);
+
+                if (!empty($cursos)) {
+                    foreach ($cursos as $curso_id) {
+                        self::grant_access($user_id, $curso_id, $data_fim, get_current_user_id());
+                    }
+                    wp_redirect(admin_url('admin.php?page=acesso-cursos-alunos&action=view&user_id=' . $user_id . '&msg=trilha_matriculada'));
+                } else {
+                    wp_redirect(admin_url('admin.php?page=acesso-cursos-alunos&action=view&user_id=' . $user_id . '&msg=trilha_vazia'));
+                }
+                exit;
+            }
+        }
     }
 
     public function render_admin_page()
@@ -592,6 +624,13 @@ class System_Cursos_Access_Control
             'order' => 'ASC'
         ]);
 
+        $trilhas = get_posts([
+            'post_type' => 'trilha',
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC'
+        ]);
+
         $acessos_map = [];
         foreach ($acessos as $acesso) {
             $acessos_map[$acesso->curso_id] = $acesso;
@@ -632,6 +671,12 @@ class System_Cursos_Access_Control
                                 break;
                             case 'acesso_concedido':
                                 echo 'Acesso concedido com sucesso!';
+                                break;
+                            case 'trilha_matriculada':
+                                echo 'Matrícula na trilha realizada com sucesso!';
+                                break;
+                            case 'trilha_vazia':
+                                echo 'A trilha selecionada não possui cursos.';
                                 break;
                         }
                         ?>
@@ -999,6 +1044,38 @@ class System_Cursos_Access_Control
 
                     <button type="submit" name="conceder_acesso" value="1" class="button button-primary">
                         Conceder Acesso
+                    </button>
+                </form>
+            </div>
+
+            <div
+                style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin-top: 20px; max-width: 500px;">
+                <h3 style="margin-top: 0;">Matrícula em Massa por Trilha</h3>
+                <p class="description">Matricula o aluno em todos os cursos desta trilha.</p>
+                <form method="post" style="display: flex; flex-direction: column; gap: 10px;">
+                    <?php wp_nonce_field('aluno_matricular_trilha'); ?>
+                    <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+
+                    <label>
+                        <strong>Trilha:</strong><br>
+                        <select name="trilha_id" required style="width: 100%;">
+                            <option value="">Selecione a Trilha...</option>
+                            <?php foreach ($trilhas as $trilha): ?>
+                                <option value="<?php echo $trilha->ID; ?>">
+                                    <?php echo esc_html($trilha->post_title); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
+
+                    <label>
+                        <strong>Data de Expiração (Opcional):</strong><br>
+                        <input type="date" name="data_fim" style="width: 100%;">
+                        <small style="color: #666;">Aplica a mesma data para todos os cursos da trilha.</small>
+                    </label>
+
+                    <button type="submit" name="matricular_trilha" value="1" class="button button-primary">
+                        Matricular na Trilha
                     </button>
                 </form>
             </div>
