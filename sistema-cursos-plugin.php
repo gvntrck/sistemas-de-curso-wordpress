@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sistema de Cursos Personalizado
  * Description: Plugin que unifica todos os snippets do sistema de cursos (Cadastro, Certificados, Aulas, Trilhas, Controle de Acesso, etc) em um único local.
- * Version: 1.2.15
+ * Version: 1.2.16
  * Author: Giovani Tureck
  * Text Domain: sistema-cursos
  */
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
  * Carrega dependências, define hooks de ativação e configura o menu de documentação no admin.
  *
  * @package SistemaCursos
- * @version 1.2.15
+ * @version 1.2.16
  */
 
 // 1. Carregar Classes do Core
@@ -61,6 +61,44 @@ new System_Cursos_Shortcode_Barra_Progresso();
 new System_Cursos_Shortcode_Cursos_Trilha();
 new System_Cursos_Shortcode_Single_Trilha();
 new System_Cursos_Shortcode_Redireciona_Aula();
+
+/**
+ * Ativação do Plugin
+ * Garante que as regras de reescrita sejam lavadas (flush) ao ativar.
+ */
+register_activation_hook(__FILE__, 'sistema_cursos_activate');
+
+function sistema_cursos_activate()
+{
+    // Garante que os CPTs estejam registrados antes do flush
+    $cpt_manager = new System_Cursos_CPT_Manager();
+    $cpt_manager->register_cpts();
+
+    flush_rewrite_rules();
+    update_option('sistema_cursos_version', '1.2.16');
+}
+
+/**
+ * Verificação de Versão (Auto-Update)
+ * Se a versão do código for maior que o banco, roda flush_rewrite_rules.
+ * Útil para atualizações onde mudamos slugs ou CPTs.
+ */
+add_action('admin_init', 'sistema_cursos_check_version');
+
+function sistema_cursos_check_version()
+{
+    $current_version = '1.2.16';
+    $db_version = get_option('sistema_cursos_version');
+
+    if ($db_version !== $current_version) {
+        // Garante registro
+        $cpt_manager = new System_Cursos_CPT_Manager();
+        $cpt_manager->register_cpts();
+
+        flush_rewrite_rules();
+        update_option('sistema_cursos_version', $current_version);
+    }
+}
 
 
 
