@@ -165,7 +165,7 @@ class System_Cursos_Shortcode_Minha_Conta
 
         <!-- CSS já carregado via assets/css/style.css -->
 
-        <div class="mc-container">
+        <div class="mc-container" style="max-width: 100%; margin-left: 0; margin-right: 0;">
 
             <!-- Header Statico -->
             <div class="mc-header">
