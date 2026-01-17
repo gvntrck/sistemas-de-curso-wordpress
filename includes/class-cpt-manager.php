@@ -127,15 +127,7 @@ class System_Cursos_CPT_Manager
             'high'
         );
 
-        // Permissões de Grupo (Curso)
-        add_meta_box(
-            'curso_group_permissions',
-            'Restrições de Acesso (Grupos)',
-            [$this, 'render_group_permissions_metabox'],
-            'curso',
-            'side',
-            'default'
-        );
+
 
         // Campos da Aula
         add_meta_box(
@@ -167,15 +159,7 @@ class System_Cursos_CPT_Manager
             'high'
         );
 
-        // Permissões de Grupo (Trilha)
-        add_meta_box(
-            'trilha_group_permissions',
-            'Restrições de Acesso (Grupos)',
-            [$this, 'render_group_permissions_metabox'],
-            'trilha',
-            'side',
-            'default'
-        );
+
 
         // Gerenciamento de Alunos (Grupo)
         add_meta_box(
@@ -185,6 +169,16 @@ class System_Cursos_CPT_Manager
             'grupo',
             'normal',
             'high'
+        );
+
+        // Gerenciamento de Conteúdos (Grupo) - LearnDash Style
+        add_meta_box(
+            'grupo_conteudos_manager',
+            'Conteúdos do Grupo (Cursos e Trilhas)',
+            [$this, 'render_grupo_conteudos_metabox'],
+            'grupo',
+            'side',
+            'default'
         );
     }
 
@@ -384,12 +378,12 @@ class System_Cursos_CPT_Manager
 
         <!-- Template Hidden -->
         <script type="text/template" id="tmpl-arquivo-row">
-                                                                                            <div class="repeater-item">
-                                                                                                <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
-                                                                                                <button type="button" class="button btn-upload-file">Upload</button>
-                                                                                                <button type="button" class="button button-link-delete btn-remove-row">X</button>
-                                                                                            </div>
-                                                                                        </script>
+                                                                                                    <div class="repeater-item">
+                                                                                                        <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
+                                                                                                        <button type="button" class="button btn-upload-file">Upload</button>
+                                                                                                        <button type="button" class="button button-link-delete btn-remove-row">X</button>
+                                                                                                    </div>
+                                                                                                </script>
 
         <?php
     }
@@ -465,13 +459,11 @@ class System_Cursos_CPT_Manager
             update_post_meta($post_id, 'descricao_curta', sanitize_textarea_field($_POST['descricao_curta']));
         }
 
-        // 8. Grupos Permitidos (Curso e Trilha)
-        $post_type = get_post_type($post_id);
-        if (in_array($post_type, ['curso', 'trilha'])) {
-            $grupos = isset($_POST['grupos_permitidos']) ? (array) $_POST['grupos_permitidos'] : [];
-            $grupos = array_map('intval', $grupos); // Sanitizar IDs
-            update_post_meta($post_id, '_grupos_permitidos', $grupos);
-        }
+        // 8. Grupos Permitidos (Curso e Trilha) - REMOVIDO: Gestão centralizada no post type 'grupo'
+        // A lógica de "push" é feita quando salvamos o GRUPO.
+        // Mantemos apenas a limpeza se necessário, mas como o campo não existe mais no form, 
+        // não devemos tocar no meta aqui para não apagar dados véios acidentalmente se o POST vier vazio.
+
 
         // 9. Sincronização de Alunos (Post Type: Grupo)
         if ($post_type === 'grupo') {
@@ -523,44 +515,45 @@ class System_Cursos_CPT_Manager
                     update_user_meta($user_id, '_aluno_grupos', array_values($user_grupos));
                 }
             }
+            // Salvar Gestão de Conteúdos do Grupo (Sincronização Bidirecional)
+            $conteudos_novos = isset($_POST['grupo_conteudos']) ? (array) $_POST['grupo_conteudos'] : [];
+            $conteudos_novos = array_map('intval', $conteudos_novos);
+
+            // Obter conteúdos antigos
+            $conteudos_antigos = get_post_meta($post_id, '_grupo_conteudos', true);
+            if (!is_array($conteudos_antigos))
+                $conteudos_antigos = [];
+
+            // Atualizar Meta do Grupo
+            update_post_meta($post_id, '_grupo_conteudos', $conteudos_novos);
+
+            // 1. Adicionar Grupo aos Conteúdos Novos
+            foreach ($conteudos_novos as $c_id) {
+                if (!in_array($c_id, $conteudos_antigos)) {
+                    $grupos_permitidos = get_post_meta($c_id, '_grupos_permitidos', true);
+                    if (!is_array($grupos_permitidos))
+                        $grupos_permitidos = [];
+
+                    if (!in_array($post_id, $grupos_permitidos)) {
+                        $grupos_permitidos[] = $post_id;
+                        update_post_meta($c_id, '_grupos_permitidos', $grupos_permitidos);
+                    }
+                }
+            }
+
+            // 2. Remover Grupo dos Conteúdos Removidos
+            $conteudos_removidos = array_diff($conteudos_antigos, $conteudos_novos);
+            foreach ($conteudos_removidos as $c_id) {
+                $grupos_permitidos = get_post_meta($c_id, '_grupos_permitidos', true);
+                if (is_array($grupos_permitidos)) {
+                    $grupos_permitidos = array_diff($grupos_permitidos, [$post_id]);
+                    update_post_meta($c_id, '_grupos_permitidos', array_values($grupos_permitidos));
+                }
+            }
         }
     }
 
-    /**
-     * Renderiza Metabox de Permissões de Grupo (Curso e Trilha)
-     */
-    public function render_group_permissions_metabox($post)
-    {
-        wp_nonce_field('sistema_cursos_save_meta', 'sistema_cursos_nonce');
 
-        $grupos_selecionados = get_post_meta($post->ID, '_grupos_permitidos', true);
-        if (!is_array($grupos_selecionados)) {
-            $grupos_selecionados = [];
-        }
-
-        $grupos = get_posts([
-            'post_type' => 'grupo',
-            'posts_per_page' => -1,
-            'orderby' => 'title',
-            'order' => 'ASC'
-        ]);
-
-        if (empty($grupos)) {
-            echo '<p class="description">Nenhum grupo de alunos cadastrado. Crie grupos no menu "Grupos de Alunos".</p>';
-            return;
-        }
-
-        echo '<p class="description">Selecione os grupos que terão acesso automático a este conteúdo.</p>';
-        echo '<div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fff;">';
-        foreach ($grupos as $grupo) {
-            $checked = in_array($grupo->ID, $grupos_selecionados) ? 'checked' : '';
-            echo '<label style="display:block; margin-bottom: 5px;">';
-            echo '<input type="checkbox" name="grupos_permitidos[]" value="' . esc_attr($grupo->ID) . '" ' . $checked . '> ';
-            echo esc_html($grupo->post_title);
-            echo '</label>';
-        }
-        echo '</div>';
-    }
 
     /**
      * Renderiza Metabox de Gestão de Alunos (CPT Grupo)
@@ -631,5 +624,67 @@ class System_Cursos_CPT_Manager
             });
         </script>
         <?php
+    }
+
+    /**
+     * Renderiza Metabox de Conteúdos do Grupo (Cursos e Trilhas)
+     */
+    public function render_grupo_conteudos_metabox($post)
+    {
+        wp_nonce_field('sistema_cursos_save_meta', 'sistema_cursos_nonce');
+
+        $conteudos_selecionados = get_post_meta($post->ID, '_grupo_conteudos', true);
+        if (!is_array($conteudos_selecionados)) {
+            $conteudos_selecionados = [];
+        }
+
+        // Buscar Cursos
+        $cursos = get_posts([
+            'post_type' => 'curso',
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC'
+        ]);
+
+        // Buscar Trilhas
+        $trilhas = get_posts([
+            'post_type' => 'trilha',
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC'
+        ]);
+
+        echo '<div class="grupo-conteudos-list" style="max-height: 300px; overflow-y: auto;">';
+
+        if (!empty($cursos)) {
+            echo '<p><strong>Cursos:</strong></p>';
+            foreach ($cursos as $curso) {
+                $checked = in_array($curso->ID, $conteudos_selecionados) ? 'checked' : '';
+                echo '<label style="display:block; margin-bottom: 5px;">';
+                echo '<input type="checkbox" name="grupo_conteudos[]" value="' . esc_attr($curso->ID) . '" ' . $checked . '> ';
+                echo esc_html($curso->post_title);
+                echo '</label>';
+            }
+        }
+
+        echo '<hr>';
+
+        if (!empty($trilhas)) {
+            echo '<p><strong>Trilhas:</strong></p>';
+            foreach ($trilhas as $trilha) {
+                $checked = in_array($trilha->ID, $conteudos_selecionados) ? 'checked' : '';
+                echo '<label style="display:block; margin-bottom: 5px;">';
+                echo '<input type="checkbox" name="grupo_conteudos[]" value="' . esc_attr($trilha->ID) . '" ' . $checked . '> ';
+                echo esc_html($trilha->post_title);
+                echo '</label>';
+            }
+        }
+
+        if (empty($cursos) && empty($trilhas)) {
+            echo '<p class="description">Nenhum curso ou trilha disponível.</p>';
+        }
+
+        echo '</div>';
+        echo '<p class="description">Selecione os conteúdos aos quais este grupo terá acesso automático.</p>';
     }
 }
