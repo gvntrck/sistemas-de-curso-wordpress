@@ -43,7 +43,7 @@ class System_Cursos_CPT_Manager
             'show_ui' => true,
             'show_in_menu' => true,
             'menu_icon' => 'dashicons-randomize',
-            'supports' => ['title', 'thumbnail', 'editor'],
+            'supports' => ['title', 'thumbnail'],
             'rewrite' => ['slug' => 'trilha'],
             'has_archive' => true,
         ]);
@@ -64,7 +64,7 @@ class System_Cursos_CPT_Manager
             'show_ui' => true,
             'show_in_menu' => true,
             'menu_icon' => 'dashicons-welcome-learn-more',
-            'supports' => ['title', 'thumbnail', 'editor'],
+            'supports' => ['title', 'thumbnail'],
             'rewrite' => ['slug' => 'curso'],
             'has_archive' => true,
         ]);
@@ -85,7 +85,7 @@ class System_Cursos_CPT_Manager
             'show_ui' => true,
             'show_in_menu' => true,
             'menu_icon' => 'dashicons-video-alt3',
-            'supports' => ['title', 'editor', 'page-attributes'], // page-attributes para 'menu_order'
+            'supports' => ['title', 'page-attributes'], // page-attributes para 'menu_order'
             'rewrite' => ['slug' => 'aula'],
             'has_archive' => false,
         ]);
@@ -171,13 +171,13 @@ class System_Cursos_CPT_Manager
 
         $descricao_curta = get_post_meta($post->ID, 'descricao_curta', true);
         ?>
-                <p>
-                    <label for="descricao_curta" style="font-weight:bold; display:block; margin-bottom:5px;">Descrição Curta:</label>
-                    <textarea name="descricao_curta" id="descricao_curta" rows="3" class="widefat"
-                        placeholder="Uma breve descrição da trilha..."><?php echo esc_textarea($descricao_curta); ?></textarea>
-            <p class="description">Esta descrição será exibida nos cards de listagem de trilhas.</p>
-                </p>
-                <?php
+        <p>
+            <label for="descricao_curta" style="font-weight:bold; display:block; margin-bottom:5px;">Descrição Curta:</label>
+            <textarea name="descricao_curta" id="descricao_curta" rows="3" class="widefat"
+                placeholder="Uma breve descrição da trilha..."><?php echo esc_textarea($descricao_curta); ?></textarea>
+        <p class="description">Esta descrição será exibida nos cards de listagem de trilhas.</p>
+        </p>
+        <?php
     }
 
     /**
@@ -333,12 +333,12 @@ class System_Cursos_CPT_Manager
 
         <!-- Template Hidden -->
         <script type="text/template" id="tmpl-arquivo-row">
-                                            <div class="repeater-item">
-                                                <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
-                                                <button type="button" class="button btn-upload-file">Upload</button>
-                                                <button type="button" class="button button-link-delete btn-remove-row">X</button>
-                                            </div>
-                                        </script>
+                                                    <div class="repeater-item">
+                                                        <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
+                                                        <button type="button" class="button btn-upload-file">Upload</button>
+                                                        <button type="button" class="button button-link-delete btn-remove-row">X</button>
+                                                    </div>
+                                                </script>
 
         <?php
     }
