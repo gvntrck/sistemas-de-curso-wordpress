@@ -5,5 +5,11 @@
 
  • alterar senha do aluno no painel do aluno
  • trocar foto do aluno no painel do aluno
-  
+
  • criar CPTs, remover dependencia do ACF 
+
+ • liberar aula com agenda e mensagem de aula bloqueada até a data de liberação
+
+ • grupo de alunos
+ • controle de acesso de aluno para grupo
+ • 
