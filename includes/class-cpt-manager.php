@@ -41,7 +41,7 @@ class System_Cursos_CPT_Manager
             'labels' => $labels_trilha,
             'public' => true,
             'show_ui' => true,
-            'show_in_menu' => true,
+            'show_in_menu' => 'lms-suporte-rapido',
             'menu_icon' => 'dashicons-randomize',
             'supports' => ['title', 'thumbnail'],
             'rewrite' => ['slug' => 'trilha'],
@@ -62,7 +62,7 @@ class System_Cursos_CPT_Manager
             'labels' => $labels_curso,
             'public' => true,
             'show_ui' => true,
-            'show_in_menu' => true,
+            'show_in_menu' => 'lms-suporte-rapido',
             'menu_icon' => 'dashicons-welcome-learn-more',
             'supports' => ['title', 'thumbnail'],
             'rewrite' => ['slug' => 'curso'],
@@ -83,7 +83,7 @@ class System_Cursos_CPT_Manager
             'labels' => $labels_aula,
             'public' => true,
             'show_ui' => true,
-            'show_in_menu' => true,
+            'show_in_menu' => 'lms-suporte-rapido',
             'menu_icon' => 'dashicons-video-alt3',
             'supports' => ['title', 'page-attributes'], // page-attributes para 'menu_order'
             'rewrite' => ['slug' => 'aula'],
@@ -104,7 +104,7 @@ class System_Cursos_CPT_Manager
             'labels' => $labels_grupo,
             'public' => false,
             'show_ui' => true,
-            'show_in_menu' => true,
+            'show_in_menu' => 'lms-suporte-rapido',
             'menu_icon' => 'dashicons-groups',
             'supports' => ['title'],
             'rewrite' => false,
@@ -384,12 +384,12 @@ class System_Cursos_CPT_Manager
 
         <!-- Template Hidden -->
         <script type="text/template" id="tmpl-arquivo-row">
-                                                                            <div class="repeater-item">
-                                                                                <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
-                                                                                <button type="button" class="button btn-upload-file">Upload</button>
-                                                                                <button type="button" class="button button-link-delete btn-remove-row">X</button>
-                                                                            </div>
-                                                                        </script>
+                                                                                    <div class="repeater-item">
+                                                                                        <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
+                                                                                        <button type="button" class="button btn-upload-file">Upload</button>
+                                                                                        <button type="button" class="button button-link-delete btn-remove-row">X</button>
+                                                                                    </div>
+                                                                                </script>
 
         <?php
     }
@@ -615,21 +615,21 @@ class System_Cursos_CPT_Manager
 
         // Script Inline Simples para Busca
         ?>
-                <script>
-                    jQuery(document).ready(function($) {
-                        $('#sistema_cursos_search_users').on('keyup', function() {
-                            var term = $(this).val().toLowerCase();
-                            $('#sistema_cursos_users_list .user-option').each(function() {
-                                var searchData = $(this).data('search');
-                                if (searchData.indexOf(term) > -1) {
-                                    $(this).show();
-                                } else {
-                                    $(this).hide();
-                                }
-                            });
-                        });
+        <script>
+            jQuery(document).ready(function ($) {
+                $('#sistema_cursos_search_users').on('keyup', function () {
+                    var term = $(this).val().toLowerCase();
+                    $('#sistema_cursos_users_list .user-option').each(function () {
+                        var searchData = $(this).data('search');
+                        if (searchData.indexOf(term) > -1) {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
                     });
-                </script>
-                <?php
+                });
+            });
+        </script>
+        <?php
     }
 }

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sistema de Cursos Personalizado
  * Description: Plugin que unifica todos os snippets do sistema de cursos (Cadastro, Certificados, Aulas, Trilhas, Controle de Acesso, etc) em um único local.
- * Version: 1.2.4
+ * Version: 1.2.5
  * Author: Giovani Tureck
  * Text Domain: sistema-cursos
  */
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
  * Carrega dependências, define hooks de ativação e configura o menu de documentação no admin.
  *
  * @package SistemaCursos
- * @version 1.2.4
+ * @version 1.2.5
  */
 
 // 1. Carregar Classes do Core
@@ -79,6 +79,16 @@ function sistema_cursos_add_admin_menu()
         'sistema_cursos_render_admin_page', // Callback function
         'dashicons-welcome-learn-more', // Icon
         99                        // Position
+    );
+
+    // Rename the first submenu item to "Documentação"
+    add_submenu_page(
+        'lms-suporte-rapido',    // Parent Slug
+        'Documentação',           // Page Title
+        'Documentação',           // Menu Title
+        'manage_options',         // Capability
+        'lms-suporte-rapido',     // Menu Slug (Same as parent to override default)
+        'sistema_cursos_render_admin_page' // Callback
     );
 }
 

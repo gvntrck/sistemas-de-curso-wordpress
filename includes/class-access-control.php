@@ -325,14 +325,13 @@ class System_Cursos_Access_Control
 
     public function admin_menu()
     {
-        add_menu_page(
+        add_submenu_page(
+            'lms-suporte-rapido',
             'Lista de Alunos',
             'Lista de Alunos',
             'manage_options',
             'acesso-cursos-alunos',
-            [$this, 'render_admin_page'],
-            'dashicons-groups',
-            30
+            [$this, 'render_admin_page']
         );
     }
 

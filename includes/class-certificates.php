@@ -44,7 +44,7 @@ class System_Cursos_Certificates
             'labels' => $labels,
             'public' => false,
             'show_ui' => true,
-            'show_in_menu' => true,
+            'show_in_menu' => 'lms-suporte-rapido',
             'menu_icon' => 'dashicons-awards',
             'supports' => ['title'],
             'capability_type' => 'post',
