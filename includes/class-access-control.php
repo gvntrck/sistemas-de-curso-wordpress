@@ -56,31 +56,7 @@ class System_Cursos_Access_Control
     // FUNÇÕES DE ACESSO
     // =============================================================================
 
-    public static function has_access($user_id, $curso_id)
-    {
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'acesso_cursos';
 
-        $result = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM $table_name WHERE user_id = %d AND curso_id = %d",
-            $user_id,
-            $curso_id
-        ));
-
-        if (!$result) {
-            return false;
-        }
-
-        if ($result->status !== 'ativo') {
-            return false;
-        }
-
-        if ($result->data_fim !== null && strtotime($result->data_fim) < time()) {
-            return false;
-        }
-
-        return true;
-    }
 
     /**
      * Verifica acesso considerando Grupos e Trilhas
@@ -437,6 +413,19 @@ class System_Cursos_Access_Control
                 exit;
             }
         }
+
+        // Salvar Grupos do Aluno (Detalhes)
+        if (isset($_POST['save_student_groups']) && wp_verify_nonce($_POST['_wpnonce'], 'aluno_save_groups')) {
+            $user_id = (int) $_POST['user_id'];
+            $grupos = isset($_POST['aluno_grupos']) ? (array) $_POST['aluno_grupos'] : [];
+            $grupos = array_map('intval', $grupos);
+
+            if ($user_id > 0) {
+                update_user_meta($user_id, '_aluno_grupos', $grupos);
+                wp_redirect(admin_url('admin.php?page=acesso-cursos-alunos&action=view&user_id=' . $user_id . '&msg=grupos_atualizados'));
+                exit;
+            }
+        }
     }
 
     public function render_admin_page()
@@ -566,6 +555,7 @@ class System_Cursos_Access_Control
                         <th>Email</th>
                         <th>Cadastro</th>
                         <th>Último Login</th>
+                        <th>Grupos</th>
                         <th style="width: 120px;">Cursos Ativos</th>
                         <th>Ações</th>
                     </tr>
@@ -617,6 +607,28 @@ class System_Cursos_Access_Control
                                     <?php else: ?>
                                         <em style="color: #999;">—</em>
                                     <?php endif; ?>
+
+                                </td>
+                                <td>
+                                    <?php
+                                    $user_grupos = get_user_meta($user->ID, '_aluno_grupos', true);
+                                    if (!empty($user_grupos) && is_array($user_grupos)) {
+                                        $grupos_titles = [];
+                                        foreach ($user_grupos as $g_id) {
+                                            $g_title = get_the_title($g_id);
+                                            if ($g_title) {
+                                                $grupos_titles[] = $g_title;
+                                            }
+                                        }
+                                        if (!empty($grupos_titles)) {
+                                            echo implode(', ', array_map('esc_html', $grupos_titles));
+                                        } else {
+                                            echo '<span style="color:#999;">—</span>';
+                                        }
+                                    } else {
+                                        echo '<span style="color:#999;">—</span>';
+                                    }
+                                    ?>
                                 </td>
                                 <td>
                                     <?php if ($cursos_ativos > 0): ?>
@@ -741,6 +753,9 @@ class System_Cursos_Access_Control
                             case 'trilha_vazia':
                                 echo 'A trilha selecionada não possui cursos.';
                                 break;
+                            case 'grupos_atualizados':
+                                echo 'Grupos do aluno atualizados com sucesso!';
+                                break;
                         }
                         ?>
                     </p>
@@ -804,6 +819,44 @@ class System_Cursos_Access_Control
                         <a href="<?php echo admin_url('user-edit.php?user_id=' . $user->ID); ?>" class="button">Editar Perfil
                             Completo</a>
                     </div>
+                </div>
+
+                <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; min-width: 250px;">
+                    <h3 style="margin-top: 0;">Grupos do Aluno</h3>
+                    <form method="post" action="">
+                        <?php wp_nonce_field('aluno_save_groups', '_wpnonce'); ?>
+                        <input type="hidden" name="save_student_groups" value="1">
+                        <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+
+                        <?php
+                        // Buscar todos os grupos
+                        $all_grupos = get_posts([
+                            'post_type' => 'grupo',
+                            'posts_per_page' => -1,
+                            'orderby' => 'title',
+                            'order' => 'ASC'
+                        ]);
+                        $user_grupos = get_user_meta($user->ID, '_aluno_grupos', true);
+                        if (!is_array($user_grupos))
+                            $user_grupos = [];
+                        ?>
+
+                        <div
+                            style="max-height: 200px; overflow-y: auto; border: 1px solid #eee; padding: 10px; margin-bottom: 10px;">
+                            <?php if (empty($all_grupos)): ?>
+                                <p style="color: #999;">Nenhum grupo cadastrado.</p>
+                            <?php else: ?>
+                                <?php foreach ($all_grupos as $grupo): ?>
+                                    <label style="display: block; margin-bottom: 5px;">
+                                        <input type="checkbox" name="aluno_grupos[]" value="<?php echo $grupo->ID; ?>" <?php checked(in_array($grupo->ID, $user_grupos)); ?>>
+                                        <?php echo esc_html($grupo->post_title); ?>
+                                    </label>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+
+                        <button type="submit" class="button button-primary" style="width: 100%;">Salvar Grupos</button>
+                    </form>
                 </div>
 
                 <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; min-width: 200px;">
