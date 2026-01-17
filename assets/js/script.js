@@ -239,7 +239,7 @@ window.SystemCursos.initListaAulas = function (containerId) {
             // Update URL
             var newUrl = this.getAttribute('href');
             if (window.history && window.history.pushState) {
-                window.history.pushState({ aula: aulaId }, '', newUrl);
+                window.history.pushState({ target_aula: aulaId }, '', newUrl);
             }
 
             // AJAX Fetch Lesson
@@ -302,8 +302,8 @@ window.SystemCursos.initListaAulas = function (containerId) {
 
     // History Support
     window.addEventListener('popstate', function (e) {
-        if (e.state && e.state.aula) {
-            var targetItem = container.querySelector('.lista-aulas__item[data-aula-id="' + e.state.aula + '"]');
+        if (e.state && e.state.target_aula) {
+            var targetItem = container.querySelector('.lista-aulas__item[data-aula-id="' + e.state.target_aula + '"]');
             if (targetItem) {
                 targetItem.click();
             }

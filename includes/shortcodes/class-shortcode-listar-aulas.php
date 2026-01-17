@@ -34,7 +34,7 @@ class System_Cursos_Shortcode_Listar_Aulas
         $limite = max(1, (int) $atts['limite']);
 
         // URL Query Params Override
-        $aulaFromQuery = isset($_GET['aula']) ? (int) $_GET['aula'] : 0;
+        $aulaFromQuery = isset($_GET['target_aula']) ? (int) $_GET['target_aula'] : 0;
         $cursoFromQuery = isset($_GET['curso']) ? (int) $_GET['curso'] : 0;
         $aulaId = $aulaFromQuery ?: (int) $atts['aula_id'];
 
@@ -212,7 +212,7 @@ class System_Cursos_Shortcode_Listar_Aulas
                     <?php foreach ($aulas as $index => $aula):
                         $id = (int) $aula->ID;
                         $isActive = ($id === $aulaId);
-                        $url = add_query_arg(['aula' => $id], $baseUrl);
+                        $url = add_query_arg(['target_aula' => $id], $baseUrl);
                         ?>
                         <a role="listitem" class="lista-aulas__item <?php echo $isActive ? 'is-active' : ''; ?>"
                             href="<?php echo esc_url($url); ?>" data-aula-id="<?php echo $id; ?>">
