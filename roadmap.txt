@@ -4,6 +4,6 @@
  • nome do curso no resultado de busca de aula
 
  • alterar senha do aluno no painel do aluno
- • página de primeiro acesso para criar a senha
- 
+ • trocar foto do aluno no painel do aluno
+  
  • criar CPTs, remover dependencia do ACF 
