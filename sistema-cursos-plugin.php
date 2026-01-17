@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Sistema de Cursos Personalizado
  * Description: Plugin que unifica todos os snippets do sistema de cursos (Cadastro, Certificados, Aulas, Trilhas, Controle de Acesso, etc) em um único local.
- * Version: 1.1.15
+ * Version: 1.1.16
  * Author: Giovani Tureck
  * Text Domain: sistema-cursos
  */
@@ -429,7 +429,19 @@ function sistema_cursos_render_admin_page()
 
             <h3 class="cpt-section-title">3. Post Type: Trilha (<code>trilha</code>)</h3>
             <table class="sc-table">
+                <thead>
+                    <tr>
+                        <th style="width: 200px;">Campo (Meta Key)</th>
+                        <th>Tipo</th>
+                        <th>Descrição</th>
+                    </tr>
+                </thead>
                 <tbody>
+                    <tr>
+                        <td><code>descricao_curta</code></td>
+                        <td><span class="field-type">Textarea</span></td>
+                        <td>Uma breve descrição da trilha exibida nos cards.</td>
+                    </tr>
                     <tr>
                         <td>Este Post Type serve primariamente como agrupador. Os cursos são ligados à trilha através do campo
                             <code>trilha</code> no CPT Curso.

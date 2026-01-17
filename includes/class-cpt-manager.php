@@ -125,6 +125,16 @@ class System_Cursos_CPT_Manager
             'side',
             'default'
         );
+
+        // Campos da Trilha
+        add_meta_box(
+            'trilha_custom_fields',
+            'Configurações da Trilha',
+            [$this, 'render_trilha_metabox'],
+            'trilha',
+            'normal',
+            'high'
+        );
     }
 
     public function admin_scripts($hook)
@@ -150,6 +160,24 @@ class System_Cursos_CPT_Manager
                 'placeholder_img' => 'https://via.placeholder.com/150'
             ]);
         }
+    }
+
+    /**
+     * Renderiza Metabox da Trilha
+     */
+    public function render_trilha_metabox($post)
+    {
+        wp_nonce_field('sistema_cursos_save_meta', 'sistema_cursos_nonce');
+
+        $descricao_curta = get_post_meta($post->ID, 'descricao_curta', true);
+        ?>
+                <p>
+                    <label for="descricao_curta" style="font-weight:bold; display:block; margin-bottom:5px;">Descrição Curta:</label>
+                    <textarea name="descricao_curta" id="descricao_curta" rows="3" class="widefat"
+                        placeholder="Uma breve descrição da trilha..."><?php echo esc_textarea($descricao_curta); ?></textarea>
+            <p class="description">Esta descrição será exibida nos cards de listagem de trilhas.</p>
+                </p>
+                <?php
     }
 
     /**
@@ -305,12 +333,12 @@ class System_Cursos_CPT_Manager
 
         <!-- Template Hidden -->
         <script type="text/template" id="tmpl-arquivo-row">
-                                    <div class="repeater-item">
-                                        <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
-                                        <button type="button" class="button btn-upload-file">Upload</button>
-                                        <button type="button" class="button button-link-delete btn-remove-row">X</button>
-                                    </div>
-                                </script>
+                                            <div class="repeater-item">
+                                                <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
+                                                <button type="button" class="button btn-upload-file">Upload</button>
+                                                <button type="button" class="button button-link-delete btn-remove-row">X</button>
+                                            </div>
+                                        </script>
 
         <?php
     }
@@ -379,6 +407,11 @@ class System_Cursos_CPT_Manager
             if (get_post_type($post_id) === 'aula') {
                 delete_post_meta($post_id, 'arquivos'); // Ou update para empty array
             }
+        }
+
+        // 7. Descrição Curta (Trilha)
+        if (isset($_POST['descricao_curta'])) {
+            update_post_meta($post_id, 'descricao_curta', sanitize_textarea_field($_POST['descricao_curta']));
         }
     }
 }
