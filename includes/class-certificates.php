@@ -65,11 +65,22 @@ class System_Cursos_Certificates
             'high'
         );
 
+        // Metabox para Curso
         add_meta_box(
             'curso_certificado_select',
             'Certificado de Conclusão',
-            [$this, 'render_metabox_curso'],
+            [$this, 'render_metabox_selection'],
             'curso',
+            'side',
+            'default'
+        );
+
+        // Metabox para Grupo de Alunos
+        add_meta_box(
+            'grupo_certificado_select',
+            'Certificado Específico da Turma',
+            [$this, 'render_metabox_selection'],
+            'grupo',
             'side',
             'default'
         );
@@ -273,10 +284,13 @@ class System_Cursos_Certificates
         <?php
     }
 
-    public function render_metabox_curso($post)
+    public function render_metabox_selection($post)
     {
-        wp_nonce_field('curso_certificado_save', 'curso_certificado_nonce');
-        $selected = get_post_meta($post->ID, '_curso_certificado_id', true);
+        wp_nonce_field('sistema_cursos_cert_selection', 'cert_selection_nonce');
+
+        // Define a meta key baseada no post type
+        $meta_key = ($post->post_type === 'grupo') ? '_grupo_certificado_id' : '_curso_certificado_id';
+        $selected = get_post_meta($post->ID, $meta_key, true);
 
         $certificados = get_posts([
             'post_type' => 'certificado',
@@ -289,9 +303,9 @@ class System_Cursos_Certificates
             return;
         }
 
-        echo '<label for="curso_certificado_id" style="display:block; margin-bottom:5px;">Selecione o modelo:</label>';
-        echo '<select name="curso_certificado_id" id="curso_certificado_id" style="width:100%;">';
-        echo '<option value="">-- Nenhum --</option>';
+        echo '<label for="certificado_id_select" style="display:block; margin-bottom:5px;">Selecione o modelo:</label>';
+        echo '<select name="certificado_id_select" id="certificado_id_select" style="width:100%;">';
+        echo '<option value="">-- ' . ($post->post_type === 'grupo' ? 'Padrão do Curso' : 'Nenhum') . ' --</option>';
 
         foreach ($certificados as $cert) {
             $is_selected = ($selected == $cert->ID) ? 'selected' : '';
@@ -299,12 +313,17 @@ class System_Cursos_Certificates
         }
 
         echo '</select>';
-        echo '<p class="description">Este modelo será usado para gerar o certificado deste curso.</p>';
+
+        if ($post->post_type === 'grupo') {
+            echo '<p class="description">Se selecionado, este modelo substituirá o modelo padrão do curso para os alunos desta turma.</p>';
+        } else {
+            echo '<p class="description">Este modelo será usado para gerar o certificado deste curso.</p>';
+        }
     }
 
     public function save_meta($post_id)
     {
-        // 1. Salvar Config do Certificado
+        // 1. Salvar Config do Certificado (Post Type: Certificado)
         if (isset($_POST['certificado_nonce']) && wp_verify_nonce($_POST['certificado_nonce'], 'certificado_save_config')) {
             $fields = [
                 '_cert_bg_url',
@@ -337,10 +356,18 @@ class System_Cursos_Certificates
             }
         }
 
-        // 2. Salvar Seleção no Curso
-        if (isset($_POST['curso_certificado_nonce']) && wp_verify_nonce($_POST['curso_certificado_nonce'], 'curso_certificado_save')) {
-            if (isset($_POST['curso_certificado_id'])) {
-                update_post_meta($post_id, '_curso_certificado_id', sanitize_text_field($_POST['curso_certificado_id']));
+        // 2. Salvar Seleção de Certificado (Post Types: Curso e Grupo)
+        if (isset($_POST['cert_selection_nonce']) && wp_verify_nonce($_POST['cert_selection_nonce'], 'sistema_cursos_cert_selection')) {
+            $post_type = get_post_type($post_id);
+            $meta_key = ($post_type === 'grupo') ? '_grupo_certificado_id' : '_curso_certificado_id';
+
+            if (isset($_POST['certificado_id_select'])) {
+                $val = sanitize_text_field($_POST['certificado_id_select']);
+                if (!empty($val)) {
+                    update_post_meta($post_id, $meta_key, $val);
+                } else {
+                    delete_post_meta($post_id, $meta_key);
+                }
             }
         }
     }

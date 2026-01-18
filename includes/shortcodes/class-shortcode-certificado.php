@@ -99,7 +99,25 @@ class System_Cursos_Shortcode_Certificado
 
     private function render_certificate($user_id, $curso_id)
     {
-        $cert_id = get_post_meta($curso_id, '_curso_certificado_id', true);
+        $cert_id = 0;
+
+        // 1. Tentar obter certificado específico do Grupo/Turma
+        if (class_exists('System_Cursos_Access_Control')) {
+            $access_source = System_Cursos_Access_Control::get_access_source($user_id, $curso_id);
+
+            if ($access_source && isset($access_source['group_id'])) {
+                $group_cert_id = get_post_meta($access_source['group_id'], '_grupo_certificado_id', true);
+                if ($group_cert_id) {
+                    $cert_id = $group_cert_id;
+                }
+            }
+        }
+
+        // 2. Se não houver certificado de grupo, usar o do curso
+        if (!$cert_id) {
+            $cert_id = get_post_meta($curso_id, '_curso_certificado_id', true);
+        }
+
         if (!$cert_id) {
             return '<div class="mc-alert" style="color:red; text-align:center;">Certificado não configurado para este curso. Contate o suporte.</div>';
         }
