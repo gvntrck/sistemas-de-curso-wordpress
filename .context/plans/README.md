@@ -3,7 +3,8 @@
 This directory contains plans for coordinating work across documentation and playbooks.
 
 ## Plan Queue
-1. [Otimizacao Css](./otimizacao-css.md)
+1. [Corrigir Icone Certificado](./corrigir-icone-certificado.md)
+2. [Otimizacao Css](./otimizacao-css.md)
 
 ## How To Create Or Update Plans
 - Run "ai-context plan <name>" to scaffold a new plan template.
