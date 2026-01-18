@@ -1,60 +1,180 @@
 ---
 name: Bug Fixer
-description: Analyze bug reports and error messages
-status: unfilled
+description: Analisa e corrige bugs no LMS SuporteRapido
+status: filled
 generated: 2026-01-18
 ---
 
 # Bug Fixer Agent Playbook
 
-## Mission
-Describe how the bug fixer agent supports the team and when to engage it.
+## Missão
+Diagnosticar e corrigir bugs no plugin LMS SuporteRapido, garantindo estabilidade e funcionamento correto de todas as funcionalidades de cursos, acesso e certificados.
 
-## Responsibilities
-- Analyze bug reports and error messages
-- Identify root causes of issues
-- Implement targeted fixes with minimal side effects
-- Test fixes thoroughly before deployment
+## Responsabilidades
+- Analisar erros PHP e JavaScript reportados
+- Identificar causas raiz de problemas de acesso
+- Corrigir bugs de renderização em shortcodes
+- Resolver problemas de geração de certificados
+- Debugar queries SQL na tabela `wp_acesso_cursos`
 
-## Best Practices
-- Reproduce the bug before fixing
-- Write tests to prevent regression
-- Document the fix for future reference
+## Arquivos Críticos por Área de Bug
 
-## Key Project Resources
-- Documentation index: [docs/README.md](../docs/README.md)
-- Agent handbook: [agents/README.md](./README.md)
-- Agent knowledge base: [AGENTS.md](../../AGENTS.md)
-- Contributor guide: [CONTRIBUTING.md](../../CONTRIBUTING.md)
+### Erros de Acesso a Cursos
+```
+includes/class-access-control.php    # Lógica de verificação
+includes/class-cpt-manager.php       # Relacionamentos CPT
+```
 
-## Repository Starting Points
-- `assets/` — TODO: Describe the purpose of this directory.
-- `includes/` — TODO: Describe the purpose of this directory.
+### Erros em Shortcodes
+```
+includes/shortcodes/class-shortcode-*.php  # Shortcode específico
+sistema-cursos-plugin.php                   # Registro e inicialização
+```
 
-## Key Files
-- *No key files detected.*
+### Erros de Certificado
+```
+includes/class-certificates.php                      # Templates e metaboxes
+includes/shortcodes/class-shortcode-certificado.php  # Geração de PDF
+assets/js/script.js                                  # html2pdf.js
+```
 
-## Key Symbols for This Agent
-- *No relevant symbols detected.*
+### Erros de Progresso
+```
+includes/class-course-progress.php   # Cálculo de progresso
+assets/js/script.js                  # AJAX de conclusão de aula
+```
 
-## Documentation Touchpoints
-- [Documentation Index](../docs/README.md)
-- [Project Overview](../docs/project-overview.md)
-- [Architecture Notes](../docs/architecture.md)
-- [Development Workflow](../docs/development-workflow.md)
-- [Testing Strategy](../docs/testing-strategy.md)
-- [Glossary & Domain Concepts](../docs/glossary.md)
-- [Data Flow & Integrations](../docs/data-flow.md)
-- [Security & Compliance Notes](../docs/security.md)
-- [Tooling & Productivity Guide](../docs/tooling.md)
+### Erros de Admin
+```
+includes/class-access-control.php    # Páginas admin de alunos
+includes/class-user-fields.php       # Campos de usuário
+```
 
-## Collaboration Checklist
+## Estratégia de Debug
 
-1. Confirm assumptions with issue reporters or maintainers.
-2. Review open pull requests affecting this area.
-3. Update the relevant doc section listed above.
-4. Capture learnings back in [docs/README.md](../docs/README.md).
+### 1. PHP Errors
+```php
+// Ativar debug no wp-config.php
+define('WP_DEBUG', true);
+define('WP_DEBUG_LOG', true);
 
-## Hand-off Notes
+// Log manual
+error_log('Debug LMS: ' . print_r($variable, true));
+```
 
-Summarize outcomes, remaining risks, and suggested follow-up actions after the agent completes its work.
+### 2. SQL Errors
+```php
+global $wpdb;
+$wpdb->show_errors();
+
+// Após query
+echo $wpdb->last_query;
+echo $wpdb->last_error;
+```
+
+### 3. JavaScript Errors
+```javascript
+console.log('Debug LMS:', variable);
+// Verificar console do navegador (F12)
+```
+
+## Bugs Comuns e Soluções
+
+### "Parse error: unexpected token"
+**Causa**: Sintaxe PHP incorreta, geralmente `endif` órfão
+**Solução**: Verificar pareamento de `if/endif`, `foreach/endforeach`
+
+### "Call to undefined function acesso_cursos_has()"
+**Causa**: Arquivo não incluído ou ordem de load incorreta
+**Solução**: Verificar require_once no sistema-cursos-plugin.php
+
+### Certificado não gera PDF
+**Causa**: html2pdf.js não carregado ou erro de CORS
+**Solução**: Verificar enqueue de scripts e imagens de fundo
+
+### Acesso negado mesmo com matrícula
+**Causa**: Status 'suspenso' ou 'revogado', ou data_fim expirada
+**Solução**: Verificar tabela wp_acesso_cursos:
+```sql
+SELECT * FROM wp_acesso_cursos 
+WHERE user_id = X AND curso_id = Y;
+```
+
+### Progresso não atualiza
+**Causa**: AJAX falhando ou meta key incorreta
+**Solução**: Verificar `aulas_concluidas_{curso_id}` no usermeta
+
+### 404 em páginas de curso
+**Causa**: Rewrite rules não atualizadas
+**Solução**: Atualizar versão do plugin (força flush) ou:
+```php
+flush_rewrite_rules();
+```
+
+## Verificações de Diagnóstico
+
+### Verificar Acesso
+```php
+$user_id = get_current_user_id();
+$curso_id = get_the_ID();
+
+// Acesso direto
+global $wpdb;
+$table = $wpdb->prefix . 'acesso_cursos';
+$result = $wpdb->get_row($wpdb->prepare(
+    "SELECT * FROM $table WHERE user_id = %d AND curso_id = %d",
+    $user_id, $curso_id
+));
+var_dump($result);
+
+// Acesso via grupo
+$grupos = get_posts(['post_type' => 'grupo', 'posts_per_page' => -1]);
+foreach ($grupos as $grupo) {
+    $alunos = get_post_meta($grupo->ID, 'alunos_do_grupo', true);
+    if (in_array($user_id, (array)$alunos)) {
+        echo "Usuário está no grupo: " . $grupo->post_title;
+    }
+}
+```
+
+### Verificar Relacionamento CPT
+```php
+// Curso da aula
+$curso_id = get_post_meta($aula_id, 'curso', true);
+echo "Aula $aula_id pertence ao curso: $curso_id";
+
+// Trilha do curso
+$trilha_id = get_post_meta($curso_id, 'trilha', true);
+echo "Curso $curso_id pertence à trilha: $trilha_id";
+```
+
+## Boas Práticas de Correção
+
+### SEMPRE:
+- Reproduzir o bug antes de corrigir
+- Fazer backup antes de alterações
+- Testar correção em ambiente local
+- Atualizar versão do plugin
+- Documentar a correção
+
+### NUNCA:
+- Corrigir diretamente em produção
+- Ignorar validação de dados
+- Remover verificações de segurança
+- Alterar estrutura da tabela sem migração
+
+## Documentação de Referência
+- [Arquitetura](../docs/architecture.md)
+- [Fluxo de Dados](../docs/data-flow.md)
+- [Glossário](../docs/glossary.md)
+
+## Checklist de Correção
+
+- [ ] Bug reproduzido localmente
+- [ ] Causa raiz identificada
+- [ ] Correção implementada
+- [ ] Testado cenário original
+- [ ] Testados cenários relacionados
+- [ ] Sem regressões
+- [ ] Versão do plugin atualizada
+- [ ] Correção documentada

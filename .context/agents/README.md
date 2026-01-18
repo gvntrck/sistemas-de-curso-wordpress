@@ -1,30 +1,108 @@
-# Agent Handbook
+# Agent Handbook - LMS SuporteRapido
 
-This directory contains ready-to-customize playbooks for AI agents collaborating on the repository.
+Este diretório contém playbooks de agentes IA personalizados para colaboração no plugin WordPress **LMS SuporteRapido**.
 
-## Available Agents
-- [Code Reviewer](./code-reviewer.md) — Review code changes for quality, style, and best practices
-- [Bug Fixer](./bug-fixer.md) — Analyze bug reports and error messages
-- [Feature Developer](./feature-developer.md) — Implement new features according to specifications
-- [Refactoring Specialist](./refactoring-specialist.md) — Identify code smells and improvement opportunities
-- [Test Writer](./test-writer.md) — Write comprehensive unit and integration tests
-- [Documentation Writer](./documentation-writer.md) — Create clear, comprehensive documentation
-- [Performance Optimizer](./performance-optimizer.md) — Identify performance bottlenecks
-- [Security Auditor](./security-auditor.md) — Identify security vulnerabilities
-- [Backend Specialist](./backend-specialist.md) — Design and implement server-side architecture
-- [Frontend Specialist](./frontend-specialist.md) — Design and implement user interfaces
-- [Architect Specialist](./architect-specialist.md) — Design overall system architecture and patterns
-- [Devops Specialist](./devops-specialist.md) — Design and maintain CI/CD pipelines
-- [Database Specialist](./database-specialist.md) — Design and optimize database schemas
-- [Mobile Specialist](./mobile-specialist.md) — Develop native and cross-platform mobile applications
+## Sobre o Projeto
 
-## How To Use These Playbooks
-1. Pick the agent that matches your task.
-2. Enrich the template with project-specific context or links.
-3. Share the final prompt with your AI assistant.
-4. Capture learnings in the relevant documentation file so future runs improve.
+O LMS SuporteRapido é um plugin WordPress de Learning Management System que oferece:
+- Gerenciamento de Trilhas, Cursos e Aulas
+- Controle de acesso e matrículas
+- Grupos de alunos
+- Certificados personalizáveis
+- Acompanhamento de progresso
 
-## Related Resources
-- [Documentation Index](../docs/README.md)
-- [Agent Knowledge Base](../../AGENTS.md)
-- [Contributor Guidelines](../../CONTRIBUTING.md)
+## Agentes Disponíveis
+
+### Desenvolvimento
+| Agente | Descrição |
+|--------|-----------|
+| [Feature Developer](./feature-developer.md) | Implementar novas funcionalidades |
+| [Bug Fixer](./bug-fixer.md) | Diagnosticar e corrigir bugs |
+| [Backend Specialist](./backend-specialist.md) | PHP/WordPress, CPTs, APIs |
+| [Frontend Specialist](./frontend-specialist.md) | CSS, JavaScript, UI |
+| [Database Specialist](./database-specialist.md) | Queries, tabelas, otimização |
+
+### Qualidade
+| Agente | Descrição |
+|--------|-----------|
+| [Code Reviewer](./code-reviewer.md) | Revisar código e garantir qualidade |
+| [Test Writer](./test-writer.md) | Criar testes automatizados |
+| [Security Auditor](./security-auditor.md) | Auditar vulnerabilidades |
+| [Performance Optimizer](./performance-optimizer.md) | Otimizar performance |
+
+### Arquitetura e Documentação
+| Agente | Descrição |
+|--------|-----------|
+| [Architect Specialist](./architect-specialist.md) | Decisões arquiteturais |
+| [Refactoring Specialist](./refactoring-specialist.md) | Melhorar código existente |
+| [Documentation Writer](./documentation-writer.md) | Criar documentação |
+
+### Infraestrutura
+| Agente | Descrição |
+|--------|-----------|
+| [DevOps Specialist](./devops-specialist.md) | CI/CD, deployment, versionamento |
+| [Mobile Specialist](./mobile-specialist.md) | Responsividade e touch |
+
+## Como Usar
+
+### 1. Escolha o Agente Apropriado
+Baseado na tarefa, selecione o agente que melhor se alinha:
+- **Nova feature?** → Feature Developer
+- **Bug reportado?** → Bug Fixer
+- **Código lento?** → Performance Optimizer
+- **Revisão de PR?** → Code Reviewer
+
+### 2. Leia o Playbook
+Cada playbook contém:
+- Missão e responsabilidades
+- Arquivos-chave do projeto
+- Padrões e exemplos de código
+- Checklists de verificação
+
+### 3. Execute a Tarefa
+Siga as instruções do playbook para:
+- Localizar arquivos relevantes
+- Aplicar padrões do projeto
+- Validar as mudanças
+
+### 4. Documente Aprendizados
+Atualize o playbook ou documentação com insights novos.
+
+## Arquivos-Chave do Projeto
+
+```
+sistema-cursos-plugin.php       # Bootstrap do plugin
+includes/
+├── class-cpt-manager.php       # CPTs principais
+├── class-access-control.php    # Controle de acesso (maior arquivo)
+├── class-certificates.php      # Certificados
+├── class-course-progress.php   # Progresso
+└── shortcodes/                 # 10 shortcodes
+```
+
+## Recursos Relacionados
+
+- [Visão Geral do Projeto](../docs/project-overview.md)
+- [Arquitetura](../docs/architecture.md)
+- [Fluxo de Dados](../docs/data-flow.md)
+- [Glossário](../docs/glossary.md)
+- [Workflow de Desenvolvimento](../docs/development-workflow.md)
+
+## Status dos Agents
+
+| Agente | Status |
+|--------|--------|
+| Feature Developer | ✅ Preenchido |
+| Bug Fixer | ✅ Preenchido |
+| Code Reviewer | ✅ Preenchido |
+| Performance Optimizer | ✅ Preenchido |
+| Security Auditor | ✅ Preenchido |
+| Documentation Writer | ✅ Preenchido |
+| Backend Specialist | ✅ Preenchido |
+| Frontend Specialist | ✅ Preenchido |
+| Database Specialist | ✅ Preenchido |
+| Refactoring Specialist | ✅ Preenchido |
+| Architect Specialist | ✅ Preenchido |
+| Test Writer | ✅ Preenchido |
+| DevOps Specialist | ✅ Preenchido |
+| Mobile Specialist | ✅ Preenchido |

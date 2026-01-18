@@ -1,60 +1,146 @@
 ---
 name: Feature Developer
-description: Implement new features according to specifications
-status: unfilled
+description: Implementa novas funcionalidades para o LMS SuporteRapido
+status: filled
 generated: 2026-01-18
 ---
 
 # Feature Developer Agent Playbook
 
-## Mission
-Describe how the feature developer agent supports the team and when to engage it.
+## Missão
+Implementar novas funcionalidades no plugin LMS SuporteRapido seguindo os padrões estabelecidos, garantindo integração com o ecossistema WordPress e mantendo compatibilidade com funcionalidades existentes.
 
-## Responsibilities
-- Implement new features according to specifications
-- Design clean, maintainable code architecture
-- Integrate features with existing codebase
-- Write comprehensive tests for new functionality
+## Responsabilidades
+- Implementar novos shortcodes seguindo o padrão de classes existente
+- Adicionar campos e metaboxes aos CPTs (Trilha, Curso, Aula, Grupo, Certificado)
+- Estender funcionalidades de controle de acesso
+- Criar novas páginas administrativas quando necessário
+- Integrar com a tabela `wp_acesso_cursos` para novas regras de acesso
 
-## Best Practices
-- Follow existing patterns and conventions
-- Consider edge cases and error handling
-- Write tests alongside implementation
+## Arquivos-Chave para Novas Features
 
-## Key Project Resources
-- Documentation index: [docs/README.md](../docs/README.md)
-- Agent handbook: [agents/README.md](./README.md)
-- Agent knowledge base: [AGENTS.md](../../AGENTS.md)
-- Contributor guide: [CONTRIBUTING.md](../../CONTRIBUTING.md)
+### Para novos Shortcodes
+```
+includes/shortcodes/class-shortcode-{nome}.php  # Criar novo arquivo
+sistema-cursos-plugin.php                        # Registrar require e instância
+```
 
-## Repository Starting Points
-- `assets/` — TODO: Describe the purpose of this directory.
-- `includes/` — TODO: Describe the purpose of this directory.
+### Para novos Campos de CPT
+```
+includes/class-cpt-manager.php    # Adicionar metabox e lógica de salvamento
+```
 
-## Key Files
-- *No key files detected.*
+### Para Controle de Acesso
+```
+includes/class-access-control.php  # Modificar verificações e páginas admin
+```
 
-## Key Symbols for This Agent
-- *No relevant symbols detected.*
+### Para Certificados
+```
+includes/class-certificates.php                      # Lógica de templates
+includes/shortcodes/class-shortcode-certificado.php  # Renderização
+```
 
-## Documentation Touchpoints
-- [Documentation Index](../docs/README.md)
-- [Project Overview](../docs/project-overview.md)
-- [Architecture Notes](../docs/architecture.md)
-- [Development Workflow](../docs/development-workflow.md)
-- [Testing Strategy](../docs/testing-strategy.md)
-- [Glossary & Domain Concepts](../docs/glossary.md)
-- [Data Flow & Integrations](../docs/data-flow.md)
-- [Security & Compliance Notes](../docs/security.md)
-- [Tooling & Productivity Guide](../docs/tooling.md)
+## Padrão de Implementação de Shortcode
 
-## Collaboration Checklist
+```php
+<?php
+class System_Cursos_Shortcode_NomeFeature extends System_Cursos_Config {
+    
+    public function __construct() {
+        add_shortcode('nome-feature', [$this, 'render_shortcode']);
+    }
+    
+    public function render_shortcode($atts) {
+        // 1. Definir atributos com defaults
+        $atts = shortcode_atts([
+            'id' => 0,
+            'mostrar_titulo' => 'sim'
+        ], $atts);
+        
+        // 2. Validar acesso se necessário
+        if (!is_user_logged_in()) {
+            return '<p class="aviso">Faça login para continuar.</p>';
+        }
+        
+        // 3. Query de dados
+        $items = get_posts([
+            'post_type' => 'curso',
+            'posts_per_page' => -1
+        ]);
+        
+        // 4. Renderizar HTML
+        ob_start();
+        ?>
+        <div class="sistema-cursos-feature">
+            <!-- HTML aqui -->
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+}
+```
 
-1. Confirm assumptions with issue reporters or maintainers.
-2. Review open pull requests affecting this area.
-3. Update the relevant doc section listed above.
-4. Capture learnings back in [docs/README.md](../docs/README.md).
+## Boas Práticas Específicas do Projeto
 
-## Hand-off Notes
+### SEMPRE fazer:
+- Atualizar versão no header do plugin após mudanças
+- Usar `esc_html()`, `esc_attr()`, `wp_kses_post()` para sanitização
+- Verificar `is_user_logged_in()` antes de operações de usuário
+- Usar `$wpdb->prepare()` para queries SQL
+- Seguir nomenclatura `System_Cursos_*` para classes
 
-Summarize outcomes, remaining risks, and suggested follow-up actions after the agent completes its work.
+### NUNCA fazer:
+- Usar `get_field()` do ACF (plugin é standalone)
+- Modificar tabelas core do WordPress
+- Hardcodar IDs de posts
+- Ignorar verificações de permissão
+
+## Relacionamentos Entre CPTs
+
+```php
+// Curso → Trilha
+$trilha_id = get_post_meta($curso_id, 'trilha', true);
+
+// Aula → Curso  
+$curso_id = get_post_meta($aula_id, 'curso', true);
+
+// Cursos de uma Trilha
+$cursos = get_posts([
+    'post_type' => 'curso',
+    'meta_query' => [['key' => 'trilha', 'value' => $trilha_id]]
+]);
+```
+
+## Verificação de Acesso
+
+```php
+// Função global disponível
+if (acesso_cursos_has($user_id, $curso_id)) {
+    // Usuário tem acesso
+}
+
+// Via classe
+$access = new System_Cursos_Access_Control();
+$source = $access->get_access_source($user_id, $curso_id);
+// Retorna: 'direto', 'grupo', 'trilha_grupo', ou false
+```
+
+## Documentação de Referência
+- [Visão Geral do Projeto](../docs/project-overview.md)
+- [Arquitetura](../docs/architecture.md)
+- [Fluxo de Dados](../docs/data-flow.md)
+- [Glossário](../docs/glossary.md)
+- [Workflow de Desenvolvimento](../docs/development-workflow.md)
+
+## Checklist de Implementação
+
+- [ ] Feature alinhada com roadmap.txt
+- [ ] Classe criada seguindo padrão System_Cursos_*
+- [ ] Registrada no arquivo principal
+- [ ] Sanitização de inputs implementada
+- [ ] Verificações de acesso quando aplicável
+- [ ] CSS adicionado em assets/css/style.css
+- [ ] JS adicionado em assets/js/script.js (se necessário)
+- [ ] Versão do plugin atualizada
+- [ ] Testado em ambiente local
