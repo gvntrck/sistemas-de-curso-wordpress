@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Lerandash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.2.22
+ * Version: 1.2.23
  */
 
 if (!defined('ABSPATH')) {
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
  * Carrega dependências, define hooks de ativação e configura o menu de documentação no admin.
  *
  * @package SistemaCursos
- * @version 1.2.22
+ * @version 1.2.23
  */
 
 // 1. Carregar Classes do Core
@@ -75,7 +75,7 @@ function sistema_cursos_activate()
     $cpt_manager->register_cpts();
 
     flush_rewrite_rules();
-    update_option('sistema_cursos_version', '1.2.21');
+    update_option('sistema_cursos_version', '1.2.23');
 }
 
 /**
@@ -87,7 +87,7 @@ add_action('init', 'sistema_cursos_check_version', 99);
 
 function sistema_cursos_check_version()
 {
-    $current_version = '1.2.21';
+    $current_version = '1.2.23';
     $db_version = get_option('sistema_cursos_version');
 
     if ($db_version !== $current_version) {
