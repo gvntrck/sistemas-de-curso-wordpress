@@ -17,7 +17,7 @@ class System_Cursos_Shortcode_Meus_Cursos
      *   Define se exibe apenas os cursos do aluno ou o catálogo completo.
      *
      * @package SistemaCursos
-     * @version 1.2.21
+     * @version 1.2.26
      */
     public function __construct()
     {
@@ -124,7 +124,6 @@ class System_Cursos_Shortcode_Meus_Cursos
                     <div class="mc-container" style="margin-bottom: 30px; max-width: 100%; margin-left: 0; margin-right: 0;">
                         <div class="mc-header" style="text-align: left; padding: 25px;">
                             <h3 style="margin: 0; font-size: 1.5rem; color: var(--text-heading, #fff);">
-                                <span style="color: var(--accent-color, #FDC110); margin-right: 8px;">◈</span>
                                 <?php echo esc_html($nome_trilha); ?>
                             </h3>
                             <?php if ($desc_trilha): ?>
