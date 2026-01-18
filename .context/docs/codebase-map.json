@@ -1,0 +1,119 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-01-18T12:38:37.184Z",
+  "stack": {
+    "primaryLanguage": "javascript",
+    "languages": [
+      "php",
+      "javascript"
+    ],
+    "frameworks": [],
+    "buildTools": [],
+    "testFrameworks": [],
+    "packageManager": null,
+    "isMonorepo": false,
+    "hasDocker": false,
+    "hasCI": false
+  },
+  "structure": {
+    "totalFiles": 26,
+    "topDirectories": [
+      {
+        "name": "assets",
+        "fileCount": 3
+      },
+      {
+        "name": "documentacao.txt",
+        "fileCount": 1
+      },
+      {
+        "name": "includes",
+        "fileCount": 19
+      },
+      {
+        "name": "modelo.html",
+        "fileCount": 1
+      },
+      {
+        "name": "roadmap.txt",
+        "fileCount": 1
+      },
+      {
+        "name": "sistema-cursos-plugin.php",
+        "fileCount": 1
+      }
+    ],
+    "languageDistribution": [
+      {
+        "extension": ".php",
+        "count": 20
+      },
+      {
+        "extension": ".txt",
+        "count": 2
+      },
+      {
+        "extension": ".js",
+        "count": 2
+      },
+      {
+        "extension": ".html",
+        "count": 1
+      },
+      {
+        "extension": ".css",
+        "count": 1
+      }
+    ]
+  },
+  "architecture": {
+    "layers": [],
+    "patterns": [],
+    "entryPoints": []
+  },
+  "symbols": {
+    "classes": [],
+    "interfaces": [],
+    "functions": [
+      {
+        "name": "atualizarBarraProgresso",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 134,
+        "exported": false
+      },
+      {
+        "name": "atualizarBotaoConcluir",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 145,
+        "exported": false
+      },
+      {
+        "name": "atualizarItemLista",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 158,
+        "exported": false
+      },
+      {
+        "name": "isAulaConcluida",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 130,
+        "exported": false
+      }
+    ],
+    "types": [],
+    "enums": []
+  },
+  "publicAPI": [],
+  "dependencies": {
+    "mostImported": []
+  },
+  "stats": {
+    "totalSymbols": 4,
+    "exportedSymbols": 0,
+    "analysisTimeMs": 41
+  }
+}
