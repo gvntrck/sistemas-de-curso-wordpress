@@ -84,8 +84,9 @@ class System_Cursos_Shortcode_Certificado
                 $link = add_query_arg('curso_id', $id, get_permalink());
                 ?>
                 <a href="<?php echo esc_url($link); ?>" class="cert-card">
-                    <svg class="cert-icon" style="width: 48px; height: 48px; flex-shrink: 0;" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg class="cert-icon" style="width: 48px; height: 48px; display: block; margin: 0 auto 15px;"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round">
                         <circle cx="12" cy="8" r="6" />
                         <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
                     </svg>
@@ -222,24 +223,10 @@ class System_Cursos_Shortcode_Certificado
             </div>
         </div>
 
-        <script>
-            function imprimirCertificado() {
-                var certElement = document.getElementById('printable-cert');
-                if (!certElement) {
-                    alert('Erro: Certificado não encontrado.');
-                    return;
-                }
-
-                // Obtém a fonte configurada do atributo data
-                var fontFamily = certElement.getAttribute('data-font') || 'Roboto';
-                var fontUrl = certElement.getAttribute('data-font-url') || '';
-                var filename = certElement.getAttribute('data-filename') || 'Certificado';
-
-                // Cria uma nova janela para impressão
-                var printWindow = window.open('', '_blank', 'width=1200,height=800');
-
-                // Estilos inline para a janela de impressão (incluindo a fonte)
-                var estilos = `
+        <script>     function imprimirCertificado() {         var certElement = document.getElementById('printable-cert');         if (!certElement) {             alert('Erro: Certificado não encontrado.');             return;         }
+                 // Obtém a fonte configurada do atributo data         var fontFamily = certElement.getAttribute('data-font') || 'Roboto';         var fontUrl = certElement.getAttribute('data-font-url') || '';         var filename = certElement.getAttribute('data-filename') || 'Certificado';
+                 // Cria uma nova janela para impressão         var printWindow = window.open('', '_blank', 'width=1200,height=800');
+                 // Estilos inline para a janela de impressão (incluindo a fonte)         var estilos = `
                 <link href="${fontUrl}" rel="stylesheet">
                 <style>
                     * { margin: 0; padding: 0; box-sizing: border-box; }
