@@ -84,8 +84,8 @@ class System_Cursos_Shortcode_Certificado
                 $link = add_query_arg('curso_id', $id, get_permalink());
                 ?>
                 <a href="<?php echo esc_url($link); ?>" class="cert-card">
-                    <svg class="cert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg class="cert-icon" style="width: 48px; height: 48px; flex-shrink: 0;" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="8" r="6" />
                         <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
                     </svg>
