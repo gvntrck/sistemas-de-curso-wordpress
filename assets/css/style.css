@@ -1110,3 +1110,112 @@
         margin: 0;
     }
 }
+
+/* =========================================
+   Componente: Carrossel de Cursos
+   ========================================= */
+
+/* Wrapper do carrossel - esconde overflow */
+.mc-carousel-wrapper {
+    overflow: hidden;
+    width: 100%;
+    padding: 0 10px;
+}
+
+/* Track que contém todos os cards - move horizontalmente */
+.mc-carousel-track {
+    display: flex;
+    gap: 20px;
+    transition: transform 0.4s ease;
+    will-change: transform;
+}
+
+/* Cards do carrossel não encolhem */
+.mc-carousel-track .curso-item {
+    flex: 0 0 200px;
+    min-width: 200px;
+}
+
+/* Container das setas de navegação */
+.mc-carousel-nav {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Botões de navegação do carrossel */
+.mc-carousel-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    padding: 0;
+}
+
+.mc-carousel-btn:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.mc-carousel-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.mc-carousel-btn:disabled:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.mc-carousel-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Header do carrossel com flex */
+.mc-header-carousel {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.mc-header-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Responsivo para carrossel */
+@media (max-width: 600px) {
+    .mc-carousel-track .curso-item {
+        flex: 0 0 160px;
+        min-width: 160px;
+    }
+
+    .mc-carousel-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .mc-carousel-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .mc-header-carousel {
+        flex-wrap: wrap;
+    }
+}

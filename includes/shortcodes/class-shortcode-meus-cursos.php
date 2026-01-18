@@ -17,7 +17,7 @@ class System_Cursos_Shortcode_Meus_Cursos
      *   Define se exibe apenas os cursos do aluno ou o catálogo completo.
      *
      * @package SistemaCursos
-     * @version 1.2.26
+     * @version 1.2.27
      */
     public function __construct()
     {
@@ -120,24 +120,44 @@ class System_Cursos_Shortcode_Meus_Cursos
                     $trilha_obj = get_post($t_id);
                     $nome_trilha = $trilha_obj->post_title;
                     $desc_trilha = get_post_meta($t_id, 'descricao_curta', true);
+                    $carousel_id = 'carousel-trilha-' . $t_id;
                     ?>
                     <div class="mc-container" style="margin-bottom: 30px; max-width: 100%; margin-left: 0; margin-right: 0;">
-                        <div class="mc-header" style="text-align: left; padding: 25px;">
-                            <h3 style="margin: 0; font-size: 1.5rem; color: var(--text-heading, #fff);">
-                                <?php echo esc_html($nome_trilha); ?>
-                            </h3>
-                            <?php if ($desc_trilha): ?>
-                                <p style="margin: 5px 0 0 0; color: var(--text-muted, #888); font-size: 0.95rem;">
-                                    <?php echo esc_html($desc_trilha); ?>
-                                </p>
-                            <?php endif; ?>
+                        <div class="mc-header mc-header-carousel" style="text-align: left; padding: 25px;">
+                            <div class="mc-header-content">
+                                <h3 style="margin: 0; font-size: 1.5rem; color: var(--text-heading, #fff);">
+                                    <?php echo esc_html($nome_trilha); ?>
+                                </h3>
+                                <?php if ($desc_trilha): ?>
+                                    <p style="margin: 5px 0 0 0; color: var(--text-muted, #888); font-size: 0.95rem;">
+                                        <?php echo esc_html($desc_trilha); ?>
+                                    </p>
+                                <?php endif; ?>
+                            </div>
+                            <!-- Setas de navegação -->
+                            <div class="mc-carousel-nav">
+                                <button class="mc-carousel-btn mc-prev" data-carousel="<?php echo esc_attr($carousel_id); ?>"
+                                    aria-label="Anterior">
+                                    <svg viewBox="0 0 24 24">
+                                        <polyline points="15 18 9 12 15 6"></polyline>
+                                    </svg>
+                                </button>
+                                <button class="mc-carousel-btn mc-next" data-carousel="<?php echo esc_attr($carousel_id); ?>"
+                                    aria-label="Próximo">
+                                    <svg viewBox="0 0 24 24">
+                                        <polyline points="9 6 15 12 9 18"></polyline>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="mc-body" style="padding: 25px;">
-                            <div class="cursos-da-trilha" style="display: flex; flex-wrap: wrap; gap: 20px; align-items: stretch;">
-                                <?php foreach ($cursos_da_trilha as $curso):
-                                    echo $this->render_curso_card($curso, $user_id);
-                                endforeach; ?>
+                            <div class="mc-carousel-wrapper" id="<?php echo esc_attr($carousel_id); ?>">
+                                <div class="mc-carousel-track">
+                                    <?php foreach ($cursos_da_trilha as $curso):
+                                        echo $this->render_curso_card($curso, $user_id);
+                                    endforeach; ?>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -147,18 +167,39 @@ class System_Cursos_Shortcode_Meus_Cursos
 
             <?php
             // B. Cursos Avulsos (Sem Trilha)
-            if (!empty($cursos_sem_trilha)): ?>
+            if (!empty($cursos_sem_trilha)):
+                $carousel_id_outros = 'carousel-outros-cursos';
+                ?>
                 <div class="mc-container" style="max-width: 100%; margin-left: 0; margin-right: 0;">
-                    <div class="mc-header" style="text-align: left; padding: 25px;">
-                        <h3 style="margin: 0; font-size: 1.5rem; color: var(--text-heading, #fff);">
-                            Outros Cursos
-                        </h3>
+                    <div class="mc-header mc-header-carousel" style="text-align: left; padding: 25px;">
+                        <div class="mc-header-content">
+                            <h3 style="margin: 0; font-size: 1.5rem; color: var(--text-heading, #fff);">
+                                Outros Cursos
+                            </h3>
+                        </div>
+                        <!-- Setas de navegação -->
+                        <div class="mc-carousel-nav">
+                            <button class="mc-carousel-btn mc-prev" data-carousel="<?php echo esc_attr($carousel_id_outros); ?>"
+                                aria-label="Anterior">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </button>
+                            <button class="mc-carousel-btn mc-next" data-carousel="<?php echo esc_attr($carousel_id_outros); ?>"
+                                aria-label="Próximo">
+                                <svg viewBox="0 0 24 24">
+                                    <polyline points="9 6 15 12 9 18"></polyline>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                     <div class="mc-body" style="padding: 25px;">
-                        <div class="cursos-da-trilha" style="display: flex; flex-wrap: wrap; gap: 20px; align-items: stretch;">
-                            <?php foreach ($cursos_sem_trilha as $curso):
-                                echo $this->render_curso_card($curso, $user_id);
-                            endforeach; ?>
+                        <div class="mc-carousel-wrapper" id="<?php echo esc_attr($carousel_id_outros); ?>">
+                            <div class="mc-carousel-track">
+                                <?php foreach ($cursos_sem_trilha as $curso):
+                                    echo $this->render_curso_card($curso, $user_id);
+                                endforeach; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -233,6 +274,70 @@ class System_Cursos_Shortcode_Meus_Cursos
                 }
             }
         </style>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Inicializar todos os carrosséis na página
+                var carousels = document.querySelectorAll('.mc-carousel-wrapper');
+
+                carousels.forEach(function (wrapper) {
+                    var carouselId = wrapper.id;
+                    var track = wrapper.querySelector('.mc-carousel-track');
+                    var prevBtn = document.querySelector('.mc-prev[data-carousel="' + carouselId + '"]');
+                    var nextBtn = document.querySelector('.mc-next[data-carousel="' + carouselId + '"]');
+
+                    if (!track || !prevBtn || !nextBtn) return;
+
+                    var currentIndex = 0;
+                    var items = track.querySelectorAll('.curso-item');
+                    var itemWidth = 220; // 200px width + 20px gap
+                    var totalItems = items.length;
+
+                    function getVisibleItems() {
+                        var wrapperWidth = wrapper.offsetWidth;
+                        return Math.floor(wrapperWidth / itemWidth);
+                    }
+
+                    function updateCarousel() {
+                        var visibleItems = getVisibleItems();
+                        var maxIndex = Math.max(0, totalItems - visibleItems);
+
+                        // Limitar índice
+                        if (currentIndex < 0) currentIndex = 0;
+                        if (currentIndex > maxIndex) currentIndex = maxIndex;
+
+                        // Mover track
+                        var offset = currentIndex * itemWidth;
+                        track.style.transform = 'translateX(-' + offset + 'px)';
+
+                        // Atualizar estado dos botões
+                        prevBtn.disabled = currentIndex === 0;
+                        nextBtn.disabled = currentIndex >= maxIndex;
+                    }
+
+                    prevBtn.addEventListener('click', function () {
+                        currentIndex--;
+                        updateCarousel();
+                    });
+
+                    nextBtn.addEventListener('click', function () {
+                        currentIndex++;
+                        updateCarousel();
+                    });
+
+                    // Inicializar
+                    updateCarousel();
+
+                    // Recalcular ao redimensionar
+                    var resizeTimeout;
+                    window.addEventListener('resize', function () {
+                        clearTimeout(resizeTimeout);
+                        resizeTimeout = setTimeout(updateCarousel, 100);
+                    });
+                });
+            });
+        </script>
+
         <?php
         return ob_get_clean();
     }
