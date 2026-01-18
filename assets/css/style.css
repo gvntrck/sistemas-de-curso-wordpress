@@ -1124,16 +1124,21 @@
 
 /* Track que contém todos os cards - move horizontalmente */
 .mc-carousel-track {
-    display: flex;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     gap: 20px;
     transition: transform 0.4s ease;
     will-change: transform;
+    align-items: stretch;
 }
 
-/* Cards do carrossel não encolhem */
+/* Cards do carrossel não encolhem e ficam em linha */
 .mc-carousel-track .curso-item {
-    flex: 0 0 200px;
-    min-width: 200px;
+    flex: 0 0 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    flex-shrink: 0 !important;
 }
 
 /* Container das setas de navegação */

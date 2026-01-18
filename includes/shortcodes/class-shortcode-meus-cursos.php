@@ -210,16 +210,27 @@ class System_Cursos_Shortcode_Meus_Cursos
         <style>
             /* Inline styles fallback or enhancement if theme CSS differs */
             .curso-item {
-                flex: 0 0 auto;
                 background: #1a1a1a;
                 padding: 12px;
                 border-radius: 8px;
                 border: 1px solid #333;
-                width: 200px;
-                /* Largura fixa para os cards verticalizados */
                 transition: transform 0.2s, border-color 0.2s;
                 display: flex;
                 flex-direction: column;
+            }
+
+            /* Garantir layout horizontal no carrossel */
+            .mc-carousel-track {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+            }
+
+            .mc-carousel-track .curso-item {
+                flex: 0 0 200px !important;
+                min-width: 200px !important;
+                width: 200px !important;
+                flex-shrink: 0 !important;
             }
 
             .curso-item:hover {
@@ -264,13 +275,14 @@ class System_Cursos_Shortcode_Meus_Cursos
 
             /* Responsive adjustments */
             @media (max-width: 600px) {
-                .cursos-da-trilha {
-                    justify-content: center;
+                .mc-carousel-track .curso-item {
+                    flex: 0 0 160px !important;
+                    min-width: 160px !important;
+                    width: 160px !important;
                 }
 
-                .curso-item {
-                    width: 100%;
-                    max-width: 250px;
+                .curso-thumb-wrapper {
+                    height: 220px;
                 }
             }
         </style>
