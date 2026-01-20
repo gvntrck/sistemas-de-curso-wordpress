@@ -1486,7 +1486,7 @@ class System_Cursos_Access_Control
                                             style="height: 100%; width: 5px; background-color: <?php echo $config['color']; ?>; height: 40px;">
                                         </div>
                                     </td>
-                                    <td><strong><?php echo esc_html($curso_title); ?></strong></td>
+                                    <td><strong><?php echo $curso_title; ?></strong></td>
                                     <td>
                                         <span style="color: <?php echo $config['color']; ?>; font-weight: 500;">
                                             <?php echo esc_html($config['label']); ?>
