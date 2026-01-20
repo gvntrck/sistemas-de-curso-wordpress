@@ -1649,9 +1649,30 @@ class System_Cursos_Access_Control
 
                     <label style="display: block; margin: 20px 0;">
                         <strong>Nova Senha</strong>
-                        <input type="password" name="new_password" class="regular-text"
-                            style="width: 100%; display: block; margin-top: 5px;" required placeholder="••••••••">
+                        <div style="position: relative;">
+                            <input type="password" name="new_password" id="new_password_field" class="regular-text"
+                                style="width: 100%; display: block; margin-top: 5px; padding-right: 40px;" required placeholder="••••••••">
+                            <span onclick="togglePasswordVisibility()" style="position: absolute; right: 10px; top: 55%; transform: translateY(-50%); cursor: pointer; color: #666;" title="Ver senha">
+                                <span class="dashicons dashicons-visibility" id="password-toggle-icon"></span>
+                            </span>
+                        </div>
                     </label>
+
+                    <script>
+                        function togglePasswordVisibility() {
+                            var passwordInput = document.getElementById('new_password_field');
+                            var toggleIcon = document.getElementById('password-toggle-icon');
+                            if (passwordInput.type === 'password') {
+                                passwordInput.type = 'text';
+                                toggleIcon.classList.remove('dashicons-visibility');
+                                toggleIcon.classList.add('dashicons-hidden');
+                            } else {
+                                passwordInput.type = 'password';
+                                toggleIcon.classList.remove('dashicons-hidden');
+                                toggleIcon.classList.add('dashicons-visibility');
+                            }
+                        }
+                    </script>
 
                     <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; text-align: right;">
                         <button type="button" class="button"
