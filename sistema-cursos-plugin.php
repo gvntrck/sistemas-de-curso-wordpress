@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.2.43
+ * Version: 1.2.44
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.2.43');
+define('SISTEMA_CURSOS_VERSION', '1.2.44');
 
 /**
  * sistema-cursos-plugin.php
@@ -22,7 +22,7 @@ define('SISTEMA_CURSOS_VERSION', '1.2.43');
  * Carrega dependências, define hooks de ativação e configura o menu de documentação no admin.
  *
  * @package SistemaCursos
- * @version 1.2.43
+ * @version 1.2.44
  */
 
 // 1. Carregar Classes do Core
@@ -45,6 +45,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-ba
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-cursos-trilha.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-single-trilha.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-redireciona-aula.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-woocommerce-integration.php';
 
 // 2. Inicializar Assets Globais
 new System_Cursos_CPT_Manager();
@@ -64,6 +65,10 @@ new System_Cursos_Shortcode_Barra_Progresso();
 new System_Cursos_Shortcode_Cursos_Trilha();
 new System_Cursos_Shortcode_Single_Trilha();
 new System_Cursos_Shortcode_Redireciona_Aula();
+
+if (class_exists('WooCommerce')) {
+    new System_Cursos_WooCommerce();
+}
 
 /**
  * Ativação do Plugin
@@ -91,7 +96,7 @@ add_action('init', 'sistema_cursos_check_version', 99);
 
 function sistema_cursos_check_version()
 {
-    $current_version = '1.2.39';
+    $current_version = '1.2.44';
     $db_version = get_option('sistema_cursos_version');
 
     if ($db_version !== $current_version) {
