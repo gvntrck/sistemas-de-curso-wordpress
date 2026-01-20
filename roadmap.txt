@@ -6,3 +6,5 @@
  • liberar aula e trilha com agenda e mensagem de aula bloqueada até a data de liberação
  
  • cerrificado por grupo de alunos
+
+Avaliar integração com woocommerce 
