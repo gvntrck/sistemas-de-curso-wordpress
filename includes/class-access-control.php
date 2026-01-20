@@ -663,6 +663,51 @@ class System_Cursos_Access_Control
             wp_redirect(admin_url('admin.php?page=acesso-cursos-alunos&msg=cleanup_success&stats=' . $stats));
             exit;
         }
+
+        // Atualizar Dados do Aluno (Detalhes)
+        if (isset($_POST['update_student_data']) && wp_verify_nonce($_POST['_wpnonce'], 'aluno_update_data')) {
+            $user_id = (int) $_POST['user_id'];
+
+            if ($user_id > 0 && current_user_can('edit_user', $user_id)) {
+                // Atualizar Senha (se fornecida)
+                if (!empty($_POST['new_password'])) {
+                    wp_update_user([
+                        'ID' => $user_id,
+                        'user_pass' => $_POST['new_password']
+                    ]);
+                }
+
+                // Campos para atualizar
+                $fields = [
+                    'billing_phone',
+                    'phone',
+                    'instagram',
+                    'cpf',
+                    'aniversario',
+                    'cep',
+                    'rua',
+                    'numero',
+                    'complemento',
+                    'bairro',
+                    'cidade',
+                    'estado'
+                ];
+
+                foreach ($fields as $field) {
+                    if (isset($_POST[$field])) {
+                        update_user_meta($user_id, $field, sanitize_text_field($_POST[$field]));
+                    }
+                }
+
+                // Tratamento especial para Billing Phone -> Phone syncing
+                if (isset($_POST['billing_phone'])) {
+                    update_user_meta($user_id, 'phone', sanitize_text_field($_POST['billing_phone']));
+                }
+
+                wp_redirect(admin_url('admin.php?page=acesso-cursos-alunos&action=view&user_id=' . $user_id . '&msg=dados_atualizados'));
+                exit;
+            }
+        }
     }
 
     public function render_admin_page()
@@ -990,10 +1035,10 @@ class System_Cursos_Access_Control
         $bairro = get_user_meta($user_id, 'bairro', true);
         $cidade = get_user_meta($user_id, 'cidade', true);
         $estado = get_user_meta($user_id, 'estado', true);
-        $empty_placeholder = '<em style="color:#999;">Não informado</em>';
-        $format_meta = function ($value) use ($empty_placeholder) {
-            $value = is_string($value) ? trim($value) : $value;
-            return ($value !== '' && $value !== null) ? esc_html((string) $value) : $empty_placeholder;
+        $empty_placeholder = ''; // Removed text placeholder in favor of input value
+        $format_meta = function ($value) {
+            // Helper not strictly needed anymore if we echo directly, but ensuring string clean
+            return is_string($value) ? trim($value) : $value;
         };
 
         ?>
@@ -1022,6 +1067,9 @@ class System_Cursos_Access_Control
                                 break;
                             case 'grupos_atualizados':
                                 echo 'Grupos do aluno atualizados com sucesso!';
+                                break;
+                            case 'dados_atualizados':
+                                echo 'Dados cadastrais e senha atualizados com sucesso!';
                                 break;
                         }
                         ?>
@@ -1180,80 +1228,117 @@ class System_Cursos_Access_Control
                 </div>
             </div>
 
-            <div style="display: flex; gap: 20px; margin: 20px 0; flex-wrap: wrap;">
-                <div
-                    style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; flex: 1; min-width: 260px;">
-                    <h3 style="margin-top: 0;">Documentos e Contato</h3>
-                    <table class="form-table" style="margin: 0;">
-                        <tr>
-                            <th style="padding: 6px 0; width: 120px;">CPF</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($cpf); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Aniversário</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($aniversario); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Instagram</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($instagram); ?>
-                            </td>
-                        </tr>
-                    </table>
+            <form method="post">
+                <?php wp_nonce_field('aluno_update_data', '_wpnonce'); ?>
+                <input type="hidden" name="update_student_data" value="1">
+                <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
+
+                <div style="display: flex; gap: 20px; margin: 20px 0; flex-wrap: wrap;">
+                    <div
+                        style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; flex: 1; min-width: 260px;">
+                        <h3 style="margin-top: 0;">Documentos e Contato</h3>
+                        <table class="form-table" style="margin: 0;">
+                            <tr>
+                                <th style="padding: 15px 10px 15px 0; width: 120px;">CPF</th>
+                                <td style="padding: 10px 0;">
+                                    <input type="text" name="cpf" value="<?php echo esc_attr($cpf); ?>" class="regular-text"
+                                        style="width: 100%;">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th style="padding: 15px 10px 15px 0;">Aniversário</th>
+                                <td style="padding: 10px 0;">
+                                    <input type="date" name="aniversario" value="<?php echo esc_attr($aniversario); ?>"
+                                        style="width: 100%;">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th style="padding: 15px 10px 15px 0;">Telefone</th>
+                                <td style="padding: 10px 0;">
+                                    <input type="text" name="billing_phone" value="<?php echo esc_attr($phone); ?>"
+                                        class="regular-text" style="width: 100%;">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th style="padding: 15px 10px 15px 0;">Instagram</th>
+                                <td style="padding: 10px 0;">
+                                    <input type="text" name="instagram" value="<?php echo esc_attr($instagram); ?>"
+                                        class="regular-text" style="width: 100%;">
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div
+                        style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; flex: 2; min-width: 320px;">
+                        <h3 style="margin-top: 0;">Endereço</h3>
+                        <table class="form-table" style="margin: 0;">
+                            <tr>
+                                <th style="padding: 15px 10px 15px 0; width: 120px;">CEP</th>
+                                <td style="padding: 10px 0;">
+                                    <input type="text" name="cep" value="<?php echo esc_attr($cep); ?>" class="regular-text"
+                                        style="width: 150px;">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th style="padding: 15px 10px 15px 0;">Rua</th>
+                                <td style="padding: 10px 0;">
+                                    <input type="text" name="rua" value="<?php echo esc_attr($rua); ?>" class="regular-text"
+                                        style="width: 100%;">
+                                </td>
+                            </tr>
+                            <tr
+                                style="display: flex; flex-wrap: wrap; gap: 20px; border-bottom: 1px solid #f0f0f1; padding-bottom: 10px; margin-bottom: 10px;">
+                                <td style="padding: 0; flex: 1; min-width: 100px;">
+                                    <strong style="display: block; margin-bottom: 5px;">Número</strong>
+                                    <input type="text" name="numero" value="<?php echo esc_attr($numero); ?>"
+                                        class="regular-text" style="width: 100%;">
+                                </td>
+                                <td style="padding: 0; flex: 2; min-width: 150px;">
+                                    <strong style="display: block; margin-bottom: 5px;">Complemento</strong>
+                                    <input type="text" name="complemento" value="<?php echo esc_attr($complemento); ?>"
+                                        class="regular-text" style="width: 100%;">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th style="padding: 15px 10px 15px 0;">Bairro</th>
+                                <td style="padding: 10px 0;">
+                                    <input type="text" name="bairro" value="<?php echo esc_attr($bairro); ?>"
+                                        class="regular-text" style="width: 100%;">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th style="padding: 15px 10px 15px 0;">Cidade/UF</th>
+                                <td style="padding: 10px 0; display: flex; gap: 10px;">
+                                    <input type="text" name="cidade" value="<?php echo esc_attr($cidade); ?>"
+                                        class="regular-text" style="flex: 3;" placeholder="Cidade">
+                                    <input type="text" name="estado" value="<?php echo esc_attr($estado); ?>"
+                                        class="regular-text" style="flex: 1;" placeholder="UF" maxlength="2">
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div
+                        style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; flex: 1; min-width: 260px; border-left: 4px solid #d63638;">
+                        <h3 style="margin-top: 0; color: #d63638;">Segurança</h3>
+                        <p class="description">Alterar a senha do usuário administrativamente.</p>
+
+                        <label style="display: block; margin-top: 15px;">
+                            <strong>Nova Senha</strong>
+                            <input type="password" name="new_password" value="" class="regular-text"
+                                style="width: 100%; margin-top: 5px;" placeholder="Preencha para alterar"
+                                autocomplete="new-password">
+                        </label>
+                        <p class="description" style="font-size: 12px;">Deixe em branco para manter a senha atual.</p>
+
+                        <div style="margin-top: 20px; pt: 15px; border-top: 1px solid #eee;">
+                            <button type="submit" class="button button-primary button-large" style="width: 100%;">Salvar Todas
+                                as Alterações</button>
+                        </div>
+                    </div>
                 </div>
-                <div
-                    style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; flex: 2; min-width: 320px;">
-                    <h3 style="margin-top: 0;">Endereço</h3>
-                    <table class="form-table" style="margin: 0;">
-                        <tr>
-                            <th style="padding: 6px 0; width: 120px;">CEP</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($cep); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Rua</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($rua); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Número</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($numero); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Complemento</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($complemento); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Bairro</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($bairro); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Cidade</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($cidade); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Estado</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($estado); ?>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
+            </form>
 
             <h2 style="margin-top: 30px;">Formação e Progresso</h2>
             <p class="description">Acompanhe o desenvolvimento do aluno em cada curso matriculado.</p>
