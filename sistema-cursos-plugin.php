@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Lerandash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.2.31
+ * Version: 1.2.32
  */
 
 if (!defined('ABSPATH')) {
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
  * Carrega dependências, define hooks de ativação e configura o menu de documentação no admin.
  *
  * @package SistemaCursos
- * @version 1.2.27
+ * @version 1.2.32
  */
 
 // 1. Carregar Classes do Core
@@ -119,11 +119,11 @@ function sistema_cursos_add_admin_menu()
         2                        // Position
     );
 
-    // Rename the first submenu item to "Documentação"
+    // Rename the first submenu item to "Configuração"
     add_submenu_page(
         'lms-suporte-rapido',    // Parent Slug
-        'Documentação',           // Page Title
-        'Documentação',           // Menu Title
+        'Configuração',           // Page Title
+        'Configuração',           // Menu Title
         'manage_options',         // Capability
         'lms-suporte-rapido',     // Menu Slug (Same as parent to override default)
         'sistema_cursos_render_admin_page' // Callback
@@ -132,20 +132,20 @@ function sistema_cursos_add_admin_menu()
 
 function sistema_cursos_render_admin_page()
 {
-    $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'shortcodes';
+    $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'ordenacao';
     ?>
     <div class="wrap">
-        <h1>LMS SuporteRapido - Documentação do Sistema</h1>
-        <p>Bem-vindo à documentação rápida dos shortcodes e funcionalidades do <strong>Sistema de Cursos
+        <h1>LMS SuporteRapido - Configuração do Sistema</h1>
+        <p>Bem-vindo ao painel de configuração dos shortcodes e funcionalidades do <strong>Sistema de Cursos
                 Personalizado</strong>.</p>
 
         <nav class="nav-tab-wrapper">
+            <a href="?page=lms-suporte-rapido&tab=ordenacao"
+                class="nav-tab <?php echo $active_tab == 'ordenacao' ? 'nav-tab-active' : ''; ?>">📋 Ordenação</a>
             <a href="?page=lms-suporte-rapido&tab=shortcodes"
                 class="nav-tab <?php echo $active_tab == 'shortcodes' ? 'nav-tab-active' : ''; ?>">Shortcodes</a>
             <a href="?page=lms-suporte-rapido&tab=cpts"
                 class="nav-tab <?php echo $active_tab == 'cpts' ? 'nav-tab-active' : ''; ?>">Estrutura de Dados (CPTs)</a>
-            <a href="?page=lms-suporte-rapido&tab=ordenacao"
-                class="nav-tab <?php echo $active_tab == 'ordenacao' ? 'nav-tab-active' : ''; ?>">📋 Ordenação</a>
         </nav>
 
         <style>
@@ -365,9 +365,11 @@ function sistema_cursos_render_admin_page()
             }
         </style>
 
-        <?php if ($active_tab == 'shortcodes'): ?>
+        <?php if ($active_tab == 'ordenacao'): ?>
 
-            <h2>Shortcodes Disponíveis</h2>
+            <h2>Ordenação de Conteúdos</h2>
+            <p>Arraste e solte os itens para definir a ordem de exibição no shortcode <code>[meus-cursos]</code>.</p>
+
             <table class="sc-table">
                 <thead>
                     <tr>
@@ -520,7 +522,9 @@ function sistema_cursos_render_admin_page()
                 </tbody>
             </table>
 
-        <?php elseif ($active_tab == 'cpts'): ?>
+        <?php elseif ($active_tab == 'shortcodes'): ?>
+
+            <h2>Shortcodes Disponíveis</h2>
 
             <h2>Estrutura de Dados e Campos Personalizados</h2>
             <p>Para que o sistema funcione corretamente, os seguintes Custom Post Types (CPTs) e Campos Personalizados (ACF)
@@ -621,10 +625,7 @@ function sistema_cursos_render_admin_page()
                 </tbody>
             </table>
 
-        <?php elseif ($active_tab == 'ordenacao'): ?>
-
-            <h2>Ordenação de Conteúdos</h2>
-            <p>Arraste e solte os itens para definir a ordem de exibição no shortcode <code>[meus-cursos]</code>.</p>
+        <?php elseif ($active_tab == 'cpts'): ?>
 
             <!-- Ordenar Trilhas -->
             <div class="sc-order-section">
