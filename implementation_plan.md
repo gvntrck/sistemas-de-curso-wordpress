@@ -1,58 +1,61 @@
-# Implementation Plan - Adicionar Edição de Dados e Senha do Aluno
+# Implementation Plan - Refinamento da UX: Modais para Edição de Aluno
 
-Este plano detalha as alterações necessárias para adicionar a funcionalidade de edição de dados cadastrais (endereço, documentos, contato) e alteração de senha na tela de "Detalhes do Aluno" no painel administrativo.
+Este plano visa reverter o layout da tela de "Detalhes do Aluno" para o modo de visualização (somente leitura) e introduzir botões de ação que abrem modais específicos para edição de dados e alteração de senha, mantendo a interface limpa e organizada.
 
 ## User Review Required
 
-> [!IMPORTANT]
-> A atualização da senha será feita diretamente usando `wp_update_user`. Isso não requer a senha antiga, pois é uma ação administrativa.
+> [!NOTE]
+> O layout principal voltará a ser de visualização. A edição será feita exclusivamente via modais (popups) acionados por botões no card de perfil.
 
-- **Arquivo Principal**: `includes/class-access-control.php`
-- **Ação**: Criar novo handler no `admin_process` e modificar o HTML do `render_details_page`.
+- **Arquivo Principal**: `includes/class-access-control.php`.
+- **Estratégia**: Manter o handler de backend "DRY" (reutilizável), permitindo atualizações parciais (só senha ou só dados) a partir de formulários distintos.
 
 ## Proposed Changes
 
-### 1. Atualizar Módulo de Controle de Acesso
+### 1. Reverter Layout de Visualização
 **Arquivo**: `includes/class-access-control.php`
 
-- **Método `admin_process`**:
-    - Adicionar verificação para `$_POST['update_student_data']`.
-    - Verificar nonce `aluno_update_data`.
-    - Sanitizar e atualizar os seguintes campos via `update_user_meta`:
-        - Contato: `billing_phone` (e `phone` como fallback), `instagram`.
-        - Documentos: `cpf`, `aniversario`.
-        - Endereço: `cep`, `rua`, `numero`, `complemento`, `bairro`, `cidade`, `estado`.
-    - Verificar se `new_password` foi preenchido.
-        - Se sim, atualizar senha via `wp_update_user`.
-    - Adicionar mensagem de sucesso `dados_atualizados` ao redirecionamento.
-
 - **Método `render_details_page`**:
-    - Envelopar as seções "Documentos e Contato" e "Endereço" em um `<form method="post">`.
-    - Adicionar `wp_nonce_field('aluno_update_data')` e input hidden `user_id`.
-    - Adicionar hidden input `update_student_data`.
-    - Substituir a exibição de texto estático (`echo $format_meta(...)`) por inputs HTML (`<input type="text" ...>`) preenchidos com os valores atuais.
-    - Adicionar nova seção (card) "Segurança" ou "Alterar Senha" dentro do formulário.
-        - Campo de senha (tipo password) com placeholder sugerindo que deixar em branco mantém a atual.
-    - Adicionar botão de submit "Salvar Alterações".
-    - Adicionar tratamento para exibir mensagem de sucesso `dados_atualizados`.
+    - Remover as tags `<form>` e `<input>` das seções "Documentos e Contato" e "Endereço".
+    - Restaurar a exibição dos dados usando `echo $format_meta(...)`.
+    - Remover a seção "Segurança" (caixa vermelha) que estava exposta na tela principal.
 
-### 2. Atualizar Versão do Plugin
-**Arquivo**: `sistema-cursos-plugin.php`
+### 2. Adicionar Botões de Ação
+**Arquivo**: `includes/class-access-control.php`
 
-- Incrementar a versão do plugin de `1.2.34` para `1.2.35` nas linhas:
-    - Cabeçalho do plugin.
-    - Constante de versão na classe (se houver/docblock).
-    - Função `sistema_cursos_check_version`.
+- **Método `render_details_page`** (Card de Perfil):
+    - Localizar a div do card de perfil (onde tem foto, nome, email).
+    - Inserir/Posicionar os novos botões *acima* do botão "Editar Perfil Completo":
+        - `<button class="button" onclick="openModal('modal-dados')">Alterar Dados Cadastrais</button>`
+        - `<button class="button" onclick="openModal('modal-senha')">Alterar Senha</button>`
+    - Ajustar estilos para espaçamento vertical.
+
+### 3. Implementar Modais e Scripts
+**Arquivo**: `includes/class-access-control.php`
+
+- **Final do Método `render_details_page`**:
+    - Adicionar HTML para dois modais (overlay + content):
+        1.  **Modal de Dados Cadastrais**:
+            - Formulário contendo todos os campos editáveis (CPF, Aniversário, Telefone, Instagram, Endereço completo).
+            - Hidden inputs necessários (`action`, `user_id`, `nonce`).
+        2.  **Modal de Senha**:
+            - Formulário contendo apenas o campo "Nova Senha".
+            - Hidden inputs necessários.
+    - Adicionar CSS inline (estilo `display: none` para ocultar, position fixed para overlay).
+    - Adicionar JavaScript simples para funções `openModal(id)` e `closeModal(id)`.
 
 ## Verification Plan
 
 ### Testes Manuais
-1.  Acessar o painel administrativo do WordPress.
-2.  Ir para **LMS SuporteRapido > Lista de Alunos**.
-3.  Clicar em "Ver Detalhes" de um aluno.
-4.  Verificar se os campos de endereço e contato agora são inputs editáveis.
-5.  Alterar alguns dados (ex: telefone, cidade) e clicar em "Salvar Alterações".
-6.  Verificar se a página recarrega com a mensagem de sucesso e se os dados persistem.
-7.  Preencher o campo "Nova Senha" e salvar.
-8.  Tentar fazer login com esse usuário em uma janela anônima usando a nova senha para confirmar a alteração.
-9.  Deixar o campo de senha em branco, alterar outro dado e salvar. Verificar se a senha *não* foi alterada (login antigo ainda funciona).
+1.  Acessar **LMS SuporteRapido > Lista de Alunos > Detalhes**.
+2.  Verificar se a página carregou com o layout "limpo" (sem inputs, apenas texto).
+3.  Verificar se os novos botões aparecem no card de perfil.
+4.  Clicar em "Alterar Dados Cadastrais":
+    - O modal deve abrir.
+    - Preencher dados e salvar.
+    - Confirmar se a página recarrega e os dados foram atualizados.
+5.  Clicar em "Alterar Senha":
+    - O modal deve abrir.
+    - Preencher senha e salvar.
+    - Verificar login com a nova senha.
+6.  Verificar se o estilo está responsivo e não quebrado.
