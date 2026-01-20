@@ -260,6 +260,10 @@ class System_Cursos_WooCommerce
                     if (!in_array($vinculo_id, $current_groups)) {
                         $current_groups[] = (int) $vinculo_id;
                         update_user_meta($user_id, '_aluno_grupos', $current_groups);
+
+                        // Log da ação
+                        System_Cursos_Access_Control::log_group_change($user_id, $vinculo_id, 'grupo_entrou', 0); // 0 = Sistema/Automático
+
                         $order->add_order_note("Usuário adicionado ao Grupo ID $vinculo_id com sucesso.");
                     } else {
                         $order->add_order_note("Usuário já estava no Grupo ID $vinculo_id. Nenhuma ação tomada.");

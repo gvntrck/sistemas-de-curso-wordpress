@@ -134,6 +134,23 @@ class System_Cursos_Access_Control
         );
     }
 
+    /**
+     * Método público para registrar mudanças em grupos
+     * 
+     * @param int $user_id ID do aluno
+     * @param int $group_id ID do grupo
+     * @param string $action Ação (grupo_entrou, grupo_saiu)
+     * @param int $actor_id ID de quem realizou a ação
+     */
+    public static function log_group_change($user_id, $group_id, $action, $actor_id = 0)
+    {
+        $group_title = get_the_title($group_id);
+        self::log_access_action($user_id, 0, $action, $actor_id, [
+            'group_id' => $group_id,
+            'group_name' => $group_title ? $group_title : "Grupo ID $group_id"
+        ]);
+    }
+
     // =============================================================================
     // FUNÇÕES DE ACESSO
     // =============================================================================
