@@ -19,6 +19,41 @@ class System_Cursos_Access_Control
         add_action('init', [$this, 'create_table']);
         add_action('admin_menu', [$this, 'admin_menu'], 20);
         add_action('admin_init', [$this, 'admin_process']);
+        add_action('wp_login', [$this, 'track_user_login'], 10, 2);
+    }
+
+    /**
+     * Rastreia o login do usuário para fins de segurança (Anti-Pirataria)
+     */
+    public function track_user_login($user_login, $user)
+    {
+        if (!$user) {
+            return;
+        }
+
+        $login_data = [
+            'time' => current_time('mysql'),
+            'ip' => $_SERVER['REMOTE_ADDR'] ?? 'Unknown',
+            'ua' => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'
+        ];
+
+        // Obter histórico existente
+        $history = get_user_meta($user->ID, '_login_history', true);
+        if (!is_array($history)) {
+            $history = [];
+        }
+
+        // Adicionar novo login no início
+        array_unshift($history, $login_data);
+
+        // Manter apenas os últimos 50 registros
+        $history = array_slice($history, 0, 50);
+
+        // Salvar
+        update_user_meta($user->ID, '_login_history', $history);
+
+        // Atualizar também o meta simples de último login para compatibilidade
+        update_user_meta($user->ID, 'last_login', current_time('mysql'));
     }
 
     // =============================================================================
@@ -619,6 +654,40 @@ class System_Cursos_Access_Control
         ];
     }
 
+    /**
+     * Retorna dados de engajamento para o gráfico (Aulas concluídas por dia nos últimos 30 dias)
+     */
+    public static function get_engagement_data($user_id)
+    {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'progresso_aluno';
+
+        // Inicializar últimos 30 dias com 0
+        $data = [];
+        for ($i = 29; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days"));
+            $data[$date] = 0;
+        }
+
+        // Buscar contagem agrupada por dia
+        $results = $wpdb->get_results($wpdb->prepare(
+            "SELECT DATE(data_conclusao) as date, COUNT(*) as count 
+             FROM $table_name 
+             WHERE user_id = %d AND data_conclusao >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+             GROUP BY DATE(data_conclusao)",
+            $user_id
+        ));
+
+        // Mesclar resultados
+        foreach ($results as $row) {
+            if (isset($data[$row->date])) {
+                $data[$row->date] = (int) $row->count;
+            }
+        }
+
+        return $data;
+    }
+
     // =============================================================================
     // PAINEL ADMINISTRATIVO
     // =============================================================================
@@ -802,6 +871,13 @@ class System_Cursos_Access_Control
                 // Tratamento especial para Billing Phone -> Phone syncing
                 if (isset($_POST['billing_phone'])) {
                     update_user_meta($user_id, 'phone', sanitize_text_field($_POST['billing_phone']));
+                }
+
+                // Salvar Notas do CRM (Apenas Admin)
+                if (isset($_POST['crm_notes'])) {
+                    // Sem sanitização excessiva para permitir quebras de linha, mas protegendo contra XSS básico se necessário.
+                    // O wp_kses_post permitiria HTML básico, mas vamos usar sanitize_textarea_field para texto puro.
+                    update_user_meta($user_id, '_crm_private_notes', sanitize_textarea_field($_POST['crm_notes']));
                 }
 
                 wp_redirect(admin_url('admin.php?page=acesso-cursos-alunos&action=view&user_id=' . $user_id . '&msg=dados_atualizados'));
@@ -1135,11 +1211,25 @@ class System_Cursos_Access_Control
         $bairro = get_user_meta($user_id, 'bairro', true);
         $cidade = get_user_meta($user_id, 'cidade', true);
         $estado = get_user_meta($user_id, 'estado', true);
+
+        // CRM Notes
+        $crm_notes = get_user_meta($user_id, '_crm_private_notes', true);
+
+        // Login History for Security
+        $login_history = get_user_meta($user_id, '_login_history', true);
+        if (!is_array($login_history)) {
+            $login_history = [];
+        }
+
         $empty_placeholder = '<em style="color:#999;">Não informado</em>';
         $format_meta = function ($value) use ($empty_placeholder) {
             $value = is_string($value) ? trim($value) : $value;
             return ($value !== '' && $value !== null) ? esc_html((string) $value) : $empty_placeholder;
         };
+
+        // Engagement Data
+        $engagement_data = self::get_engagement_data($user_id);
+
 
         ?>
         <div class="wrap">
@@ -1240,6 +1330,94 @@ class System_Cursos_Access_Control
                         <a href="<?php echo admin_url('user-edit.php?user_id=' . $user->ID); ?>" class="button">Editar Perfil
                             Completo</a>
                     </div>
+                </div>
+
+                <!-- CRM / Notas Internas -->
+                <div
+                    style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; flex: 1; min-width: 300px;">
+                    <h3 style="margin-top: 0; display:flex; align-items:center; gap:8px;">
+                        📝 Notas Internas (CRM)
+                        <span class="dashicons dashicons-lock" style="font-size:16px; width:16px; height:16px; color:#666;"
+                            title="Visível apenas para administradores"></span>
+                    </h3>
+                    <form method="post">
+                        <?php wp_nonce_field('aluno_update_data', '_wpnonce'); ?>
+                        <input type="hidden" name="update_student_data" value="1">
+                        <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+
+                        <textarea name="crm_notes" rows="6"
+                            style="width:100%; margin-bottom:10px; font-family:monospace; background:#fafafa; border:1px solid #ddd;"
+                            placeholder="Escreva observações internas sobre o aluno aqui... (Ex: Solicitou prorrogação, contato via WhatsApp, etc)"><?php echo esc_textarea($crm_notes); ?></textarea>
+
+                        <button type="submit" class="button button-primary">Salvar Anotações</button>
+                    </form>
+                </div>
+
+                <!-- Segurança e Histórico de Login -->
+                <div
+                    style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; min-width: 300px; max-width: 400px;">
+                    <h3 style="margin-top: 0; display:flex; align-items:center; gap:8px;">
+                        🛡️ Segurança
+                    </h3>
+
+                    <?php
+                    // Detecção Básica de Compartilhamento (Múltiplos IPs recentes)
+                    $unique_ips_recent = [];
+                    $recent_time_limit = strtotime('-24 hours');
+                    foreach ($login_history as $log) {
+                        $log_time = is_numeric($log['time']) ? $log['time'] : strtotime($log['time']);
+                        if ($log_time > $recent_time_limit) {
+                            $unique_ips_recent[$log['ip']] = true;
+                        }
+                    }
+                    if (count($unique_ips_recent) > 1) {
+                        echo '<div class="notice notice-warning inline" style="margin:0 0 15px 0; border-left-color: #f59e0b;"><p><strong>⚠️ Alerta de Segurança:</strong> Este usuário acessou de <strong>' . count($unique_ips_recent) . ' Endereços IP diferentes</strong> nas últimas 24 horas.</p></div>';
+                    }
+                    ?>
+
+                    <p style="margin-bottom:10px;"><strong>Últimos Acessos:</strong></p>
+
+                    <?php if (empty($login_history)): ?>
+                        <p style="color:#999; font-style:italic;">Nenhum registro de login recente.</p>
+                    <?php else: ?>
+                        <div style="max-height: 200px; overflow-y: auto; border:1px solid #eee; border-radius:4px;">
+                            <table class="wp-list-table widefat fixed striped" style="border:none;">
+                                <thead>
+                                    <tr>
+                                        <th>Data/Hora</th>
+                                        <th>IP</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach (array_slice($login_history, 0, 10) as $log):
+                                        $time_str = is_numeric($log['time']) ? date('d/m/Y H:i', $log['time']) : date('d/m/Y H:i', strtotime($log['time']));
+                                        $ip = $log['ip'];
+                                        $ua = isset($log['ua']) ? $log['ua'] : '';
+
+                                        // Simple brower detection for tooltip
+                                        $browser = 'Desconhecido';
+                                        if (strpos($ua, 'Chrome') !== false)
+                                            $browser = 'Chrome';
+                                        elseif (strpos($ua, 'Firefox') !== false)
+                                            $browser = 'Firefox';
+                                        elseif (strpos($ua, 'Safari') !== false)
+                                            $browser = 'Safari';
+                                        elseif (strpos($ua, 'Edge') !== false)
+                                            $browser = 'Edge';
+                                        ?>
+                                        <tr>
+                                            <td><?php echo $time_str; ?></td>
+                                            <td title="<?php echo esc_attr($ua); ?>">
+                                                <?php echo esc_html($ip); ?>
+                                                <br><small style="color:#999;"><?php echo $browser; ?></small>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="description" style="margin-top:5px;">Mostrando os últimos 10 acessos.</p>
+                    <?php endif; ?>
                 </div>
 
                 <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; min-width: 250px;">
@@ -1409,7 +1587,103 @@ class System_Cursos_Access_Control
                 </div>
             </div>
 
-            <!-- Histórico de Matrículas Card -->
+            <!-- Gráfico de Engajamento e Certificados -->
+            <div style="display: flex; gap: 20px; margin: 20px 0; flex-wrap: wrap;">
+
+                <!-- Gráfico -->
+                <div
+                    style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; flex: 2; min-width: 300px;">
+                    <h3 style="margin-top: 0;">📊 Engajamento (Últimos 30 dias)</h3>
+                    <p class="description">Quantidade de aulas concluídas por dia.</p>
+
+                    <div style="display: flex; align-items: flex-end; height: 150px; gap: 4px; padding-top: 20px;">
+                        <?php
+                        $max_count = max($engagement_data) ?: 1; // Avoid division by zero
+                        foreach ($engagement_data as $date => $count):
+                            $height_percent = ($count / $max_count) * 100;
+                            $height_percent = max($height_percent, 2); // Min height for visibility
+                            $color = $count > 0 ? '#3b82f6' : '#e5e7eb';
+                            $title = date('d/m', strtotime($date)) . ': ' . $count . ' aulas';
+                            ?>
+                            <div style="flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;"
+                                title="<?php echo esc_attr($title); ?>">
+                                <div
+                                    style="width: 100%; height: <?php echo $height_percent; ?>%; background: <?php echo $color; ?>; border-radius: 2px 2px 0 0; transition: height 0.3s;">
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 10px; color: #999;">
+                        <span><?php echo date('d/m', strtotime('-30 days')); ?></span>
+                        <span>Hoje</span>
+                    </div>
+                </div>
+
+                <!-- Certificados -->
+                <div
+                    style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; flex: 1; min-width: 250px;">
+                    <h3 style="margin-top: 0;">🏆 Certificados Conquistados</h3>
+                    <?php
+                    // Encontrar cursos 100% concluídos
+                    $certificados_conquistados = [];
+                    global $wpdb;
+                    $meta_rows = $wpdb->get_results($wpdb->prepare(
+                        "SELECT meta_key, meta_value FROM $wpdb->usermeta WHERE user_id = %d AND meta_key LIKE 'progresso_curso_%'",
+                        $user_id
+                    ));
+
+                    foreach ($meta_rows as $row) {
+                        if ($row->meta_value >= 100) {
+                            $c_id = (int) str_replace('progresso_curso_', '', $row->meta_key);
+                            if (get_post_status($c_id) === 'publish') {
+                                $certificados_conquistados[] = $c_id;
+                            }
+                        }
+                    }
+
+                    if (empty($certificados_conquistados)):
+                        ?>
+                        <p style="color: #999;">Nenhum certificado emitido ainda.</p>
+                    <?php else: ?>
+                        <ul style="list-style: none; margin: 0; padding: 0;">
+                            <?php foreach ($certificados_conquistados as $c_id):
+                                $c_title = get_the_title($c_id);
+                                $progress = self::get_detailed_progress($user_id, $c_id);
+                                $data_conclusao = isset($progress['last_date']) ? date('d/m/Y', strtotime($progress['last_date'])) : 'Data desconhecida';
+
+                                // Link para visualizar certificado (requer update no shortcode para aceitar aluno_id)
+                                // Por enquanto vamos apontar para o shortcode, o admin precisará adaptar o shortcode para ver o certificado de outro aluno se não for ele mesmo.
+                                // Porém, no plano, prometemos alterar o shortcode. Vamos gerar o link esperando essa alteração.
+                                $cert_link = add_query_arg(['curso_id' => $c_id, 'aluno_id' => $user_id], site_url('/certificado'));
+                                // Nota: O User precisará criar uma página /certificado com o shortcode [certificado] se não existir, mas assumimos que existe.
+                                // Melhor: Tentar achar a página que tem o shortcode.
+                                // Fallback genérico se não acharmos página
+                                $cert_page_query = new WP_Query([
+                                    's' => '[certificado]',
+                                    'post_type' => 'page',
+                                    'posts_per_page' => 1
+                                ]);
+                                if ($cert_page_query->have_posts()) {
+                                    $cert_link = add_query_arg(['curso_id' => $c_id, 'aluno_id' => $user_id], get_permalink($cert_page_query->posts[0]->ID));
+                                }
+                                ?>
+                                <li
+                                    style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f1; display:flex; align-items:center; justify-content:space-between;">
+                                    <div>
+                                        <strong><?php echo esc_html($c_title); ?></strong>
+                                        <br><small style="color:#666;">Concluído em: <?php echo $data_conclusao; ?></small>
+                                    </div>
+                                    <a href="<?php echo esc_url($cert_link); ?>" target="_blank" class="button button-small"
+                                        title="Visualizar Certificado">
+                                        <span class="dashicons dashicons-visibility" style="margin-top:2px;"></span>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+
+            </div>
             <?php
             // Fetch History Logs
             $table_log = $wpdb->prefix . 'acesso_cursos_log';
