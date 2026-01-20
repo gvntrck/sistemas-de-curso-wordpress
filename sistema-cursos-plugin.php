@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.2.44
+ * Version: 1.2.45
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.2.44');
+define('SISTEMA_CURSOS_VERSION', '1.2.45');
 
 /**
  * sistema-cursos-plugin.php
@@ -22,7 +22,7 @@ define('SISTEMA_CURSOS_VERSION', '1.2.44');
  * Carrega dependências, define hooks de ativação e configura o menu de documentação no admin.
  *
  * @package SistemaCursos
- * @version 1.2.44
+ * @version 1.2.45
  */
 
 // 1. Carregar Classes do Core
@@ -66,8 +66,13 @@ new System_Cursos_Shortcode_Cursos_Trilha();
 new System_Cursos_Shortcode_Single_Trilha();
 new System_Cursos_Shortcode_Redireciona_Aula();
 
-if (class_exists('WooCommerce')) {
-    new System_Cursos_WooCommerce();
+add_action('plugins_loaded', 'sistema_cursos_init_woocommerce_integration');
+
+function sistema_cursos_init_woocommerce_integration()
+{
+    if (class_exists('WooCommerce')) {
+        new System_Cursos_WooCommerce();
+    }
 }
 
 /**
@@ -96,7 +101,7 @@ add_action('init', 'sistema_cursos_check_version', 99);
 
 function sistema_cursos_check_version()
 {
-    $current_version = '1.2.44';
+    $current_version = '1.2.45';
     $db_version = get_option('sistema_cursos_version');
 
     if ($db_version !== $current_version) {
