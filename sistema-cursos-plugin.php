@@ -4,12 +4,15 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.2.39
+ * Version: 1.2.40
  */
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
+
+// Definição de constantes
+define('SISTEMA_CURSOS_VERSION', '1.2.40');
 
 /**
  * sistema-cursos-plugin.php

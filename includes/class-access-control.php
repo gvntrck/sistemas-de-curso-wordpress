@@ -1409,337 +1409,336 @@ class System_Cursos_Access_Control
                 </div>
             </div>
 
-        </div>
-
-        <!-- Histórico de Matrículas Card -->
-        <?php
-        // Fetch History Logs
-        $table_log = $wpdb->prefix . 'acesso_cursos_log';
-        $history_logs = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM $table_log WHERE user_id = %d ORDER BY created_at DESC",
-            $user_id
-        ));
-
-        // Group logs by Course for duration calculation logic if needed, 
-        // but flat list is better for a timeline view.
-        ?>
-        <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin: 20px 0;">
-            <h3 style="margin-top: 0;">Histórico de Matrículas e Acessos</h3>
-            <p class="description">Registro detalhado de quando o acesso foi concedido, revogado ou suspenso.</p>
-
-            <?php if (empty($history_logs)): ?>
-                <p style="color: #666; font-style: italic;">Nenhum histórico registrado para este aluno.</p>
-            <?php else: ?>
-                <div style="max-height: 300px; overflow-y: auto;">
-                    <table class="wp-list-table widefat fixed striped" style="box-shadow: none; border: 1px solid #e5e7eb;">
-                        <thead>
-                            <tr>
-                                <th style="width: 15px;"></th> <!-- Status color indicator -->
-                                <th>Curso</th>
-                                <th>Ação</th>
-                                <th>Data</th>
-                                <th>Realizado por</th>
-                                <th>Detalhes</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($history_logs as $log):
-                                $curso_title = '';
-                                if ($log->curso_id == 0) {
-                                    $details_arr = json_decode($log->details, true);
-                                    if (isset($details_arr['group_name'])) {
-                                        $curso_title = '<strong>Grupo:</strong> ' . esc_html($details_arr['group_name']);
-                                    } else {
-                                        $curso_title = 'Sistema / Geral';
-                                    }
-                                } else {
-                                    $curso_title = get_the_title($log->curso_id) ?: '(Curso Deletado ID: ' . $log->curso_id . ')';
-                                    $curso_title = '<a href="' . get_edit_post_link($log->curso_id) . '" target="_blank">' . esc_html(strip_tags($curso_title)) . '</a>';
-                                }
-                                $actor_data = get_userdata($log->actor_id);
-                                $actor_name = $actor_data ? $actor_data->display_name : 'Sistema/Desconhecido';
-
-                                // Status config
-                                $status_config = [
-                                    'concedido' => ['color' => '#22c55e', 'label' => 'Acesso Concedido'],
-                                    'revogado' => ['color' => '#ef4444', 'label' => 'Acesso Revogado'],
-                                    'suspenso' => ['color' => '#f59e0b', 'label' => 'Acesso Suspenso'],
-                                    'reativado' => ['color' => '#3b82f6', 'label' => 'Acesso Reativado'],
-                                ];
-
-                                $config = isset($status_config[$log->action]) ? $status_config[$log->action] : ['color' => '#64748b', 'label' => ucfirst($log->action)];
-                                $details = $log->details ? json_decode($log->details, true) : [];
-
-                                // Calculate time enrolled if this is a 'revoked' event, find the previous 'granted'
-                                // (This is a simplified "time enrolled" calculation for display)
-                                $time_diff_display = '';
-                                if (in_array($log->action, ['revogado', 'suspenso'])) {
-                                    // Find most recent 'concedido' or 'reativado' before this log for this course
-                                    // using simple array search as we are iterating
-                                    // Note: sophisticated duration calc might require dedicated query, 
-                                    // but simple "since" logic serves the purpose here.
-                                }
-                                ?>
-                                <tr>
-                                    <td style="padding: 0;">
-                                        <div
-                                            style="height: 100%; width: 5px; background-color: <?php echo $config['color']; ?>; height: 40px;">
-                                        </div>
-                                    </td>
-                                    <td><strong><?php echo $curso_title; ?></strong></td>
-                                    <td>
-                                        <span style="color: <?php echo $config['color']; ?>; font-weight: 500;">
-                                            <?php echo esc_html($config['label']); ?>
-                                        </span>
-                                    </td>
-                                    <td><?php echo date('d/m/Y H:i', strtotime($log->created_at)); ?></td>
-                                    <td>
-                                        <?php echo esc_html($actor_name); ?>
-                                        <small style="display:block; color: #999;">ID: <?php echo $log->actor_id; ?></small>
-                                    </td>
-                                    <td>
-                                        <?php
-                                        if (!empty($details['data_fim'])) {
-                                            echo '<small>Expira em: ' . date('d/m/Y', strtotime($details['data_fim'])) . '</small>';
-                                        }
-                                        ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            <?php endif; ?>
-        </div>
-
-        <h2 style="margin-top: 30px;">Formação e Progresso</h2>
-        <p class="description">Acompanhe o desenvolvimento do aluno em cada curso matriculado.</p>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+            <!-- Histórico de Matrículas Card -->
             <?php
-            $cursos_com_acesso = array_filter($cursos, function ($c) use ($user_id) {
-                return self::has_access($user_id, $c->ID);
-            });
+            // Fetch History Logs
+            $table_log = $wpdb->prefix . 'acesso_cursos_log';
+            $history_logs = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM $table_log WHERE user_id = %d ORDER BY created_at DESC",
+                $user_id
+            ));
 
-            if (empty($cursos_com_acesso)): ?>
-                <div
-                    style="grid-column: 1 / -1; background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; text-align: center; color: #666;">
-                    Nenhum curso ativo para este aluno.
-                </div>
-            <?php else:
-                foreach ($cursos_com_acesso as $c):
-                    $progresso = self::get_detailed_progress($user_id, $c->ID);
-                    ?>
-                    <div
-                        style="background: #fff; border: 1px solid #ccd0d4; border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                            <h4 style="margin: 0; font-size: 15px; color: #1d2327;">
-                                <?php echo esc_html($c->post_title); ?>
-                            </h4>
-                            <span style="font-size: 18px; font-weight: 700; color: #22c55e;">
-                                <?php echo $progresso['percent']; ?>%
-                            </span>
-                        </div>
+            // Group logs by Course for duration calculation logic if needed, 
+            // but flat list is better for a timeline view.
+            ?>
+            <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin: 20px 0;">
+                <h3 style="margin-top: 0;">Histórico de Matrículas e Acessos</h3>
+                <p class="description">Registro detalhado de quando o acesso foi concedido, revogado ou suspenso.</p>
 
-                        <div style="height: 8px; background: #f0f0f1; border-radius: 4px; overflow: hidden; margin-bottom: 10px;">
-                            <div
-                                style="width: <?php echo $progresso['percent']; ?>%; height: 100%; background: #22c55e; border-radius: 4px; transition: width 0.3s ease;">
-                            </div>
-                        </div>
+                <?php if (empty($history_logs)): ?>
+                    <p style="color: #666; font-style: italic;">Nenhum histórico registrado para este aluno.</p>
+                <?php else: ?>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        <table class="wp-list-table widefat fixed striped" style="box-shadow: none; border: 1px solid #e5e7eb;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 15px;"></th> <!-- Status color indicator -->
+                                    <th>Curso</th>
+                                    <th>Ação</th>
+                                    <th>Data</th>
+                                    <th>Realizado por</th>
+                                    <th>Detalhes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($history_logs as $log):
+                                    $curso_title = '';
+                                    if ($log->curso_id == 0) {
+                                        $details_arr = json_decode($log->details, true);
+                                        if (isset($details_arr['group_name'])) {
+                                            $curso_title = '<strong>Grupo:</strong> ' . esc_html($details_arr['group_name']);
+                                        } else {
+                                            $curso_title = 'Sistema / Geral';
+                                        }
+                                    } else {
+                                        $curso_title = get_the_title($log->curso_id) ?: '(Curso Deletado ID: ' . $log->curso_id . ')';
+                                        $curso_title = '<a href="' . get_edit_post_link($log->curso_id) . '" target="_blank">' . esc_html(strip_tags($curso_title)) . '</a>';
+                                    }
+                                    $actor_data = get_userdata($log->actor_id);
+                                    $actor_name = $actor_data ? $actor_data->display_name : 'Sistema/Desconhecido';
 
-                        <div style="display: flex; justify-content: space-between; font-size: 13px; color: #64748b;">
-                            <span>
-                                <?php echo $progresso['concluidas']; ?> de
-                                <?php echo $progresso['total']; ?> aulas
-                            </span>
-                            <span>
-                                <?php if ($progresso['percent'] >= 100): ?>
-                                    <span
-                                        style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">CONCLUÍDO</span>
-                                <?php else: ?>
-                                    EM ANDAMENTO
-                                <?php endif; ?>
-                            </span>
-                        </div>
+                                    // Status config
+                                    $status_config = [
+                                        'concedido' => ['color' => '#22c55e', 'label' => 'Acesso Concedido'],
+                                        'revogado' => ['color' => '#ef4444', 'label' => 'Acesso Revogado'],
+                                        'suspenso' => ['color' => '#f59e0b', 'label' => 'Acesso Suspenso'],
+                                        'reativado' => ['color' => '#3b82f6', 'label' => 'Acesso Reativado'],
+                                    ];
 
-                        <?php if ($progresso['last_date']): ?>
-                            <div
-                                style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #94a3b8;">
-                                🕒 Última aula:
-                                <?php echo date('d/m/Y H:i', strtotime($progresso['last_date'])); ?>
-                            </div>
-                        <?php endif; ?>
+                                    $config = isset($status_config[$log->action]) ? $status_config[$log->action] : ['color' => '#64748b', 'label' => ucfirst($log->action)];
+                                    $details = $log->details ? json_decode($log->details, true) : [];
+
+                                    // Calculate time enrolled if this is a 'revoked' event, find the previous 'granted'
+                                    // (This is a simplified "time enrolled" calculation for display)
+                                    $time_diff_display = '';
+                                    if (in_array($log->action, ['revogado', 'suspenso'])) {
+                                        // Find most recent 'concedido' or 'reativado' before this log for this course
+                                        // using simple array search as we are iterating
+                                        // Note: sophisticated duration calc might require dedicated query, 
+                                        // but simple "since" logic serves the purpose here.
+                                    }
+                                    ?>
+                                    <tr>
+                                        <td style="padding: 0;">
+                                            <div
+                                                style="height: 100%; width: 5px; background-color: <?php echo $config['color']; ?>; height: 40px;">
+                                            </div>
+                                        </td>
+                                        <td><strong><?php echo $curso_title; ?></strong></td>
+                                        <td>
+                                            <span style="color: <?php echo $config['color']; ?>; font-weight: 500;">
+                                                <?php echo esc_html($config['label']); ?>
+                                            </span>
+                                        </td>
+                                        <td><?php echo date('d/m/Y H:i', strtotime($log->created_at)); ?></td>
+                                        <td>
+                                            <?php echo esc_html($actor_name); ?>
+                                            <small style="display:block; color: #999;">ID: <?php echo $log->actor_id; ?></small>
+                                        </td>
+                                        <td>
+                                            <?php
+                                            if (!empty($details['data_fim'])) {
+                                                echo '<small>Expira em: ' . date('d/m/Y', strtotime($details['data_fim'])) . '</small>';
+                                            }
+                                            ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
-                <?php endforeach;
-            endif; ?>
-        </div>
+                <?php endif; ?>
+            </div>
 
-        <h2>Cursos e Permissões</h2>
-        <p class="description">Gerencie os acessos do aluno aos cursos disponíveis.</p>
+            <h2 style="margin-top: 30px;">Formação e Progresso</h2>
+            <p class="description">Acompanhe o desenvolvimento do aluno em cada curso matriculado.</p>
 
-        <form method="post">
-            <?php wp_nonce_field('aluno_acesso_rapido'); ?>
-            <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+                <?php
+                $cursos_com_acesso = array_filter($cursos, function ($c) use ($user_id) {
+                    return self::has_access($user_id, $c->ID);
+                });
 
-            <table class="wp-list-table widefat fixed striped">
-                <thead>
-                    <tr>
-                        <th>Curso</th>
-                        <th style="width: 120px;">Status</th>
-                        <th style="width: 150px;">Expiração</th>
-                        <th style="width: 130px;">Desde</th>
-                        <th style="width: 250px;">Ações Rápidas</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($cursos as $curso):
-                        $acesso = isset($acessos_map[$curso->ID]) ? $acessos_map[$curso->ID] : null;
-
-                        // Check for Group Access if no Direct Access
-                        $access_source = self::get_access_source($user->ID, $curso->ID);
-
-                        $tem_acesso = ($access_source !== false);
-                        $is_group_access = ($access_source && in_array($access_source['type'], ['group', 'group_trilha']));
-
-                        $expirado = $acesso && $acesso->status === 'ativo' && $acesso->data_fim && strtotime($acesso->data_fim) < time();
+                if (empty($cursos_com_acesso)): ?>
+                    <div
+                        style="grid-column: 1 / -1; background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; text-align: center; color: #666;">
+                        Nenhum curso ativo para este aluno.
+                    </div>
+                <?php else:
+                    foreach ($cursos_com_acesso as $c):
+                        $progresso = self::get_detailed_progress($user_id, $c->ID);
                         ?>
-                        <tr>
-                            <td><strong>
-                                    <a href="<?php echo esc_url(admin_url('post.php?post=' . $curso->ID . '&action=edit')); ?>"
-                                        title="Editar curso: <?php echo esc_attr($curso->post_title); ?>"
-                                        style="text-decoration: none; color: #2271b1;">
-                                        <?php echo esc_html($curso->post_title); ?>
-                                    </a>
-                                </strong></td>
-                            <td>
-                                <?php if (!$tem_acesso): ?>
-                                    <?php if ($expirado): ?>
-                                        <span style="color: #f59e0b; font-weight: 600;">Expirado</span>
-                                    <?php else: ?>
-                                        <span style="color: #9ca3af;">Sem acesso</span>
-                                    <?php endif; ?>
-                                <?php else: ?>
-                                    <?php if ($is_group_access): ?>
+                        <div
+                            style="background: #fff; border: 1px solid #ccd0d4; border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                                <h4 style="margin: 0; font-size: 15px; color: #1d2327;">
+                                    <?php echo esc_html($c->post_title); ?>
+                                </h4>
+                                <span style="font-size: 18px; font-weight: 700; color: #22c55e;">
+                                    <?php echo $progresso['percent']; ?>%
+                                </span>
+                            </div>
+
+                            <div style="height: 8px; background: #f0f0f1; border-radius: 4px; overflow: hidden; margin-bottom: 10px;">
+                                <div
+                                    style="width: <?php echo $progresso['percent']; ?>%; height: 100%; background: #22c55e; border-radius: 4px; transition: width 0.3s ease;">
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #64748b;">
+                                <span>
+                                    <?php echo $progresso['concluidas']; ?> de
+                                    <?php echo $progresso['total']; ?> aulas
+                                </span>
+                                <span>
+                                    <?php if ($progresso['percent'] >= 100): ?>
                                         <span
-                                            style="color: #2563eb; font-weight: 600; background: #dbeafe; padding: 2px 8px; border-radius: 4px;">Utilizando
-                                            <?php echo esc_html($access_source['label']); ?></span>
-                                    <?php elseif ($acesso && $acesso->status === 'ativo'): ?>
-                                        <span style="color: #22c55e; font-weight: 600;">Ativo (Manual)</span>
-                                    <?php elseif ($acesso && $acesso->status === 'suspenso'): ?>
-                                        <span style="color: #6b7280; font-weight: 600;">Suspenso</span>
+                                            style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">CONCLUÍDO</span>
                                     <?php else: ?>
-                                        <span style="color: #ef4444; font-weight: 600;">Revogado</span>
+                                        EM ANDAMENTO
                                     <?php endif; ?>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php if ($is_group_access): ?>
-                                    <em>Gerenciado pelo Grupo</em>
-                                <?php elseif ($acesso && $acesso->data_fim): ?>
-                                    <?php echo date('d/m/Y', strtotime($acesso->data_fim)); ?>
-                                <?php elseif ($acesso && $acesso->status === 'ativo'): ?>
-                                    <em>Vitalício</em>
-                                <?php else: ?>
-                                    —
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php echo $acesso ? date('d/m/Y', strtotime($acesso->created_at)) : '—'; ?>
-                            </td>
-                            <td>
-                                <?php if ($is_group_access): ?>
-                                    <small style="color:#666;">Acesso via grupo. Edite o grupo ou remova o aluno dele.</small>
-                                <?php elseif (!$acesso || $acesso->status !== 'ativo' || $expirado): ?>
-                                    <button type="submit" name="acao_rapida" value="ativar_<?php echo $curso->ID; ?>"
-                                        class="button button-primary button-small">
-                                        Conceder Acesso
-                                    </button>
-                                <?php else: ?>
-                                    <button type="submit" name="acao_rapida" value="suspender_<?php echo $curso->ID; ?>"
-                                        class="button button-small">
-                                        Suspender
-                                    </button>
-                                    <button type="submit" name="acao_rapida" value="revogar_<?php echo $curso->ID; ?>"
-                                        class="button button-small" style="color: #dc3232;">
-                                        Revogar
-                                    </button>
-                                <?php endif; ?>
+                                </span>
+                            </div>
 
-                                <?php if ($acesso && $acesso->status === 'suspenso'): ?>
-                                    <button type="submit" name="acao_rapida" value="reativar_<?php echo $curso->ID; ?>"
-                                        class="button button-primary button-small">
-                                        Reativar
-                                    </button>
-                                <?php endif; ?>
-                            </td>
+                            <?php if ($progresso['last_date']): ?>
+                                <div
+                                    style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #94a3b8;">
+                                    🕒 Última aula:
+                                    <?php echo date('d/m/Y H:i', strtotime($progresso['last_date'])); ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach;
+                endif; ?>
+            </div>
+
+            <h2>Cursos e Permissões</h2>
+            <p class="description">Gerencie os acessos do aluno aos cursos disponíveis.</p>
+
+            <form method="post">
+                <?php wp_nonce_field('aluno_acesso_rapido'); ?>
+                <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+
+                <table class="wp-list-table widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th>Curso</th>
+                            <th style="width: 120px;">Status</th>
+                            <th style="width: 150px;">Expiração</th>
+                            <th style="width: 130px;">Desde</th>
+                            <th style="width: 250px;">Ações Rápidas</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </form>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($cursos as $curso):
+                            $acesso = isset($acessos_map[$curso->ID]) ? $acessos_map[$curso->ID] : null;
 
-        <div
-            style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin-top: 20px; max-width: 500px;">
-            <h3 style="margin-top: 0;">Conceder Acesso com Data de Expiração</h3>
-            <form method="post" style="display: flex; flex-direction: column; gap: 10px;">
-                <?php wp_nonce_field('aluno_conceder_acesso'); ?>
-                <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+                            // Check for Group Access if no Direct Access
+                            $access_source = self::get_access_source($user->ID, $curso->ID);
 
-                <label>
-                    <strong>Curso:</strong><br>
-                    <select name="curso_id" required style="width: 100%;">
-                        <option value="">Selecione...</option>
-                        <?php foreach ($cursos as $curso): ?>
-                            <option value="<?php echo $curso->ID; ?>">
-                                <?php echo esc_html($curso->post_title); ?>
-                            </option>
+                            $tem_acesso = ($access_source !== false);
+                            $is_group_access = ($access_source && in_array($access_source['type'], ['group', 'group_trilha']));
+
+                            $expirado = $acesso && $acesso->status === 'ativo' && $acesso->data_fim && strtotime($acesso->data_fim) < time();
+                            ?>
+                            <tr>
+                                <td><strong>
+                                        <a href="<?php echo esc_url(admin_url('post.php?post=' . $curso->ID . '&action=edit')); ?>"
+                                            title="Editar curso: <?php echo esc_attr($curso->post_title); ?>"
+                                            style="text-decoration: none; color: #2271b1;">
+                                            <?php echo esc_html($curso->post_title); ?>
+                                        </a>
+                                    </strong></td>
+                                <td>
+                                    <?php if (!$tem_acesso): ?>
+                                        <?php if ($expirado): ?>
+                                            <span style="color: #f59e0b; font-weight: 600;">Expirado</span>
+                                        <?php else: ?>
+                                            <span style="color: #9ca3af;">Sem acesso</span>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <?php if ($is_group_access): ?>
+                                            <span
+                                                style="color: #2563eb; font-weight: 600; background: #dbeafe; padding: 2px 8px; border-radius: 4px;">Utilizando
+                                                <?php echo esc_html($access_source['label']); ?></span>
+                                        <?php elseif ($acesso && $acesso->status === 'ativo'): ?>
+                                            <span style="color: #22c55e; font-weight: 600;">Ativo (Manual)</span>
+                                        <?php elseif ($acesso && $acesso->status === 'suspenso'): ?>
+                                            <span style="color: #6b7280; font-weight: 600;">Suspenso</span>
+                                        <?php else: ?>
+                                            <span style="color: #ef4444; font-weight: 600;">Revogado</span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if ($is_group_access): ?>
+                                        <em>Gerenciado pelo Grupo</em>
+                                    <?php elseif ($acesso && $acesso->data_fim): ?>
+                                        <?php echo date('d/m/Y', strtotime($acesso->data_fim)); ?>
+                                    <?php elseif ($acesso && $acesso->status === 'ativo'): ?>
+                                        <em>Vitalício</em>
+                                    <?php else: ?>
+                                        —
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php echo $acesso ? date('d/m/Y', strtotime($acesso->created_at)) : '—'; ?>
+                                </td>
+                                <td>
+                                    <?php if ($is_group_access): ?>
+                                        <small style="color:#666;">Acesso via grupo. Edite o grupo ou remova o aluno dele.</small>
+                                    <?php elseif (!$acesso || $acesso->status !== 'ativo' || $expirado): ?>
+                                        <button type="submit" name="acao_rapida" value="ativar_<?php echo $curso->ID; ?>"
+                                            class="button button-primary button-small">
+                                            Conceder Acesso
+                                        </button>
+                                    <?php else: ?>
+                                        <button type="submit" name="acao_rapida" value="suspender_<?php echo $curso->ID; ?>"
+                                            class="button button-small">
+                                            Suspender
+                                        </button>
+                                        <button type="submit" name="acao_rapida" value="revogar_<?php echo $curso->ID; ?>"
+                                            class="button button-small" style="color: #dc3232;">
+                                            Revogar
+                                        </button>
+                                    <?php endif; ?>
+
+                                    <?php if ($acesso && $acesso->status === 'suspenso'): ?>
+                                        <button type="submit" name="acao_rapida" value="reativar_<?php echo $curso->ID; ?>"
+                                            class="button button-primary button-small">
+                                            Reativar
+                                        </button>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
                         <?php endforeach; ?>
-                    </select>
-                </label>
-
-                <label>
-                    <strong>Data de Expiração:</strong><br>
-                    <input type="date" name="data_fim" style="width: 100%;">
-                    <small style="color: #666;">Deixe vazio para acesso vitalício.</small>
-                </label>
-
-                <button type="submit" name="conceder_acesso" value="1" class="button button-primary">
-                    Conceder Acesso
-                </button>
+                    </tbody>
+                </table>
             </form>
-        </div>
 
-        <div
-            style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin-top: 20px; max-width: 500px;">
-            <h3 style="margin-top: 0;">Matrícula em Massa por Trilha</h3>
-            <p class="description">Matricula o aluno em todos os cursos desta trilha.</p>
-            <form method="post" style="display: flex; flex-direction: column; gap: 10px;">
-                <?php wp_nonce_field('aluno_matricular_trilha'); ?>
-                <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+            <div
+                style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin-top: 20px; max-width: 500px;">
+                <h3 style="margin-top: 0;">Conceder Acesso com Data de Expiração</h3>
+                <form method="post" style="display: flex; flex-direction: column; gap: 10px;">
+                    <?php wp_nonce_field('aluno_conceder_acesso'); ?>
+                    <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
 
-                <label>
-                    <strong>Trilha:</strong><br>
-                    <select name="trilha_id" required style="width: 100%;">
-                        <option value="">Selecione a Trilha...</option>
-                        <?php foreach ($trilhas as $trilha): ?>
-                            <option value="<?php echo $trilha->ID; ?>">
-                                <?php echo esc_html($trilha->post_title); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </label>
+                    <label>
+                        <strong>Curso:</strong><br>
+                        <select name="curso_id" required style="width: 100%;">
+                            <option value="">Selecione...</option>
+                            <?php foreach ($cursos as $curso): ?>
+                                <option value="<?php echo $curso->ID; ?>">
+                                    <?php echo esc_html($curso->post_title); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
 
-                <label>
-                    <strong>Data de Expiração (Opcional):</strong><br>
-                    <input type="date" name="data_fim" style="width: 100%;">
-                    <small style="color: #666;">Aplica a mesma data para todos os cursos da trilha.</small>
-                </label>
+                    <label>
+                        <strong>Data de Expiração:</strong><br>
+                        <input type="date" name="data_fim" style="width: 100%;">
+                        <small style="color: #666;">Deixe vazio para acesso vitalício.</small>
+                    </label>
 
-                <button type="submit" name="matricular_trilha" value="1" class="button button-primary">
-                    Matricular na Trilha
-                </button>
-            </form>
-        </div>
+                    <button type="submit" name="conceder_acesso" value="1" class="button button-primary">
+                        Conceder Acesso
+                    </button>
+                </form>
+            </div>
+
+            <div
+                style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin-top: 20px; max-width: 500px;">
+                <h3 style="margin-top: 0;">Matrícula em Massa por Trilha</h3>
+                <p class="description">Matricula o aluno em todos os cursos desta trilha.</p>
+                <form method="post" style="display: flex; flex-direction: column; gap: 10px;">
+                    <?php wp_nonce_field('aluno_matricular_trilha'); ?>
+                    <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+
+                    <label>
+                        <strong>Trilha:</strong><br>
+                        <select name="trilha_id" required style="width: 100%;">
+                            <option value="">Selecione a Trilha...</option>
+                            <?php foreach ($trilhas as $trilha): ?>
+                                <option value="<?php echo $trilha->ID; ?>">
+                                    <?php echo esc_html($trilha->post_title); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
+
+                    <label>
+                        <strong>Data de Expiração (Opcional):</strong><br>
+                        <input type="date" name="data_fim" style="width: 100%;">
+                        <small style="color: #666;">Aplica a mesma data para todos os cursos da trilha.</small>
+                    </label>
+
+                    <button type="submit" name="matricular_trilha" value="1" class="button button-primary">
+                        Matricular na Trilha
+                    </button>
+                </form>
+            </div>
         </div>
 
         <!-- Modal Alterar Dados Cadastrais -->
