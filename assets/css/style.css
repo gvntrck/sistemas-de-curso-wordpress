@@ -1119,7 +1119,8 @@
 .mc-carousel-wrapper {
     overflow: hidden;
     width: 100%;
-    padding: 0 10px;
+    padding: 5px 10px;
+    /* Padding vertical para o hover não ser cortado pelo overflow */
 }
 
 /* Track que contém todos os cards - move horizontalmente */

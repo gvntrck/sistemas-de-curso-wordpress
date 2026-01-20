@@ -4,8 +4,10 @@ This directory contains plans for coordinating work across documentation and pla
 
 ## Plan Queue
 1. [Carrossel Meus Cursos](./carrossel-meus-cursos.md)
-2. [Corrigir Icone Certificado](./corrigir-icone-certificado.md)
-3. [Otimizacao Css](./otimizacao-css.md)
+2. [Correcao Bug Border Hover Cards](./correcao-bug-border-hover-cards.md)
+3. [Correcao Bug Grupo Fantasma](./correcao-bug-grupo-fantasma.md)
+4. [Corrigir Icone Certificado](./corrigir-icone-certificado.md)
+5. [Otimizacao Css](./otimizacao-css.md)
 
 ## How To Create Or Update Plans
 - Run "ai-context plan <name>" to scaffold a new plan template.

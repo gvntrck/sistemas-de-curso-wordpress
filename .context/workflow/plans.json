@@ -1,0 +1,13 @@
+{
+  "active": [
+    {
+      "slug": "correcao-bug-border-hover-cards",
+      "path": "plans/correcao-bug-border-hover-cards.md",
+      "title": "Correção do Bug Visual - Border Hover nos Cards do Carrossel",
+      "linkedAt": "2026-01-20T13:26:20.947Z",
+      "status": "active"
+    }
+  ],
+  "completed": [],
+  "primary": "correcao-bug-border-hover-cards"
+}
