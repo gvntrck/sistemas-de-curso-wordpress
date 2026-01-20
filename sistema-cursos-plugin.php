@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Lerandash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.2.30
+ * Version: 1.2.31
  */
 
 if (!defined('ABSPATH')) {
@@ -144,6 +144,8 @@ function sistema_cursos_render_admin_page()
                 class="nav-tab <?php echo $active_tab == 'shortcodes' ? 'nav-tab-active' : ''; ?>">Shortcodes</a>
             <a href="?page=lms-suporte-rapido&tab=cpts"
                 class="nav-tab <?php echo $active_tab == 'cpts' ? 'nav-tab-active' : ''; ?>">Estrutura de Dados (CPTs)</a>
+            <a href="?page=lms-suporte-rapido&tab=ordenacao"
+                class="nav-tab <?php echo $active_tab == 'ordenacao' ? 'nav-tab-active' : ''; ?>">📋 Ordenação</a>
         </nav>
 
         <style>
@@ -249,6 +251,117 @@ function sistema_cursos_render_admin_page()
             .req-plugin {
                 color: #d63638;
                 font-weight: bold;
+            }
+
+            /* Ordenação Styles */
+            .sc-order-section {
+                background: #fff;
+                border: 1px solid #c3c4c7;
+                border-radius: 4px;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+
+            .sc-order-section h3 {
+                margin-top: 0;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #2271b1;
+                color: #1d2327;
+            }
+
+            .sortable-list {
+                list-style: none;
+                padding: 0;
+                margin: 15px 0;
+            }
+
+            .sortable-list li {
+                background: #f6f7f7;
+                border: 1px solid #c3c4c7;
+                padding: 12px 15px;
+                margin-bottom: 8px;
+                border-radius: 4px;
+                cursor: move;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                transition: all 0.2s;
+            }
+
+            .sortable-list li:hover {
+                background: #e8f4fc;
+                border-color: #2271b1;
+            }
+
+            .sortable-list li.ui-sortable-helper {
+                background: #fff;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            .sortable-list li.ui-sortable-placeholder {
+                background: #e1f0fa;
+                border: 2px dashed #2271b1;
+                visibility: visible !important;
+            }
+
+            .sortable-list .drag-handle {
+                color: #888;
+                font-size: 1.2em;
+            }
+
+            .sortable-list .item-title {
+                flex: 1;
+                font-weight: 500;
+            }
+
+            .sortable-list .item-order {
+                color: #666;
+                font-size: 0.85em;
+                background: #e0e0e0;
+                padding: 2px 8px;
+                border-radius: 10px;
+            }
+
+            .sc-order-actions {
+                margin-top: 15px;
+                display: flex;
+                gap: 10px;
+                align-items: center;
+            }
+
+            .sc-order-notice {
+                padding: 10px 15px;
+                border-radius: 4px;
+                display: none;
+            }
+
+            .sc-order-notice.success {
+                background: #d1e7dd;
+                color: #0f5132;
+                border: 1px solid #badbcc;
+                display: block;
+            }
+
+            .sc-order-notice.error {
+                background: #f8d7da;
+                color: #842029;
+                border: 1px solid #f5c2c7;
+                display: block;
+            }
+
+            .sc-trilha-selector {
+                margin-bottom: 15px;
+            }
+
+            .sc-trilha-selector select {
+                min-width: 300px;
+                padding: 8px;
+            }
+
+            .sc-loading {
+                display: none;
+                color: #666;
+                font-style: italic;
             }
         </style>
 
@@ -407,7 +520,7 @@ function sistema_cursos_render_admin_page()
                 </tbody>
             </table>
 
-        <?php else: ?>
+        <?php elseif ($active_tab == 'cpts'): ?>
 
             <h2>Estrutura de Dados e Campos Personalizados</h2>
             <p>Para que o sistema funcione corretamente, os seguintes Custom Post Types (CPTs) e Campos Personalizados (ACF)
@@ -508,8 +621,368 @@ function sistema_cursos_render_admin_page()
                 </tbody>
             </table>
 
+        <?php elseif ($active_tab == 'ordenacao'): ?>
+
+            <h2>Ordenação de Conteúdos</h2>
+            <p>Arraste e solte os itens para definir a ordem de exibição no shortcode <code>[meus-cursos]</code>.</p>
+
+            <!-- Ordenar Trilhas -->
+            <div class="sc-order-section">
+                <h3>📌 Ordenar Trilhas</h3>
+                <p class="description">A ordem definida aqui será usada para exibir as trilhas no frontend.</p>
+
+                <ul id="sortable-trilhas" class="sortable-list">
+                    <?php
+                    $trilhas = get_posts([
+                        'post_type' => 'trilha',
+                        'posts_per_page' => -1,
+                        'orderby' => 'menu_order',
+                        'order' => 'ASC',
+                        'post_status' => 'publish'
+                    ]);
+                    foreach ($trilhas as $index => $trilha):
+                        ?>
+                        <li data-id="<?php echo $trilha->ID; ?>">
+                            <span class="drag-handle">⋮⋮</span>
+                            <span class="item-title"><?php echo esc_html($trilha->post_title); ?></span>
+                            <span class="item-order">#<?php echo $index + 1; ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+
+                <?php if (empty($trilhas)): ?>
+                    <p style="color: #666; font-style: italic;">Nenhuma trilha encontrada.</p>
+                <?php else: ?>
+                    <div class="sc-order-actions">
+                        <button type="button" class="button button-primary" id="salvar-ordem-trilhas">
+                            💾 Salvar Ordem das Trilhas
+                        </button>
+                        <span id="trilhas-notice" class="sc-order-notice"></span>
+                        <span id="trilhas-loading" class="sc-loading">Salvando...</span>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Ordenar Cursos por Trilha -->
+            <div class="sc-order-section">
+                <h3>📚 Ordenar Cursos por Trilha</h3>
+                <p class="description">Selecione uma trilha para ordenar os cursos dentro dela.</p>
+
+                <div class="sc-trilha-selector">
+                    <select id="select-trilha-cursos">
+                        <option value="">-- Selecione uma Trilha --</option>
+                        <?php foreach ($trilhas as $trilha): ?>
+                            <option value="<?php echo $trilha->ID; ?>"><?php echo esc_html($trilha->post_title); ?></option>
+                        <?php endforeach; ?>
+                        <option value="0">📦 Cursos sem Trilha</option>
+                    </select>
+                    <span id="cursos-loading" class="sc-loading">Carregando cursos...</span>
+                </div>
+
+                <ul id="sortable-cursos" class="sortable-list">
+                    <li style="background: #f0f0f1; color: #666; cursor: default; border-style: dashed;">
+                        Selecione uma trilha acima para ver os cursos
+                    </li>
+                </ul>
+
+                <div class="sc-order-actions" id="cursos-actions" style="display: none;">
+                    <button type="button" class="button button-primary" id="salvar-ordem-cursos">
+                        💾 Salvar Ordem dos Cursos
+                    </button>
+                    <span id="cursos-notice" class="sc-order-notice"></span>
+                </div>
+            </div>
+
+            <script>
+                jQuery(document).ready(function ($) {
+                    // Inicializar Sortable para Trilhas
+                    $('#sortable-trilhas').sortable({
+                        placeholder: 'ui-sortable-placeholder',
+                        handle: '.drag-handle',
+                        update: function (event, ui) {
+                            // Atualizar números de ordem
+                            $('#sortable-trilhas li').each(function (i) {
+                                $(this).find('.item-order').text('#' + (i + 1));
+                            });
+                        }
+                    });
+
+                    // Salvar ordem das trilhas
+                    $('#salvar-ordem-trilhas').on('click', function () {
+                        var $btn = $(this);
+                        var $notice = $('#trilhas-notice');
+                        var $loading = $('#trilhas-loading');
+
+                        var trilhaIds = [];
+                        $('#sortable-trilhas li').each(function () {
+                            trilhaIds.push($(this).data('id'));
+                        });
+
+                        $btn.prop('disabled', true);
+                        $loading.show();
+                        $notice.removeClass('success error').hide();
+
+                        $.ajax({
+                            url: ajaxurl,
+                            type: 'POST',
+                            data: {
+                                action: 'salvar_ordem_trilhas',
+                                trilha_ids: trilhaIds,
+                                nonce: '<?php echo wp_create_nonce('ordenar_trilhas_nonce'); ?>'
+                            },
+                            success: function (response) {
+                                $loading.hide();
+                                $btn.prop('disabled', false);
+
+                                if (response.success) {
+                                    $notice.text('✅ Ordem das trilhas salva com sucesso!').addClass('success').show();
+                                    setTimeout(function () { $notice.fadeOut(); }, 3000);
+                                } else {
+                                    $notice.text('❌ Erro ao salvar: ' + response.data).addClass('error').show();
+                                }
+                            },
+                            error: function () {
+                                $loading.hide();
+                                $btn.prop('disabled', false);
+                                $notice.text('❌ Erro de conexão').addClass('error').show();
+                            }
+                        });
+                    });
+
+                    // Carregar cursos da trilha selecionada
+                    $('#select-trilha-cursos').on('change', function () {
+                        var trilhaId = $(this).val();
+                        var $list = $('#sortable-cursos');
+                        var $loading = $('#cursos-loading');
+                        var $actions = $('#cursos-actions');
+
+                        if (!trilhaId && trilhaId !== '0') {
+                            $list.html('<li style="background: #f0f0f1; color: #666; cursor: default; border-style: dashed;">Selecione uma trilha acima para ver os cursos</li>');
+                            $actions.hide();
+                            return;
+                        }
+
+                        $loading.show();
+                        $list.html('<li style="color: #666;">Carregando...</li>');
+
+                        $.ajax({
+                            url: ajaxurl,
+                            type: 'POST',
+                            data: {
+                                action: 'get_cursos_trilha',
+                                trilha_id: trilhaId,
+                                nonce: '<?php echo wp_create_nonce('ordenar_cursos_nonce'); ?>'
+                            },
+                            success: function (response) {
+                                $loading.hide();
+
+                                if (response.success && response.data.length > 0) {
+                                    var html = '';
+                                    $.each(response.data, function (i, curso) {
+                                        html += '<li data-id="' + curso.id + '">';
+                                        html += '<span class="drag-handle">⋮⋮</span>';
+                                        html += '<span class="item-title">' + curso.title + '</span>';
+                                        html += '<span class="item-order">#' + (i + 1) + '</span>';
+                                        html += '</li>';
+                                    });
+                                    $list.html(html);
+                                    $actions.show();
+
+                                    // Reinicializar sortable
+                                    $list.sortable({
+                                        placeholder: 'ui-sortable-placeholder',
+                                        handle: '.drag-handle',
+                                        update: function (event, ui) {
+                                            $list.find('li').each(function (i) {
+                                                $(this).find('.item-order').text('#' + (i + 1));
+                                            });
+                                        }
+                                    });
+                                } else {
+                                    $list.html('<li style="background: #f0f0f1; color: #666; cursor: default; border-style: dashed;">Nenhum curso encontrado nesta trilha</li>');
+                                    $actions.hide();
+                                }
+                            },
+                            error: function () {
+                                $loading.hide();
+                                $list.html('<li style="color: #d63638;">Erro ao carregar cursos</li>');
+                            }
+                        });
+                    });
+
+                    // Salvar ordem dos cursos
+                    $('#salvar-ordem-cursos').on('click', function () {
+                        var $btn = $(this);
+                        var $notice = $('#cursos-notice');
+                        var trilhaId = $('#select-trilha-cursos').val();
+
+                        var cursoIds = [];
+                        $('#sortable-cursos li[data-id]').each(function () {
+                            cursoIds.push($(this).data('id'));
+                        });
+
+                        $btn.prop('disabled', true).text('Salvando...');
+                        $notice.removeClass('success error').hide();
+
+                        $.ajax({
+                            url: ajaxurl,
+                            type: 'POST',
+                            data: {
+                                action: 'salvar_ordem_cursos_trilha',
+                                trilha_id: trilhaId,
+                                curso_ids: cursoIds,
+                                nonce: '<?php echo wp_create_nonce('ordenar_cursos_nonce'); ?>'
+                            },
+                            success: function (response) {
+                                $btn.prop('disabled', false).text('💾 Salvar Ordem dos Cursos');
+
+                                if (response.success) {
+                                    $notice.text('✅ Ordem dos cursos salva com sucesso!').addClass('success').show();
+                                    setTimeout(function () { $notice.fadeOut(); }, 3000);
+                                } else {
+                                    $notice.text('❌ Erro ao salvar: ' + response.data).addClass('error').show();
+                                }
+                            },
+                            error: function () {
+                                $btn.prop('disabled', false).text('💾 Salvar Ordem dos Cursos');
+                                $notice.text('❌ Erro de conexão').addClass('error').show();
+                            }
+                        });
+                    });
+                });
+            </script>
+
         <?php endif; ?>
 
     </div>
     <?php
+}
+
+/**
+ * AJAX: Salvar ordem das trilhas
+ */
+add_action('wp_ajax_salvar_ordem_trilhas', 'sistema_cursos_salvar_ordem_trilhas');
+function sistema_cursos_salvar_ordem_trilhas()
+{
+    // Verificar nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'ordenar_trilhas_nonce')) {
+        wp_send_json_error('Nonce inválido');
+    }
+
+    // Verificar permissão
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Sem permissão');
+    }
+
+    $trilha_ids = isset($_POST['trilha_ids']) ? (array) $_POST['trilha_ids'] : [];
+    $trilha_ids = array_map('intval', $trilha_ids);
+
+    foreach ($trilha_ids as $ordem => $trilha_id) {
+        wp_update_post([
+            'ID' => $trilha_id,
+            'menu_order' => $ordem
+        ]);
+    }
+
+    wp_send_json_success('Ordem salva');
+}
+
+/**
+ * AJAX: Obter cursos de uma trilha
+ */
+add_action('wp_ajax_get_cursos_trilha', 'sistema_cursos_get_cursos_trilha');
+function sistema_cursos_get_cursos_trilha()
+{
+    // Verificar nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'ordenar_cursos_nonce')) {
+        wp_send_json_error('Nonce inválido');
+    }
+
+    $trilha_id = isset($_POST['trilha_id']) ? intval($_POST['trilha_id']) : 0;
+
+    // Buscar cursos da trilha
+    if ($trilha_id === 0) {
+        // Cursos sem trilha
+        $cursos = get_posts([
+            'post_type' => 'curso',
+            'posts_per_page' => -1,
+            'orderby' => 'menu_order',
+            'order' => 'ASC',
+            'post_status' => 'publish',
+            'meta_query' => [
+                'relation' => 'OR',
+                [
+                    'key' => 'trilha',
+                    'compare' => 'NOT EXISTS'
+                ],
+                [
+                    'key' => 'trilha',
+                    'value' => '',
+                    'compare' => '='
+                ]
+            ]
+        ]);
+    } else {
+        // Cursos da trilha específica
+        $cursos = get_posts([
+            'post_type' => 'curso',
+            'posts_per_page' => -1,
+            'orderby' => 'menu_order',
+            'order' => 'ASC',
+            'post_status' => 'publish',
+            'meta_key' => 'trilha',
+            'meta_value' => $trilha_id
+        ]);
+    }
+
+    $result = [];
+    foreach ($cursos as $curso) {
+        $result[] = [
+            'id' => $curso->ID,
+            'title' => $curso->post_title,
+            'order' => $curso->menu_order
+        ];
+    }
+
+    wp_send_json_success($result);
+}
+
+/**
+ * AJAX: Salvar ordem dos cursos de uma trilha
+ */
+add_action('wp_ajax_salvar_ordem_cursos_trilha', 'sistema_cursos_salvar_ordem_cursos_trilha');
+function sistema_cursos_salvar_ordem_cursos_trilha()
+{
+    // Verificar nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'ordenar_cursos_nonce')) {
+        wp_send_json_error('Nonce inválido');
+    }
+
+    // Verificar permissão
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Sem permissão');
+    }
+
+    $curso_ids = isset($_POST['curso_ids']) ? (array) $_POST['curso_ids'] : [];
+    $curso_ids = array_map('intval', $curso_ids);
+
+    foreach ($curso_ids as $ordem => $curso_id) {
+        wp_update_post([
+            'ID' => $curso_id,
+            'menu_order' => $ordem
+        ]);
+    }
+
+    wp_send_json_success('Ordem salva');
+}
+
+/**
+ * Carregar jQuery UI Sortable na página de ordenação
+ */
+add_action('admin_enqueue_scripts', 'sistema_cursos_enqueue_sortable');
+function sistema_cursos_enqueue_sortable($hook)
+{
+    if ($hook === 'toplevel_page_lms-suporte-rapido' && isset($_GET['tab']) && $_GET['tab'] === 'ordenacao') {
+        wp_enqueue_script('jquery-ui-sortable');
+    }
 }

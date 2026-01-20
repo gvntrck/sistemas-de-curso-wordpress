@@ -43,7 +43,7 @@ class System_Cursos_CPT_Manager
             'show_ui' => true,
             'show_in_menu' => 'lms-suporte-rapido',
             'menu_icon' => 'dashicons-randomize',
-            'supports' => ['title', 'thumbnail'],
+            'supports' => ['title', 'thumbnail', 'page-attributes'],
             'rewrite' => ['slug' => 'trilha'],
             'has_archive' => true,
         ]);
@@ -64,7 +64,7 @@ class System_Cursos_CPT_Manager
             'show_ui' => true,
             'show_in_menu' => 'lms-suporte-rapido',
             'menu_icon' => 'dashicons-welcome-learn-more',
-            'supports' => ['title', 'thumbnail'],
+            'supports' => ['title', 'thumbnail', 'page-attributes'],
             'rewrite' => ['slug' => 'curso'],
             'has_archive' => true,
         ]);
@@ -494,12 +494,12 @@ class System_Cursos_CPT_Manager
 
         <!-- Template Hidden -->
         <script type="text/template" id="tmpl-arquivo-row">
-                                                                                                            <div class="repeater-item">
-                                                                                                                <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
-                                                                                                                <button type="button" class="button btn-upload-file">Upload</button>
-                                                                                                                <button type="button" class="button button-link-delete btn-remove-row">X</button>
-                                                                                                            </div>
-                                                                                                        </script>
+                                                                                                                    <div class="repeater-item">
+                                                                                                                        <input type="text" name="arquivos[INDEX][anexos]" value="" class="widefat file-url-input" placeholder="URL do Arquivo">
+                                                                                                                        <button type="button" class="button btn-upload-file">Upload</button>
+                                                                                                                        <button type="button" class="button button-link-delete btn-remove-row">X</button>
+                                                                                                                    </div>
+                                                                                                                </script>
 
         <?php
     }

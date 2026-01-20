@@ -105,19 +105,61 @@ class System_Cursos_Shortcode_Meus_Cursos
             }
         }
 
-        // 6. Preparar dados das Trilhas para ordenação (opcional: ordenar trilhas por nome)
-        // Aqui vamos iterar o array $cursos_por_trilha que é indexado por ID.
+        // 6. Ordenar Trilhas por menu_order (campo nativo do WordPress)
+        $trilha_ids = array_keys($cursos_por_trilha);
+        $trilhas_ordenadas = [];
 
-        // 7. Renderizar
+        if (!empty($trilha_ids)) {
+            $trilhas_ordenadas = get_posts([
+                'post_type' => 'trilha',
+                'post__in' => $trilha_ids,
+                'posts_per_page' => -1,
+                'orderby' => 'menu_order',
+                'order' => 'ASC',
+                'post_status' => 'publish'
+            ]);
+        }
+
+        // 7. Ordenar cursos dentro de cada trilha por menu_order
+        foreach ($cursos_por_trilha as $trilha_id => &$cursos_da_trilha) {
+            usort($cursos_da_trilha, function ($a, $b) {
+                $ordem_a = (int) $a->menu_order;
+                $ordem_b = (int) $b->menu_order;
+
+                // Se ordens iguais, ordenar alfabeticamente
+                if ($ordem_a === $ordem_b) {
+                    return strcmp($a->post_title, $b->post_title);
+                }
+                return $ordem_a - $ordem_b;
+            });
+        }
+        unset($cursos_da_trilha); // Quebrar referência
+
+        // 8. Ordenar cursos sem trilha por menu_order
+        usort($cursos_sem_trilha, function ($a, $b) {
+            $ordem_a = (int) $a->menu_order;
+            $ordem_b = (int) $b->menu_order;
+
+            if ($ordem_a === $ordem_b) {
+                return strcmp($a->post_title, $b->post_title);
+            }
+            return $ordem_a - $ordem_b;
+        });
+
+        // 9. Renderizar
         ob_start();
         ?>
         <div class="meus-cursos-wrapper">
 
             <?php
-            // A. Trilhas
-            if (!empty($cursos_por_trilha)):
-                foreach ($cursos_por_trilha as $t_id => $cursos_da_trilha):
-                    $trilha_obj = get_post($t_id);
+            // A. Trilhas (na ordem definida por menu_order)
+            if (!empty($trilhas_ordenadas)):
+                foreach ($trilhas_ordenadas as $trilha_obj):
+                    $t_id = $trilha_obj->ID;
+                    if (!isset($cursos_por_trilha[$t_id]))
+                        continue;
+
+                    $cursos_da_trilha = $cursos_por_trilha[$t_id];
                     $nome_trilha = $trilha_obj->post_title;
                     $desc_trilha = get_post_meta($t_id, 'descricao_curta', true);
                     $carousel_id = 'carousel-trilha-' . $t_id;
