@@ -1,0 +1,4 @@
+sync_ftp.py
+# Credenciais e arquivos sensíveis
+.env
+*.log
