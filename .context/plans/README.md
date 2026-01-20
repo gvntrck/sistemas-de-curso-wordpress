@@ -10,6 +10,7 @@ This directory contains plans for coordinating work across documentation and pla
 5. [Link Edicao Curso Detalhes Aluno](./link-edicao-curso-detalhes-aluno.md)
 6. [Ordenacao Trilhas Cursos](./ordenacao-trilhas-cursos.md)
 7. [Otimizacao Css](./otimizacao-css.md)
+8. [Restringir Acesso Aluno Plan](./restringir-acesso-aluno-plan.md)
 
 ## How To Create Or Update Plans
 - Run "ai-context plan <name>" to scaffold a new plan template.
