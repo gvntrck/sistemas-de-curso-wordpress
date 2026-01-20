@@ -12,7 +12,7 @@ class System_Cursos_Access_Control
      * Cria a tabela personalizada no banco de dados, verifica permissões, concede, revoga e suspende acessos, além de gerenciar a interface administrativa de alunos.
      *
      * @package SistemaCursos
-     * @version 1.0.8
+     * @version 1.0.9
      */
     public function __construct()
     {
@@ -73,6 +73,8 @@ class System_Cursos_Access_Control
     /**
      * Retorna a fonte do acesso (Direto, Grupo ou Trilha)
      * Retorna array com detalhes ou false se não tiver acesso.
+     * 
+     * @version 1.0.9 - Adicionada validação para grupos inexistentes (bug grupo fantasma)
      */
     public static function get_access_source($user_id, $curso_id)
     {
@@ -81,19 +83,43 @@ class System_Cursos_Access_Control
             return ['type' => 'direct', 'label' => 'Matrícula Direta'];
         }
 
-        // 2. Verificar Grupos
+        // 2. Verificar Grupos do Usuário
         $user_grupos = get_user_meta($user_id, '_aluno_grupos', true);
         if (empty($user_grupos) || !is_array($user_grupos)) {
             return false;
         }
 
+        // Filtrar grupos do usuário que ainda existem (remover grupos deletados)
+        $user_grupos_validos = array_filter($user_grupos, function ($grupo_id) {
+            $status = get_post_status($grupo_id);
+            return $status !== false && $status !== 'trash';
+        });
+
+        // Se não sobrou nenhum grupo válido, retorna false
+        if (empty($user_grupos_validos)) {
+            return false;
+        }
+
         // 2a. Grupos no Curso
         $curso_grupos = get_post_meta($curso_id, '_grupos_permitidos', true);
-        if (is_array($curso_grupos)) {
-            $intersect = array_intersect($user_grupos, $curso_grupos);
-            if (!empty($intersect)) {
-                $g_id = reset($intersect); // Pega o primeiro grupo encontrado
-                return ['type' => 'group', 'label' => 'Grupo: ' . get_the_title($g_id), 'group_id' => $g_id];
+        if (is_array($curso_grupos) && !empty($curso_grupos)) {
+            // Filtrar grupos do curso que ainda existem
+            $curso_grupos_validos = array_filter($curso_grupos, function ($grupo_id) {
+                $status = get_post_status($grupo_id);
+                return $status !== false && $status !== 'trash';
+            });
+
+            if (!empty($curso_grupos_validos)) {
+                $intersect = array_intersect($user_grupos_validos, $curso_grupos_validos);
+                if (!empty($intersect)) {
+                    $g_id = reset($intersect); // Pega o primeiro grupo encontrado
+                    $grupo_titulo = get_the_title($g_id);
+
+                    // Verificar se o grupo realmente existe e tem título
+                    if (!empty($grupo_titulo)) {
+                        return ['type' => 'group', 'label' => 'Grupo: ' . $grupo_titulo, 'group_id' => $g_id];
+                    }
+                }
             }
         }
 
@@ -101,11 +127,24 @@ class System_Cursos_Access_Control
         $trilha_id = get_post_meta($curso_id, 'trilha', true);
         if ($trilha_id) {
             $trilha_grupos = get_post_meta($trilha_id, '_grupos_permitidos', true);
-            if (is_array($trilha_grupos)) {
-                $intersect = array_intersect($user_grupos, $trilha_grupos);
-                if (!empty($intersect)) {
-                    $g_id = reset($intersect);
-                    return ['type' => 'group_trilha', 'label' => 'Trilha/Grupo: ' . get_the_title($g_id), 'group_id' => $g_id];
+            if (is_array($trilha_grupos) && !empty($trilha_grupos)) {
+                // Filtrar grupos da trilha que ainda existem
+                $trilha_grupos_validos = array_filter($trilha_grupos, function ($grupo_id) {
+                    $status = get_post_status($grupo_id);
+                    return $status !== false && $status !== 'trash';
+                });
+
+                if (!empty($trilha_grupos_validos)) {
+                    $intersect = array_intersect($user_grupos_validos, $trilha_grupos_validos);
+                    if (!empty($intersect)) {
+                        $g_id = reset($intersect);
+                        $grupo_titulo = get_the_title($g_id);
+
+                        // Verificar se o grupo realmente existe e tem título
+                        if (!empty($grupo_titulo)) {
+                            return ['type' => 'group_trilha', 'label' => 'Trilha/Grupo: ' . $grupo_titulo, 'group_id' => $g_id];
+                        }
+                    }
                 }
             }
         }
@@ -137,6 +176,120 @@ class System_Cursos_Access_Control
         }
 
         return true;
+    }
+
+    // =============================================================================
+    // LIMPEZA DE GRUPOS ÓRFÃOS
+    // =============================================================================
+
+    /**
+     * Limpa referências a grupos que foram deletados mas ainda estão
+     * associados a cursos, trilhas ou usuários.
+     * 
+     * @return array Estatísticas de limpeza com totais por tipo
+     * @since 1.0.9
+     */
+    public static function cleanup_orphaned_group_references()
+    {
+        $cleaned = [
+            'cursos' => 0,
+            'trilhas' => 0,
+            'usuarios' => 0
+        ];
+
+        // 1. Limpar grupos inexistentes de cursos
+        $cursos = get_posts([
+            'post_type' => 'curso',
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'post_status' => 'any'
+        ]);
+
+        foreach ($cursos as $curso_id) {
+            $grupos = get_post_meta($curso_id, '_grupos_permitidos', true);
+            if (is_array($grupos) && !empty($grupos)) {
+                $grupos_validos = array_filter($grupos, function ($g_id) {
+                    $status = get_post_status($g_id);
+                    return $status !== false && $status !== 'trash';
+                });
+
+                if (count($grupos_validos) !== count($grupos)) {
+                    update_post_meta($curso_id, '_grupos_permitidos', array_values($grupos_validos));
+                    $cleaned['cursos']++;
+                }
+            }
+        }
+
+        // 2. Limpar grupos inexistentes de trilhas
+        $trilhas = get_posts([
+            'post_type' => 'trilha',
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'post_status' => 'any'
+        ]);
+
+        foreach ($trilhas as $trilha_id) {
+            $grupos = get_post_meta($trilha_id, '_grupos_permitidos', true);
+            if (is_array($grupos) && !empty($grupos)) {
+                $grupos_validos = array_filter($grupos, function ($g_id) {
+                    $status = get_post_status($g_id);
+                    return $status !== false && $status !== 'trash';
+                });
+
+                if (count($grupos_validos) !== count($grupos)) {
+                    update_post_meta($trilha_id, '_grupos_permitidos', array_values($grupos_validos));
+                    $cleaned['trilhas']++;
+                }
+            }
+        }
+
+        // 3. Limpar grupos inexistentes de usuários
+        $users = get_users(['fields' => 'ID']);
+        foreach ($users as $user_id) {
+            if (self::cleanup_user_orphaned_groups($user_id)) {
+                $cleaned['usuarios']++;
+            }
+        }
+
+        // Log para auditoria
+        if (array_sum($cleaned) > 0) {
+            error_log(sprintf(
+                '[LMS SuporteRapido] Limpeza de grupos órfãos: %d cursos, %d trilhas, %d usuários atualizados',
+                $cleaned['cursos'],
+                $cleaned['trilhas'],
+                $cleaned['usuarios']
+            ));
+        }
+
+        return $cleaned;
+    }
+
+    /**
+     * Limpa grupos órfãos de um usuário específico.
+     * 
+     * @param int $user_id ID do usuário
+     * @return bool True se houve alteração, false caso contrário
+     * @since 1.0.9
+     */
+    public static function cleanup_user_orphaned_groups($user_id)
+    {
+        $grupos = get_user_meta($user_id, '_aluno_grupos', true);
+
+        if (!is_array($grupos) || empty($grupos)) {
+            return false;
+        }
+
+        $grupos_validos = array_filter($grupos, function ($g_id) {
+            $status = get_post_status($g_id);
+            return $status !== false && $status !== 'trash';
+        });
+
+        if (count($grupos_validos) !== count($grupos)) {
+            update_user_meta($user_id, '_aluno_grupos', array_values($grupos_validos));
+            return true;
+        }
+
+        return false;
     }
 
     public static function grant_access($user_id, $curso_id, $data_fim = null, $created_by = null)
@@ -501,6 +654,15 @@ class System_Cursos_Access_Control
                 exit;
             }
         }
+
+        // Limpeza de grupos órfãos
+        if (isset($_POST['cleanup_orphaned_groups']) && wp_verify_nonce($_POST['_wpnonce'], 'cleanup_orphaned_groups')) {
+            $result = self::cleanup_orphaned_group_references();
+
+            $stats = base64_encode(json_encode($result));
+            wp_redirect(admin_url('admin.php?page=acesso-cursos-alunos&msg=cleanup_success&stats=' . $stats));
+            exit;
+        }
     }
 
     public function render_admin_page()
@@ -585,11 +747,40 @@ class System_Cursos_Access_Control
                             case 'updated':
                                 echo 'Aluno atualizado com sucesso!';
                                 break;
+                            case 'cleanup_success':
+                                $stats = isset($_GET['stats']) ? json_decode(base64_decode($_GET['stats']), true) : [];
+                                echo sprintf(
+                                    '🧹 <strong>Limpeza concluída com sucesso!</strong> %d cursos, %d trilhas e %d usuários foram atualizados.',
+                                    isset($stats['cursos']) ? (int)$stats['cursos'] : 0,
+                                    isset($stats['trilhas']) ? (int)$stats['trilhas'] : 0,
+                                    isset($stats['usuarios']) ? (int)$stats['usuarios'] : 0
+                                );
+                                break;
                         }
                         ?>
                     </p>
                 </div>
             <?php endif; ?>
+
+            <!-- Painel de Manutenção -->
+            <details style="margin: 15px 0; background: #fff; border: 1px solid #ccd0d4; border-radius: 4px;">
+                <summary style="padding: 12px 15px; cursor: pointer; font-weight: 600; color: #1d2327;">
+                    🔧 Manutenção do Sistema
+                </summary>
+                <div style="padding: 15px; border-top: 1px solid #eee;">
+                    <p style="margin-top: 0;">
+                        Limpe referências a grupos que foram deletados mas ainda estão associados a cursos, trilhas ou alunos.
+                        <br><small style="color: #666;">Isso corrige o bug onde alunos aparecem com "Utilizando Grupo:" vazio.</small>
+                    </p>
+                    <form method="post" style="display: inline;">
+                        <?php wp_nonce_field('cleanup_orphaned_groups'); ?>
+                        <button type="submit" name="cleanup_orphaned_groups" value="1" class="button"
+                                onclick="return confirm('Deseja realmente limpar as referências órfãs?\n\nIsso removerá grupos deletados de cursos, trilhas e usuários.\nEsta ação não pode ser desfeita.');">
+                            🧹 Executar Limpeza de Grupos Órfãos
+                        </button>
+                    </form>
+                </div>
+            </details>
 
             <!-- Filtros -->
             <form method="get" style="margin: 20px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
