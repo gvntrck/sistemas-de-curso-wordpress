@@ -1782,479 +1782,479 @@ class System_Cursos_Access_Control
                                         // but simple "since" logic serves the purpose here.
                                     }
                                     ?>
-                                                    <tr>
-                                                        <td style="padding: 0;">
-                                                            <div
-                                                                style="height: 100%; width: 5px; background-color: <?php echo $config['color']; ?>; height: 40px;">
-                                                            </div>
-                                                        </td>
-                                                        <td><strong><?php echo $curso_title; ?></strong></td>
-                                                        <td>
-                                                            <span style="color: <?php echo $config['color']; ?>; font-weight: 500;">
-                                                                <?php echo esc_html($config['label']); ?>
-                                                            </span>
-                                                        </td>
-                                                        <td><?php echo date('d/m/Y H:i', strtotime($log->created_at)); ?></td>
-                                                        <td>
-                                                            <?php echo esc_html($actor_name); ?>
-                                                            <small style="display:block; color: #999;">ID: <?php echo $log->actor_id; ?></small>
-                                                        </td>
-                                                        <td>
-                                                            <?php
-                                                            if (!empty($details['data_fim'])) {
-                                                                echo '<small>Expira em: ' . date('d/m/Y', strtotime($details['data_fim'])) . '</small>';
-                                                            }
-                                                            ?>
-                                                        </td>
-                                                    </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <h2 style="margin-top: 30px;">Formação e Progresso</h2>
-                    <p class="description">Acompanhe o desenvolvimento do aluno em cada curso matriculado.</p>
-
-                    <div
-                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
-                        <?php
-                        $cursos_com_acesso = array_filter($cursos, function ($c) use ($user_id) {
-                            return self::has_access($user_id, $c->ID);
-                        });
-
-                        if (empty($cursos_com_acesso)): ?>
-                                <div
-                                    style="grid-column: 1 / -1; background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; text-align: center; color: #666;">
-                                    Nenhum curso ativo para este aluno.
-                                </div>
-                        <?php else:
-                            foreach ($cursos_com_acesso as $c):
-                                $progresso = self::get_detailed_progress($user_id, $c->ID);
-                                ?>
-                                        <div
-                                            style="background: #fff; border: 1px solid #ccd0d4; border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                                                <h4 style="margin: 0; font-size: 15px; color: #1d2327;">
-                                                    <?php echo esc_html($c->post_title); ?>
-                                                </h4>
-                                                <span style="font-size: 18px; font-weight: 700; color: #22c55e;">
-                                                    <?php echo $progresso['percent']; ?>%
-                                                </span>
+                                    <tr>
+                                        <td style="padding: 0;">
+                                            <div
+                                                style="height: 100%; width: 5px; background-color: <?php echo $config['color']; ?>; height: 40px;">
                                             </div>
-
-                                            <div style="height: 8px; background: #f0f0f1; border-radius: 4px; overflow: hidden; margin-bottom: 10px;">
-                                                <div
-                                                    style="width: <?php echo $progresso['percent']; ?>%; height: 100%; background: #22c55e; border-radius: 4px; transition: width 0.3s ease;">
-                                                </div>
-                                            </div>
-
-                                            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #64748b;">
-                                                <span>
-                                                    <?php echo $progresso['concluidas']; ?> de
-                                                    <?php echo $progresso['total']; ?> aulas
-                                                </span>
-                                                <span>
-                                                    <?php if ($progresso['percent'] >= 100): ?>
-                                                            <span
-                                                                style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">CONCLUÍDO</span>
-                                                    <?php else: ?>
-                                                            EM ANDAMENTO
-                                                    <?php endif; ?>
-                                                </span>
-                                            </div>
-
-                                            <?php if ($progresso['last_date']): ?>
-                                                    <div
-                                                        style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #94a3b8;">
-                                                        🕒 Última aula:
-                                                        <?php echo date('d/m/Y H:i', strtotime($progresso['last_date'])); ?>
-                                                    </div>
-                                            <?php endif; ?>
-                                        </div>
-                                <?php endforeach;
-                        endif; ?>
-                    </div>
-
-                    <h2>Cursos e Permissões</h2>
-                    <p class="description">Gerencie os acessos do aluno aos cursos disponíveis.</p>
-
-                    <form method="post">
-                        <?php wp_nonce_field('aluno_acesso_rapido'); ?>
-                        <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
-
-                        <table class="wp-list-table widefat fixed striped">
-                            <thead>
-                                <tr>
-                                    <th>Curso</th>
-                                    <th style="width: 120px;">Status</th>
-                                    <th style="width: 150px;">Expiração</th>
-                                    <th style="width: 130px;">Desde</th>
-                                    <th style="width: 250px;">Ações Rápidas</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($cursos as $curso):
-                                    $acesso = isset($acessos_map[$curso->ID]) ? $acessos_map[$curso->ID] : null;
-
-                                    // Check for Group Access if no Direct Access
-                                    $access_source = self::get_access_source($user->ID, $curso->ID);
-
-                                    $tem_acesso = ($access_source !== false);
-                                    $is_group_access = ($access_source && in_array($access_source['type'], ['group', 'group_trilha']));
-
-                                    $expirado = $acesso && $acesso->status === 'ativo' && $acesso->data_fim && strtotime($acesso->data_fim) < time();
-                                    ?>
-                                        <tr>
-                                            <td><strong>
-                                                    <a href="<?php echo esc_url(admin_url('post.php?post=' . $curso->ID . '&action=edit')); ?>"
-                                                        title="Editar curso: <?php echo esc_attr($curso->post_title); ?>"
-                                                        style="text-decoration: none; color: #2271b1;">
-                                                        <?php echo esc_html($curso->post_title); ?>
-                                                    </a>
-                                                </strong></td>
-                                            <td>
-                                                <?php if (!$tem_acesso): ?>
-                                                        <?php if ($expirado): ?>
-                                                                <span style="color: #f59e0b; font-weight: 600;">Expirado</span>
-                                                        <?php else: ?>
-                                                                <span style="color: #9ca3af;">Sem acesso</span>
-                                                        <?php endif; ?>
-                                                <?php else: ?>
-                                                        <?php if ($is_group_access): ?>
-                                                                <span
-                                                                    style="color: #2563eb; font-weight: 600; background: #dbeafe; padding: 2px 8px; border-radius: 4px;">Utilizando
-                                                                    <?php echo esc_html($access_source['label']); ?></span>
-                                                        <?php elseif ($acesso && $acesso->status === 'ativo'): ?>
-                                                                <span style="color: #22c55e; font-weight: 600;">Ativo (Manual)</span>
-                                                        <?php elseif ($acesso && $acesso->status === 'suspenso'): ?>
-                                                                <span style="color: #6b7280; font-weight: 600;">Suspenso</span>
-                                                        <?php else: ?>
-                                                                <span style="color: #ef4444; font-weight: 600;">Revogado</span>
-                                                        <?php endif; ?>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td>
-                                                <?php if ($is_group_access): ?>
-                                                        <em>Gerenciado pelo Grupo</em>
-                                                <?php elseif ($acesso && $acesso->data_fim): ?>
-                                                        <?php echo date('d/m/Y', strtotime($acesso->data_fim)); ?>
-                                                <?php elseif ($acesso && $acesso->status === 'ativo'): ?>
-                                                        <em>Vitalício</em>
-                                                <?php else: ?>
-                                                        —
-                                                <?php endif; ?>
-                                            </td>
-                                            <td>
-                                                <?php echo $acesso ? date('d/m/Y', strtotime($acesso->created_at)) : '—'; ?>
-                                            </td>
-                                            <td>
-                                                <?php if ($is_group_access): ?>
-                                                        <small style="color:#666;">Acesso via grupo. Edite o grupo ou remova o aluno dele.</small>
-                                                <?php elseif (!$acesso || $acesso->status !== 'ativo' || $expirado): ?>
-                                                        <button type="submit" name="acao_rapida" value="ativar_<?php echo $curso->ID; ?>"
-                                                            class="button button-primary button-small">
-                                                            Conceder Acesso
-                                                        </button>
-                                                <?php else: ?>
-                                                        <button type="submit" name="acao_rapida" value="suspender_<?php echo $curso->ID; ?>"
-                                                            class="button button-small">
-                                                            Suspender
-                                                        </button>
-                                                        <button type="submit" name="acao_rapida" value="revogar_<?php echo $curso->ID; ?>"
-                                                            class="button button-small" style="color: #dc3232;">
-                                                            Revogar
-                                                        </button>
-                                                <?php endif; ?>
-
-                                                <?php if ($acesso && $acesso->status === 'suspenso'): ?>
-                                                        <button type="submit" name="acao_rapida" value="reativar_<?php echo $curso->ID; ?>"
-                                                            class="button button-primary button-small">
-                                                            Reativar
-                                                        </button>
-                                                <?php endif; ?>
-                                            </td>
-                                        </tr>
+                                        </td>
+                                        <td><strong><?php echo $curso_title; ?></strong></td>
+                                        <td>
+                                            <span style="color: <?php echo $config['color']; ?>; font-weight: 500;">
+                                                <?php echo esc_html($config['label']); ?>
+                                            </span>
+                                        </td>
+                                        <td><?php echo date('d/m/Y H:i', strtotime($log->created_at)); ?></td>
+                                        <td>
+                                            <?php echo esc_html($actor_name); ?>
+                                            <small style="display:block; color: #999;">ID: <?php echo $log->actor_id; ?></small>
+                                        </td>
+                                        <td>
+                                            <?php
+                                            if (!empty($details['data_fim'])) {
+                                                echo '<small>Expira em: ' . date('d/m/Y', strtotime($details['data_fim'])) . '</small>';
+                                            }
+                                            ?>
+                                        </td>
+                                    </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
-                    </form>
-
-                    <div
-                        style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin-top: 20px; max-width: 500px;">
-                        <h3 style="margin-top: 0;">Conceder Acesso com Data de Expiração</h3>
-                        <form method="post" style="display: flex; flex-direction: column; gap: 10px;">
-                            <?php wp_nonce_field('aluno_conceder_acesso'); ?>
-                            <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
-
-                            <label>
-                                <strong>Curso:</strong><br>
-                                <select name="curso_id" required style="width: 100%;">
-                                    <option value="">Selecione...</option>
-                                    <?php foreach ($cursos as $curso): ?>
-                                            <option value="<?php echo $curso->ID; ?>">
-                                                <?php echo esc_html($curso->post_title); ?>
-                                            </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </label>
-
-                            <label>
-                                <strong>Data de Expiração:</strong><br>
-                                <input type="date" name="data_fim" style="width: 100%;">
-                                <small style="color: #666;">Deixe vazio para acesso vitalício.</small>
-                            </label>
-
-                            <button type="submit" name="conceder_acesso" value="1" class="button button-primary">
-                                Conceder Acesso
-                            </button>
-                        </form>
                     </div>
+                <?php endif; ?>
+            </div>
 
-                    <div
-                        style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin-top: 20px; max-width: 500px;">
-                        <h3 style="margin-top: 0;">Matrícula em Massa por Trilha</h3>
-                        <p class="description">Matricula o aluno em todos os cursos desta trilha.</p>
-                        <form method="post" style="display: flex; flex-direction: column; gap: 10px;">
-                            <?php wp_nonce_field('aluno_matricular_trilha'); ?>
-                            <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+            <h2 style="margin-top: 30px;">Formação e Progresso</h2>
+            <p class="description">Acompanhe o desenvolvimento do aluno em cada curso matriculado.</p>
 
-                            <label>
-                                <strong>Trilha:</strong><br>
-                                <select name="trilha_id" required style="width: 100%;">
-                                    <option value="">Selecione a Trilha...</option>
-                                    <?php foreach ($trilhas as $trilha): ?>
-                                            <option value="<?php echo $trilha->ID; ?>">
-                                                <?php echo esc_html($trilha->post_title); ?>
-                                            </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </label>
-
-                            <label>
-                                <strong>Data de Expiração (Opcional):</strong><br>
-                                <input type="date" name="data_fim" style="width: 100%;">
-                                <small style="color: #666;">Aplica a mesma data para todos os cursos da trilha.</small>
-                            </label>
-
-                            <button type="submit" name="matricular_trilha" value="1" class="button button-primary">
-                                Matricular na Trilha
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Modal Alterar Dados Cadastrais -->
-                <div id="modal-dados-cadastrais" class="sc-modal-overlay">
-                    <div class="sc-modal-content">
-                        <div class="sc-modal-header">
-                            <h2>Alterar Dados Cadastrais</h2>
-                            <span class="sc-modal-close"
-                                onclick="document.getElementById('modal-dados-cadastrais').style.display='none'">&times;</span>
-                        </div>
-                        <form method="post">
-                            <?php wp_nonce_field('aluno_update_data', '_wpnonce'); ?>
-                            <input type="hidden" name="update_student_data" value="1">
-                            <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
-
-                            <div style="max-height: 70vh; overflow-y: auto; padding-right: 10px;">
-                                <div style="margin-bottom: 20px;">
-                                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0;">Contato e Documentos
-                                    </h3>
-                                    <table class="form-table">
-                                        <tr>
-                                            <th>CPF</th>
-                                            <td><input type="text" name="cpf" value="<?php echo esc_attr($cpf); ?>" class="regular-text"
-                                                    style="width: 100%;"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Aniversário</th>
-                                            <td><input type="date" name="aniversario" value="<?php echo esc_attr($aniversario); ?>"
-                                                    style="width: 100%;"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Telefone</th>
-                                            <td><input type="text" name="billing_phone" value="<?php echo esc_attr($phone); ?>"
-                                                    class="regular-text" style="width: 100%;"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Instagram</th>
-                                            <td><input type="text" name="instagram" value="<?php echo esc_attr($instagram); ?>"
-                                                    class="regular-text" style="width: 100%;"></td>
-                                        </tr>
-                                    </table>
-                                </div>
-
-                                <div>
-                                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">Endereço</h3>
-                                    <table class="form-table">
-                                        <tr>
-                                            <th>CEP</th>
-                                            <td><input type="text" name="cep" value="<?php echo esc_attr($cep); ?>" class="regular-text"
-                                                    style="width: 150px;"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Rua</th>
-                                            <td><input type="text" name="rua" value="<?php echo esc_attr($rua); ?>" class="regular-text"
-                                                    style="width: 100%;"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Número</th>
-                                            <td><input type="text" name="numero" value="<?php echo esc_attr($numero); ?>"
-                                                    class="regular-text" style="width: 100%;"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Complemento</th>
-                                            <td><input type="text" name="complemento" value="<?php echo esc_attr($complemento); ?>"
-                                                    class="regular-text" style="width: 100%;"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Bairro</th>
-                                            <td><input type="text" name="bairro" value="<?php echo esc_attr($bairro); ?>"
-                                                    class="regular-text" style="width: 100%;"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Cidade</th>
-                                            <td><input type="text" name="cidade" value="<?php echo esc_attr($cidade); ?>"
-                                                    class="regular-text" style="width: 100%;"></td>
-                                        </tr>
-                                        <tr>
-                                            <th>Estado</th>
-                                            <td><input type="text" name="estado" value="<?php echo esc_attr($estado); ?>"
-                                                    class="regular-text" style="width: 60px;" maxlength="2" placeholder="UF"></td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; text-align: right;">
-                                <button type="button" class="button"
-                                    onclick="document.getElementById('modal-dados-cadastrais').style.display='none'">Cancelar</button>
-                                <button type="submit" class="button button-primary">Salvar Alterações</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Modal Alterar Senha -->
-                <div id="modal-alterar-senha" class="sc-modal-overlay">
-                    <div class="sc-modal-content" style="max-width: 500px;">
-                        <div class="sc-modal-header">
-                            <h2>Alterar Senha de Acesso</h2>
-                            <span class="sc-modal-close"
-                                onclick="document.getElementById('modal-alterar-senha').style.display='none'">&times;</span>
-                        </div>
-                        <form method="post">
-                            <?php wp_nonce_field('aluno_update_data', '_wpnonce'); ?>
-                            <input type="hidden" name="update_student_data" value="1">
-                            <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
-
-                            <p>Digite a nova senha para este usuário. A senha anterior será substituída imediatamente.</p>
-
-                            <label style="display: block; margin: 20px 0;">
-                                <strong>Nova Senha</strong>
-                                <div style="position: relative;">
-                                    <input type="password" name="new_password" id="new_password_field" class="regular-text"
-                                        style="width: 100%; display: block; margin-top: 5px; padding-right: 40px;" required
-                                        placeholder="••••••••">
-                                    <span onclick="togglePasswordVisibility()"
-                                        style="position: absolute; right: 10px; top: 55%; transform: translateY(-50%); cursor: pointer; color: #666;"
-                                        title="Ver senha">
-                                        <span class="dashicons dashicons-visibility" id="password-toggle-icon"></span>
-                                    </span>
-                                </div>
-                            </label>
-
-                            <script>
-                                function togglePasswordVisibility() {
-                                    var passwordInput = document.getElementById('new_password_field');
-                                    var toggleIcon = document.getElementById('password-toggle-icon');
-                                    if (passwordInput.type === 'password') {
-                                        passwordInput.type = 'text';
-                                        toggleIcon.classList.remove('dashicons-visibility');
-                                        toggleIcon.classList.add('dashicons-hidden');
-                                    } else {
-                                        passwordInput.type = 'password';
-                                        toggleIcon.classList.remove('dashicons-hidden');
-                                        toggleIcon.classList.add('dashicons-visibility');
-                                    }
-                                }
-                            </script>
-
-                            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; text-align: right;">
-                                <button type="button" class="button"
-                                    onclick="document.getElementById('modal-alterar-senha').style.display='none'">Cancelar</button>
-                                <button type="submit" class="button button-primary">Alterar Senha</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <style>
-                    .sc-modal-overlay {
-                        display: none;
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 100%;
-                        background: rgba(0, 0, 0, 0.5);
-                        z-index: 9999;
-                        justify-content: center;
-                        align-items: center;
-                    }
-
-                    .sc-modal-content {
-                        background: #fff;
-                        width: 90%;
-                        max-width: 800px;
-                        border-radius: 8px;
-                        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-                        padding: 25px;
-                        position: relative;
-                        animation: slideDown 0.3s ease-out;
-                    }
-
-                    .sc-modal-header {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        border-bottom: 1px solid #eee;
-                        padding-bottom: 15px;
-                        margin-bottom: 20px;
-                    }
-
-                    .sc-modal-header h2 {
-                        margin: 0;
-                        font-size: 1.3em;
-                    }
-
-                    .sc-modal-close {
-                        font-size: 28px;
-                        font-weight: bold;
-                        color: #aaa;
-                        cursor: pointer;
-                        line-height: 1;
-                    }
-
-                    .sc-modal-close:hover {
-                        color: #000;
-                    }
-
-                    @keyframes slideDown {
-                        from {
-                            transform: translateY(-50px);
-                            opacity: 0;
-                        }
-
-                        to {
-                            transform: translateY(0);
-                            opacity: 1;
-                        }
-                    }
-                </style>
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
                 <?php
+                $cursos_com_acesso = array_filter($cursos, function ($c) use ($user_id) {
+                    return self::has_access($user_id, $c->ID);
+                });
+
+                if (empty($cursos_com_acesso)): ?>
+                    <div
+                        style="grid-column: 1 / -1; background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; text-align: center; color: #666;">
+                        Nenhum curso ativo para este aluno.
+                    </div>
+                <?php else:
+                    foreach ($cursos_com_acesso as $c):
+                        $progresso = self::get_detailed_progress($user_id, $c->ID);
+                        ?>
+                        <div
+                            style="background: #fff; border: 1px solid #ccd0d4; border-radius: 8px; padding: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                                <h4 style="margin: 0; font-size: 15px; color: #1d2327;">
+                                    <?php echo esc_html($c->post_title); ?>
+                                </h4>
+                                <span style="font-size: 18px; font-weight: 700; color: #22c55e;">
+                                    <?php echo $progresso['percent']; ?>%
+                                </span>
+                            </div>
+
+                            <div style="height: 8px; background: #f0f0f1; border-radius: 4px; overflow: hidden; margin-bottom: 10px;">
+                                <div
+                                    style="width: <?php echo $progresso['percent']; ?>%; height: 100%; background: #22c55e; border-radius: 4px; transition: width 0.3s ease;">
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #64748b;">
+                                <span>
+                                    <?php echo $progresso['concluidas']; ?> de
+                                    <?php echo $progresso['total']; ?> aulas
+                                </span>
+                                <span>
+                                    <?php if ($progresso['percent'] >= 100): ?>
+                                        <span
+                                            style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">CONCLUÍDO</span>
+                                    <?php else: ?>
+                                        EM ANDAMENTO
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+
+                            <?php if ($progresso['last_date']): ?>
+                                <div
+                                    style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #94a3b8;">
+                                    🕒 Última aula:
+                                    <?php echo date('d/m/Y H:i', strtotime($progresso['last_date'])); ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach;
+                endif; ?>
+            </div>
+
+            <h2>Cursos e Permissões</h2>
+            <p class="description">Gerencie os acessos do aluno aos cursos disponíveis.</p>
+
+            <form method="post">
+                <?php wp_nonce_field('aluno_acesso_rapido'); ?>
+                <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+
+                <table class="wp-list-table widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th>Curso</th>
+                            <th style="width: 120px;">Status</th>
+                            <th style="width: 150px;">Expiração</th>
+                            <th style="width: 130px;">Desde</th>
+                            <th style="width: 250px;">Ações Rápidas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($cursos as $curso):
+                            $acesso = isset($acessos_map[$curso->ID]) ? $acessos_map[$curso->ID] : null;
+
+                            // Check for Group Access if no Direct Access
+                            $access_source = self::get_access_source($user->ID, $curso->ID);
+
+                            $tem_acesso = ($access_source !== false);
+                            $is_group_access = ($access_source && in_array($access_source['type'], ['group', 'group_trilha']));
+
+                            $expirado = $acesso && $acesso->status === 'ativo' && $acesso->data_fim && strtotime($acesso->data_fim) < time();
+                            ?>
+                            <tr>
+                                <td><strong>
+                                        <a href="<?php echo esc_url(admin_url('post.php?post=' . $curso->ID . '&action=edit')); ?>"
+                                            title="Editar curso: <?php echo esc_attr($curso->post_title); ?>"
+                                            style="text-decoration: none; color: #2271b1;">
+                                            <?php echo esc_html($curso->post_title); ?>
+                                        </a>
+                                    </strong></td>
+                                <td>
+                                    <?php if (!$tem_acesso): ?>
+                                        <?php if ($expirado): ?>
+                                            <span style="color: #f59e0b; font-weight: 600;">Expirado</span>
+                                        <?php else: ?>
+                                            <span style="color: #9ca3af;">Sem acesso</span>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <?php if ($is_group_access): ?>
+                                            <span
+                                                style="color: #2563eb; font-weight: 600; background: #dbeafe; padding: 2px 8px; border-radius: 4px;">Utilizando
+                                                <?php echo esc_html($access_source['label']); ?></span>
+                                        <?php elseif ($acesso && $acesso->status === 'ativo'): ?>
+                                            <span style="color: #22c55e; font-weight: 600;">Ativo (Manual)</span>
+                                        <?php elseif ($acesso && $acesso->status === 'suspenso'): ?>
+                                            <span style="color: #6b7280; font-weight: 600;">Suspenso</span>
+                                        <?php else: ?>
+                                            <span style="color: #ef4444; font-weight: 600;">Revogado</span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if ($is_group_access): ?>
+                                        <em>Gerenciado pelo Grupo</em>
+                                    <?php elseif ($acesso && $acesso->data_fim): ?>
+                                        <?php echo date('d/m/Y', strtotime($acesso->data_fim)); ?>
+                                    <?php elseif ($acesso && $acesso->status === 'ativo'): ?>
+                                        <em>Vitalício</em>
+                                    <?php else: ?>
+                                        —
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php echo $acesso ? date('d/m/Y', strtotime($acesso->created_at)) : '—'; ?>
+                                </td>
+                                <td>
+                                    <?php if ($is_group_access): ?>
+                                        <small style="color:#666;">Acesso via grupo. Edite o grupo ou remova o aluno dele.</small>
+                                    <?php elseif (!$acesso || $acesso->status !== 'ativo' || $expirado): ?>
+                                        <button type="submit" name="acao_rapida" value="ativar_<?php echo $curso->ID; ?>"
+                                            class="button button-primary button-small">
+                                            Conceder Acesso
+                                        </button>
+                                    <?php else: ?>
+                                        <button type="submit" name="acao_rapida" value="suspender_<?php echo $curso->ID; ?>"
+                                            class="button button-small">
+                                            Suspender
+                                        </button>
+                                        <button type="submit" name="acao_rapida" value="revogar_<?php echo $curso->ID; ?>"
+                                            class="button button-small" style="color: #dc3232;">
+                                            Revogar
+                                        </button>
+                                    <?php endif; ?>
+
+                                    <?php if ($acesso && $acesso->status === 'suspenso' && !$is_group_access): ?>
+                                        <button type="submit" name="acao_rapida" value="reativar_<?php echo $curso->ID; ?>"
+                                            class="button button-primary button-small">
+                                            Reativar
+                                        </button>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </form>
+
+            <div
+                style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin-top: 20px; max-width: 500px;">
+                <h3 style="margin-top: 0;">Conceder Acesso com Data de Expiração</h3>
+                <form method="post" style="display: flex; flex-direction: column; gap: 10px;">
+                    <?php wp_nonce_field('aluno_conceder_acesso'); ?>
+                    <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+
+                    <label>
+                        <strong>Curso:</strong><br>
+                        <select name="curso_id" required style="width: 100%;">
+                            <option value="">Selecione...</option>
+                            <?php foreach ($cursos as $curso): ?>
+                                <option value="<?php echo $curso->ID; ?>">
+                                    <?php echo esc_html($curso->post_title); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
+
+                    <label>
+                        <strong>Data de Expiração:</strong><br>
+                        <input type="date" name="data_fim" style="width: 100%;">
+                        <small style="color: #666;">Deixe vazio para acesso vitalício.</small>
+                    </label>
+
+                    <button type="submit" name="conceder_acesso" value="1" class="button button-primary">
+                        Conceder Acesso
+                    </button>
+                </form>
+            </div>
+
+            <div
+                style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin-top: 20px; max-width: 500px;">
+                <h3 style="margin-top: 0;">Matrícula em Massa por Trilha</h3>
+                <p class="description">Matricula o aluno em todos os cursos desta trilha.</p>
+                <form method="post" style="display: flex; flex-direction: column; gap: 10px;">
+                    <?php wp_nonce_field('aluno_matricular_trilha'); ?>
+                    <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+
+                    <label>
+                        <strong>Trilha:</strong><br>
+                        <select name="trilha_id" required style="width: 100%;">
+                            <option value="">Selecione a Trilha...</option>
+                            <?php foreach ($trilhas as $trilha): ?>
+                                <option value="<?php echo $trilha->ID; ?>">
+                                    <?php echo esc_html($trilha->post_title); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
+
+                    <label>
+                        <strong>Data de Expiração (Opcional):</strong><br>
+                        <input type="date" name="data_fim" style="width: 100%;">
+                        <small style="color: #666;">Aplica a mesma data para todos os cursos da trilha.</small>
+                    </label>
+
+                    <button type="submit" name="matricular_trilha" value="1" class="button button-primary">
+                        Matricular na Trilha
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal Alterar Dados Cadastrais -->
+        <div id="modal-dados-cadastrais" class="sc-modal-overlay">
+            <div class="sc-modal-content">
+                <div class="sc-modal-header">
+                    <h2>Alterar Dados Cadastrais</h2>
+                    <span class="sc-modal-close"
+                        onclick="document.getElementById('modal-dados-cadastrais').style.display='none'">&times;</span>
+                </div>
+                <form method="post">
+                    <?php wp_nonce_field('aluno_update_data', '_wpnonce'); ?>
+                    <input type="hidden" name="update_student_data" value="1">
+                    <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
+
+                    <div style="max-height: 70vh; overflow-y: auto; padding-right: 10px;">
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0;">Contato e Documentos
+                            </h3>
+                            <table class="form-table">
+                                <tr>
+                                    <th>CPF</th>
+                                    <td><input type="text" name="cpf" value="<?php echo esc_attr($cpf); ?>" class="regular-text"
+                                            style="width: 100%;"></td>
+                                </tr>
+                                <tr>
+                                    <th>Aniversário</th>
+                                    <td><input type="date" name="aniversario" value="<?php echo esc_attr($aniversario); ?>"
+                                            style="width: 100%;"></td>
+                                </tr>
+                                <tr>
+                                    <th>Telefone</th>
+                                    <td><input type="text" name="billing_phone" value="<?php echo esc_attr($phone); ?>"
+                                            class="regular-text" style="width: 100%;"></td>
+                                </tr>
+                                <tr>
+                                    <th>Instagram</th>
+                                    <td><input type="text" name="instagram" value="<?php echo esc_attr($instagram); ?>"
+                                            class="regular-text" style="width: 100%;"></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div>
+                            <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">Endereço</h3>
+                            <table class="form-table">
+                                <tr>
+                                    <th>CEP</th>
+                                    <td><input type="text" name="cep" value="<?php echo esc_attr($cep); ?>" class="regular-text"
+                                            style="width: 150px;"></td>
+                                </tr>
+                                <tr>
+                                    <th>Rua</th>
+                                    <td><input type="text" name="rua" value="<?php echo esc_attr($rua); ?>" class="regular-text"
+                                            style="width: 100%;"></td>
+                                </tr>
+                                <tr>
+                                    <th>Número</th>
+                                    <td><input type="text" name="numero" value="<?php echo esc_attr($numero); ?>"
+                                            class="regular-text" style="width: 100%;"></td>
+                                </tr>
+                                <tr>
+                                    <th>Complemento</th>
+                                    <td><input type="text" name="complemento" value="<?php echo esc_attr($complemento); ?>"
+                                            class="regular-text" style="width: 100%;"></td>
+                                </tr>
+                                <tr>
+                                    <th>Bairro</th>
+                                    <td><input type="text" name="bairro" value="<?php echo esc_attr($bairro); ?>"
+                                            class="regular-text" style="width: 100%;"></td>
+                                </tr>
+                                <tr>
+                                    <th>Cidade</th>
+                                    <td><input type="text" name="cidade" value="<?php echo esc_attr($cidade); ?>"
+                                            class="regular-text" style="width: 100%;"></td>
+                                </tr>
+                                <tr>
+                                    <th>Estado</th>
+                                    <td><input type="text" name="estado" value="<?php echo esc_attr($estado); ?>"
+                                            class="regular-text" style="width: 60px;" maxlength="2" placeholder="UF"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; text-align: right;">
+                        <button type="button" class="button"
+                            onclick="document.getElementById('modal-dados-cadastrais').style.display='none'">Cancelar</button>
+                        <button type="submit" class="button button-primary">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal Alterar Senha -->
+        <div id="modal-alterar-senha" class="sc-modal-overlay">
+            <div class="sc-modal-content" style="max-width: 500px;">
+                <div class="sc-modal-header">
+                    <h2>Alterar Senha de Acesso</h2>
+                    <span class="sc-modal-close"
+                        onclick="document.getElementById('modal-alterar-senha').style.display='none'">&times;</span>
+                </div>
+                <form method="post">
+                    <?php wp_nonce_field('aluno_update_data', '_wpnonce'); ?>
+                    <input type="hidden" name="update_student_data" value="1">
+                    <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
+
+                    <p>Digite a nova senha para este usuário. A senha anterior será substituída imediatamente.</p>
+
+                    <label style="display: block; margin: 20px 0;">
+                        <strong>Nova Senha</strong>
+                        <div style="position: relative;">
+                            <input type="password" name="new_password" id="new_password_field" class="regular-text"
+                                style="width: 100%; display: block; margin-top: 5px; padding-right: 40px;" required
+                                placeholder="••••••••">
+                            <span onclick="togglePasswordVisibility()"
+                                style="position: absolute; right: 10px; top: 55%; transform: translateY(-50%); cursor: pointer; color: #666;"
+                                title="Ver senha">
+                                <span class="dashicons dashicons-visibility" id="password-toggle-icon"></span>
+                            </span>
+                        </div>
+                    </label>
+
+                    <script>
+                        function togglePasswordVisibility() {
+                            var passwordInput = document.getElementById('new_password_field');
+                            var toggleIcon = document.getElementById('password-toggle-icon');
+                            if (passwordInput.type === 'password') {
+                                passwordInput.type = 'text';
+                                toggleIcon.classList.remove('dashicons-visibility');
+                                toggleIcon.classList.add('dashicons-hidden');
+                            } else {
+                                passwordInput.type = 'password';
+                                toggleIcon.classList.remove('dashicons-hidden');
+                                toggleIcon.classList.add('dashicons-visibility');
+                            }
+                        }
+                    </script>
+
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; text-align: right;">
+                        <button type="button" class="button"
+                            onclick="document.getElementById('modal-alterar-senha').style.display='none'">Cancelar</button>
+                        <button type="submit" class="button button-primary">Alterar Senha</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <style>
+            .sc-modal-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 9999;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .sc-modal-content {
+                background: #fff;
+                width: 90%;
+                max-width: 800px;
+                border-radius: 8px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                padding: 25px;
+                position: relative;
+                animation: slideDown 0.3s ease-out;
+            }
+
+            .sc-modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid #eee;
+                padding-bottom: 15px;
+                margin-bottom: 20px;
+            }
+
+            .sc-modal-header h2 {
+                margin: 0;
+                font-size: 1.3em;
+            }
+
+            .sc-modal-close {
+                font-size: 28px;
+                font-weight: bold;
+                color: #aaa;
+                cursor: pointer;
+                line-height: 1;
+            }
+
+            .sc-modal-close:hover {
+                color: #000;
+            }
+
+            @keyframes slideDown {
+                from {
+                    transform: translateY(-50px);
+                    opacity: 0;
+                }
+
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+        </style>
+        <?php
     }
 }
 
