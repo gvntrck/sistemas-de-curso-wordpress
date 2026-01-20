@@ -85,9 +85,10 @@ function sistema_cursos_activate()
  */
 add_action('init', 'sistema_cursos_check_version', 99);
 
+
 function sistema_cursos_check_version()
 {
-    $current_version = '1.2.36';
+    $current_version = '1.2.39';
     $db_version = get_option('sistema_cursos_version');
 
     if ($db_version !== $current_version) {
@@ -99,6 +100,7 @@ function sistema_cursos_check_version()
         update_option('sistema_cursos_version', $current_version);
     }
 }
+
 
 
 
