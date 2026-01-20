@@ -132,12 +132,12 @@ class System_Cursos_Certificates
         wp_nonce_field('certificado_save_config', 'certificado_nonce');
 
         $bg_url = get_post_meta($post->ID, '_cert_bg_url', true);
-        $nome_top = get_post_meta($post->ID, '_cert_nome_top', true) ?: '40%';
-        $nome_left = get_post_meta($post->ID, '_cert_nome_left', true) ?: '50%';
-        $curso_top = get_post_meta($post->ID, '_cert_curso_top', true) ?: '55%';
-        $curso_left = get_post_meta($post->ID, '_cert_curso_left', true) ?: '50%';
-        $data_top = get_post_meta($post->ID, '_cert_data_top', true) ?: '70%';
-        $data_left = get_post_meta($post->ID, '_cert_data_left', true) ?: '50%';
+        $nome_top = rtrim(get_post_meta($post->ID, '_cert_nome_top', true) ?: '40%', '%');
+        $nome_left = rtrim(get_post_meta($post->ID, '_cert_nome_left', true) ?: '50%', '%');
+        $curso_top = rtrim(get_post_meta($post->ID, '_cert_curso_top', true) ?: '55%', '%');
+        $curso_left = rtrim(get_post_meta($post->ID, '_cert_curso_left', true) ?: '50%', '%');
+        $data_top = rtrim(get_post_meta($post->ID, '_cert_data_top', true) ?: '70%', '%');
+        $data_left = rtrim(get_post_meta($post->ID, '_cert_data_left', true) ?: '50%', '%');
         $color = get_post_meta($post->ID, '_cert_color', true) ?: '#000000';
         $font_size = get_post_meta($post->ID, '_cert_font_size', true) ?: '24px';
         $font_family = get_post_meta($post->ID, '_cert_font_family', true) ?: 'Roboto';
@@ -243,10 +243,10 @@ class System_Cursos_Certificates
         <div class="cert-row">
             <span class="cert-label">Posição: Nome do Aluno</span>
             <div class="cert-inputs">
-                <label>Top: <input type="text" name="cert_nome_top" value="<?php echo esc_attr($nome_top); ?>"
-                        class="tiny-text"></label>
-                <label>Left: <input type="text" name="cert_nome_left" value="<?php echo esc_attr($nome_left); ?>"
-                        class="tiny-text"></label>
+                <label>Top (%): <input type="number" step="0.1" min="0" max="100" name="cert_nome_top"
+                        value="<?php echo esc_attr($nome_top); ?>" class="tiny-text"></label>
+                <label>Left (%): <input type="number" step="0.1" min="0" max="100" name="cert_nome_left"
+                        value="<?php echo esc_attr($nome_left); ?>" class="tiny-text"></label>
             </div>
         </div>
 
@@ -258,10 +258,10 @@ class System_Cursos_Certificates
                 </label>
             </div>
             <div class="cert-inputs">
-                <label>Top: <input type="text" name="cert_curso_top" value="<?php echo esc_attr($curso_top); ?>"
-                        class="tiny-text"></label>
-                <label>Left: <input type="text" name="cert_curso_left" value="<?php echo esc_attr($curso_left); ?>"
-                        class="tiny-text"></label>
+                <label>Top (%): <input type="number" step="0.1" min="0" max="100" name="cert_curso_top"
+                        value="<?php echo esc_attr($curso_top); ?>" class="tiny-text"></label>
+                <label>Left (%): <input type="number" step="0.1" min="0" max="100" name="cert_curso_left"
+                        value="<?php echo esc_attr($curso_left); ?>" class="tiny-text"></label>
             </div>
         </div>
 
@@ -273,10 +273,10 @@ class System_Cursos_Certificates
                 </label>
             </div>
             <div class="cert-inputs">
-                <label>Top: <input type="text" name="cert_data_top" value="<?php echo esc_attr($data_top); ?>"
-                        class="tiny-text"></label>
-                <label>Left: <input type="text" name="cert_data_left" value="<?php echo esc_attr($data_left); ?>"
-                        class="tiny-text"></label>
+                <label>Top (%): <input type="number" step="0.1" min="0" max="100" name="cert_data_top"
+                        value="<?php echo esc_attr($data_top); ?>" class="tiny-text"></label>
+                <label>Left (%): <input type="number" step="0.1" min="0" max="100" name="cert_data_left"
+                        value="<?php echo esc_attr($data_left); ?>" class="tiny-text"></label>
             </div>
         </div>
 
@@ -341,7 +341,12 @@ class System_Cursos_Certificates
             foreach ($fields as $field) {
                 $key = substr($field, 1);
                 if (isset($_POST[$key])) {
-                    update_post_meta($post_id, $field, sanitize_text_field($_POST[$key]));
+                    $value = sanitize_text_field($_POST[$key]);
+                    // Se for campo de posição, adicionar %
+                    if (strpos($key, '_top') !== false || strpos($key, '_left') !== false) {
+                        $value .= '%';
+                    }
+                    update_post_meta($post_id, $field, $value);
                 }
             }
 

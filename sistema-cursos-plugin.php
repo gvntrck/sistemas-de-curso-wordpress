@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.2.42
+ * Version: 1.2.43
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.2.42');
+define('SISTEMA_CURSOS_VERSION', '1.2.43');
 
 /**
  * sistema-cursos-plugin.php
@@ -22,7 +22,7 @@ define('SISTEMA_CURSOS_VERSION', '1.2.42');
  * Carrega dependências, define hooks de ativação e configura o menu de documentação no admin.
  *
  * @package SistemaCursos
- * @version 1.2.39
+ * @version 1.2.43
  */
 
 // 1. Carregar Classes do Core
