@@ -262,7 +262,9 @@ class System_Cursos_WooCommerce
                         update_user_meta($user_id, '_aluno_grupos', $current_groups);
 
                         // Log da ação
-                        System_Cursos_Access_Control::log_group_change($user_id, $vinculo_id, 'grupo_entrou', 0); // 0 = Sistema/Automático
+                        // Tenta pegar o ID do usuário atual (Admin clicando) ou 0 se for webhook/sistema
+                        $actor_id = get_current_user_id() ?: 0;
+                        System_Cursos_Access_Control::log_group_change($user_id, $vinculo_id, 'grupo_entrou', $actor_id, ['origin' => 'WooCommerce']);
 
                         $order->add_order_note("Usuário adicionado ao Grupo ID $vinculo_id com sucesso.");
                     } else {
