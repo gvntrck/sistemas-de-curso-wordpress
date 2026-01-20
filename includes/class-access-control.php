@@ -751,9 +751,9 @@ class System_Cursos_Access_Control
                                 $stats = isset($_GET['stats']) ? json_decode(base64_decode($_GET['stats']), true) : [];
                                 echo sprintf(
                                     '🧹 <strong>Limpeza concluída com sucesso!</strong> %d cursos, %d trilhas e %d usuários foram atualizados.',
-                                    isset($stats['cursos']) ? (int)$stats['cursos'] : 0,
-                                    isset($stats['trilhas']) ? (int)$stats['trilhas'] : 0,
-                                    isset($stats['usuarios']) ? (int)$stats['usuarios'] : 0
+                                    isset($stats['cursos']) ? (int) $stats['cursos'] : 0,
+                                    isset($stats['trilhas']) ? (int) $stats['trilhas'] : 0,
+                                    isset($stats['usuarios']) ? (int) $stats['usuarios'] : 0
                                 );
                                 break;
                         }
@@ -770,12 +770,13 @@ class System_Cursos_Access_Control
                 <div style="padding: 15px; border-top: 1px solid #eee;">
                     <p style="margin-top: 0;">
                         Limpe referências a grupos que foram deletados mas ainda estão associados a cursos, trilhas ou alunos.
-                        <br><small style="color: #666;">Isso corrige o bug onde alunos aparecem com "Utilizando Grupo:" vazio.</small>
+                        <br><small style="color: #666;">Isso corrige o bug onde alunos aparecem com "Utilizando Grupo:"
+                            vazio.</small>
                     </p>
                     <form method="post" style="display: inline;">
                         <?php wp_nonce_field('cleanup_orphaned_groups'); ?>
                         <button type="submit" name="cleanup_orphaned_groups" value="1" class="button"
-                                onclick="return confirm('Deseja realmente limpar as referências órfãs?\n\nIsso removerá grupos deletados de cursos, trilhas e usuários.\nEsta ação não pode ser desfeita.');">
+                            onclick="return confirm('Deseja realmente limpar as referências órfãs?\n\nIsso removerá grupos deletados de cursos, trilhas e usuários.\nEsta ação não pode ser desfeita.');">
                             🧹 Executar Limpeza de Grupos Órfãos
                         </button>
                     </form>
@@ -1348,7 +1349,11 @@ class System_Cursos_Access_Control
                             ?>
                             <tr>
                                 <td><strong>
-                                        <?php echo esc_html($curso->post_title); ?>
+                                        <a href="<?php echo esc_url(admin_url('post.php?post=' . $curso->ID . '&action=edit')); ?>"
+                                            title="Editar curso: <?php echo esc_attr($curso->post_title); ?>"
+                                            style="text-decoration: none; color: #2271b1;">
+                                            <?php echo esc_html($curso->post_title); ?>
+                                        </a>
                                     </strong></td>
                                 <td>
                                     <?php if (!$tem_acesso): ?>

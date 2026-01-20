@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Lerandash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.2.29
+ * Version: 1.2.30
  */
 
 if (!defined('ABSPATH')) {
