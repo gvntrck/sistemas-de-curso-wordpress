@@ -291,6 +291,36 @@ window.SystemCursos.initListaAulas = function (containerId) {
                             if (anexosWrapper) anexosWrapper.innerHTML = '';
                         }
 
+                        // Quiz (NEW - Fix for AJAX navigation)
+                        var quizWrapper = container.querySelector('.lista-aulas__quiz-wrapper');
+                        if (data.data.quiz) {
+                            if (quizWrapper) {
+                                quizWrapper.innerHTML = data.data.quiz;
+                            } else {
+                                // Create wrapper if missing
+                                var newQuizWrapper = document.createElement('div');
+                                newQuizWrapper.className = 'lista-aulas__quiz-wrapper';
+                                newQuizWrapper.innerHTML = data.data.quiz;
+                                // Insert after anexos or descricao
+                                var insertAfter = anexosWrapper || descricaoEl || tituloEl;
+                                if (insertAfter) insertAfter.insertAdjacentElement('afterend', newQuizWrapper);
+                            }
+                        } else {
+                            // No quiz: remove wrapper if exists
+                            if (quizWrapper) {
+                                quizWrapper.remove();
+                            }
+                        }
+
+                        // Update button visibility (NEW - Fix for AJAX navigation)
+                        if (btnConcluir) {
+                            if (data.data.esconder_botao_manual) {
+                                btnConcluir.style.display = 'none';
+                            } else {
+                                btnConcluir.style.display = '';
+                            }
+                        }
+
                         mainEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                 })

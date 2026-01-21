@@ -158,11 +158,20 @@ class System_Cursos_Shortcode_Listar_Aulas
                     <?php echo $embedHtml; ?>
                 </div>
 
+                <?php
+                // Integração com Quiz
+                $quizHtml = '';
+                if (class_exists('System_Cursos_Quiz_Process')) {
+                    $quizHtml = System_Cursos_Quiz_Process::render_quiz($aulaId);
+                }
+                $esconderBotaoManual = !empty($quizHtml) && !$aulaAtualConcluida;
+                ?>
+
                 <div class="lista-aulas__header">
                     <h2 class="lista-aulas__titulo">
                         <?php echo $titulo; ?>
                     </h2>
-                    <?php if ($isLoggedIn): ?>
+                    <?php if ($isLoggedIn && !$esconderBotaoManual): ?>
                         <button type="button"
                             class="lista-aulas__btn-concluir <?php echo $aulaAtualConcluida ? 'is-concluida' : ''; ?>"
                             data-aula-id="<?php echo $aulaId; ?>" data-curso-id="<?php echo $cursoId; ?>">
@@ -186,6 +195,12 @@ class System_Cursos_Shortcode_Listar_Aulas
                 <?php if (!empty($anexosHtml)): ?>
                     <div class="lista-aulas__anexos-wrapper">
                         <?php echo $anexosHtml; ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($quizHtml)): ?>
+                    <div class="lista-aulas__quiz-wrapper">
+                        <?php echo $quizHtml; ?>
                     </div>
                 <?php endif; ?>
             </div>
@@ -267,11 +282,29 @@ class System_Cursos_Shortcode_Listar_Aulas
         $embed = get_post_meta($aulaId, 'embed_do_vimeo', true);
         $descricao = get_post_meta($aulaId, 'descricao', true);
 
+        // Quiz Integration (AJAX Navigation Fix)
+        $quizHtml = '';
+        if (class_exists('System_Cursos_Quiz_Process')) {
+            $quizHtml = System_Cursos_Quiz_Process::render_quiz($aulaId);
+        }
+
+        // Check if user already completed this lesson
+        $user_id = get_current_user_id();
+        $isCompleted = false;
+        if ($user_id > 0 && class_exists('System_Cursos_Progress')) {
+            $isCompleted = System_Cursos_Progress::is_lesson_completed($user_id, $aulaId);
+        }
+
+        // Should hide manual button if quiz is active and not completed
+        $esconderBotaoManual = !empty($quizHtml) && !$isCompleted;
+
         wp_send_json_success([
             'titulo' => esc_html(get_the_title($aulaId)),
             'embed' => $embed ? $this->kses_embed($embed) : '<div class="lista-aulas__placeholder">Vídeo não disponível.</div>',
             'descricao' => $descricao ? wp_kses_post($descricao) : '',
             'anexos' => $this->get_anexos_html($aulaId),
+            'quiz' => $quizHtml,
+            'esconder_botao_manual' => $esconderBotaoManual
         ]);
     }
 

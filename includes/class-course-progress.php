@@ -32,6 +32,8 @@ class System_Cursos_Progress
             user_id bigint(20) unsigned NOT NULL,
             aula_id bigint(20) unsigned NOT NULL,
             curso_id bigint(20) unsigned NOT NULL,
+            pontuacao int(3) DEFAULT 0,
+            tentativas int(5) DEFAULT 0,
             data_conclusao datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
             PRIMARY KEY (id),
             UNIQUE KEY user_aula (user_id, aula_id),
