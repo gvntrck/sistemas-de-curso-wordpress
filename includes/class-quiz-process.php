@@ -31,12 +31,22 @@ class System_Cursos_Quiz_Process
                 true
             );
 
+            wp_enqueue_script('sistema-cursos-quiz-frontend');
+
             wp_register_style(
                 'sistema-cursos-quiz-frontend-css',
                 plugins_url('../assets/css/frontend-quiz.css', __FILE__),
                 [],
                 SISTEMA_CURSOS_VERSION
             );
+
+            wp_enqueue_style('sistema-cursos-quiz-frontend-css');
+
+            // Localize script globally to ensure base params exist
+            wp_localize_script('sistema-cursos-quiz-frontend', 'quizFrontend', [
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('sistema_cursos_quiz_submit')
+            ]);
         }
     }
 
@@ -93,15 +103,10 @@ class System_Cursos_Quiz_Process
         if (!$quiz)
             return '';
 
-        // Enqueue
-        wp_enqueue_script('sistema-cursos-quiz-frontend');
-        wp_enqueue_style('sistema-cursos-quiz-frontend-css');
+        // Enqueue handled in enqueue_assets
+        // Localize is also global now, but we can keep aulaId here if needed via data attributes, which is cleaner for ajax.
+        // But for compatibility let's keep it safe.
 
-        wp_localize_script('sistema-cursos-quiz-frontend', 'quizFrontend', [
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'aulaId' => $aula_id,
-            'nonce' => wp_create_nonce('sistema_cursos_quiz_submit')
-        ]);
 
         $questions = $quiz['questions'] ?? [];
         if (empty($questions))
@@ -131,7 +136,7 @@ class System_Cursos_Quiz_Process
             </div>
 
             <!-- Formulário do Quiz -->
-            <form id="sc_quiz_form_<?php echo $aula_id; ?>" class="sc-quiz-form" style="display:none;">
+            <form id="sc_quiz_form_<?php echo $aula_id; ?>" class="sc-quiz-form" style="display:none;" data-aula-id="<?php echo $aula_id; ?>">
                 <div class="mc-body">
                     <?php foreach ($questions as $index => $q): ?>
                         <div class="sc-quiz-question" data-type="<?php echo esc_attr($q['type']); ?>">

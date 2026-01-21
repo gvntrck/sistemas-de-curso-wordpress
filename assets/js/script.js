@@ -301,8 +301,12 @@ window.SystemCursos.initListaAulas = function (containerId) {
                                 var newQuizWrapper = document.createElement('div');
                                 newQuizWrapper.className = 'lista-aulas__quiz-wrapper';
                                 newQuizWrapper.innerHTML = data.data.quiz;
-                                // Insert after anexos or descricao
-                                var insertAfter = anexosWrapper || descricaoEl || tituloEl;
+
+                                // Insert logic: Must remain inside .lista-aulas__main but AFTER description/attachments
+                                // If description/attachments are missing, it should go AFTER the header, not inside it.
+                                var headerEl = container.querySelector('.lista-aulas__header');
+                                var insertAfter = anexosWrapper || descricaoEl || headerEl || tituloEl;
+
                                 if (insertAfter) insertAfter.insertAdjacentElement('afterend', newQuizWrapper);
                             }
                         } else {

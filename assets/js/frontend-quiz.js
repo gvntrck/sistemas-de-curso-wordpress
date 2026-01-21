@@ -1,14 +1,21 @@
 jQuery(document).ready(function ($) {
+    // If quizFrontend is not defined, we can't do anything (url/nonce)
     if (typeof quizFrontend === 'undefined') return;
 
-    const aulaId = quizFrontend.aulaId;
-    const formId = '#sc_quiz_form_' + aulaId;
-    const containerId = '#sc_quiz_container_' + aulaId;
-
-    $(document).on('submit', formId, function (e) {
+    // Use Event Delegation for dynamically loaded forms via AJAX
+    $(document).on('submit', '.sc-quiz-form', function (e) {
         e.preventDefault();
 
         const $form = $(this);
+        // Get aulaId from data attribute in the form
+        const aulaId = $form.attr('data-aula-id'); 
+        
+        if (!aulaId) {
+            console.error('Aula ID not found on form');
+            return;
+        }
+
+        const containerId = '#sc_quiz_container_' + aulaId;
         const $btn = $form.find('.sc-btn-submit');
         const $msg = $form.find('.sc-quiz-message');
 
@@ -76,6 +83,14 @@ jQuery(document).ready(function ($) {
                             // Se estiver usando o shortcode de lista, podemos tentar atualizar a classe da sidebar
                             $('.lista-aulas__item[data-aula-id="' + aulaId + '"] .lista-aulas__item-index').addClass('is-concluida').html('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>');
                             // Se houver botão de concluir que estava escondido, atualizar
+                            // Tentar achar o botão globalmente ou dentro do contexto se possivel (mas ele ta fora do form)
+                            // A logica original nao tratava isso muito bem, vamos manter simples
+                            var $btnConcluir = $('.lista-aulas__btn-concluir[data-aula-id="' + aulaId + '"]');
+                            if ($btnConcluir.length) {
+                                $btnConcluir.addClass('is-concluida');
+                                $btnConcluir.find('.lista-aulas__btn-texto').text('Concluído');
+                                $btnConcluir.show(); // Caso estivesse escondido
+                            }
                         }, 1000);
 
                     } else {
@@ -99,3 +114,4 @@ jQuery(document).ready(function ($) {
         });
     });
 });
+
