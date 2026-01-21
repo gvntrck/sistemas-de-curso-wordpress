@@ -1,0 +1,202 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-01-21T15:47:51.849Z",
+  "stack": {
+    "primaryLanguage": "javascript",
+    "languages": [
+      "php",
+      "javascript"
+    ],
+    "frameworks": [],
+    "buildTools": [],
+    "testFrameworks": [],
+    "packageManager": null,
+    "isMonorepo": false,
+    "hasDocker": false,
+    "hasCI": false
+  },
+  "structure": {
+    "totalFiles": 33,
+    "topDirectories": [
+      {
+        "name": "assets",
+        "fileCount": 8
+      },
+      {
+        "name": "includes",
+        "fileCount": 22
+      },
+      {
+        "name": "modelo.html",
+        "fileCount": 1
+      },
+      {
+        "name": "roadmap.txt",
+        "fileCount": 1
+      },
+      {
+        "name": "sistema-cursos-plugin.php",
+        "fileCount": 1
+      }
+    ],
+    "languageDistribution": [
+      {
+        "extension": ".php",
+        "count": 23
+      },
+      {
+        "extension": ".js",
+        "count": 5
+      },
+      {
+        "extension": ".css",
+        "count": 3
+      },
+      {
+        "extension": ".html",
+        "count": 1
+      },
+      {
+        "extension": ".txt",
+        "count": 1
+      }
+    ]
+  },
+  "architecture": {
+    "layers": [
+      {
+        "name": "Generators",
+        "description": "Content and object generation",
+        "directories": [
+          "assets\\js"
+        ],
+        "symbolCount": 5,
+        "dependsOn": []
+      }
+    ],
+    "patterns": [],
+    "entryPoints": []
+  },
+  "symbols": {
+    "classes": [],
+    "interfaces": [],
+    "functions": [
+      {
+        "name": "applyMask",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 3,
+        "exported": false
+      },
+      {
+        "name": "atualizarBarraProgresso",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 134,
+        "exported": false
+      },
+      {
+        "name": "atualizarBotaoConcluir",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 145,
+        "exported": false
+      },
+      {
+        "name": "atualizarItemLista",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 158,
+        "exported": false
+      },
+      {
+        "name": "escapeHtml",
+        "kind": "function",
+        "file": "assets\\js\\admin-quiz-builder.js",
+        "line": 120,
+        "exported": false
+      },
+      {
+        "name": "imprimirCertificado",
+        "kind": "function",
+        "file": "assets\\js\\certificado.js",
+        "line": 1,
+        "exported": false
+      },
+      {
+        "name": "initAddressFetch",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 53,
+        "exported": false
+      },
+      {
+        "name": "isAulaConcluida",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 130,
+        "exported": false
+      },
+      {
+        "name": "maskCEP",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 31,
+        "exported": false
+      },
+      {
+        "name": "maskCPF",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 12,
+        "exported": false
+      },
+      {
+        "name": "maskDate",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 22,
+        "exported": false
+      },
+      {
+        "name": "render",
+        "kind": "function",
+        "file": "assets\\js\\admin-quiz-builder.js",
+        "line": 19,
+        "exported": false
+      },
+      {
+        "name": "renderOptions",
+        "kind": "function",
+        "file": "assets\\js\\admin-quiz-builder.js",
+        "line": 104,
+        "exported": false
+      },
+      {
+        "name": "renderQuestions",
+        "kind": "function",
+        "file": "assets\\js\\admin-quiz-builder.js",
+        "line": 61,
+        "exported": false
+      },
+      {
+        "name": "updateJson",
+        "kind": "function",
+        "file": "assets\\js\\admin-quiz-builder.js",
+        "line": 116,
+        "exported": false
+      }
+    ],
+    "types": [],
+    "enums": []
+  },
+  "publicAPI": [],
+  "dependencies": {
+    "mostImported": []
+  },
+  "stats": {
+    "totalSymbols": 15,
+    "exportedSymbols": 0,
+    "analysisTimeMs": 21
+  }
+}
