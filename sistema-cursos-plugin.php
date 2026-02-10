@@ -830,6 +830,51 @@ function sistema_cursos_render_admin_page()
                         </td>
                     </tr>
                 </tbody>
+                </tbody>
+            </table>
+
+            <br>
+            <h3 style="border-top: 1px solid #ccc; padding-top: 20px; margin-top: 20px;">Modelos de Single (Elementor Theme
+                Builder)</h3>
+            <p>Além das páginas acima, você deve criar modelos de <strong>Single Post</strong> no Elementor (Theme Builder) para
+                os seguintes tipos de post:</p>
+
+            <table class="sc-table">
+                <thead>
+                    <tr>
+                        <th style="width: 250px;">Tipo de Post (CPT)</th>
+                        <th>Shortcode Recomendado</th>
+                        <th>O que faz?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Aulas</strong> (<code>aula</code>)</td>
+                        <td><code>[lista-aulas]</code></td>
+                        <td>
+                            Exibe o player de vídeo principal, navegação lateral e anexos.
+                            <br><em>Essencial para a experiência de aprendizado.</em>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Trilhas</strong> (<code>trilha</code>)</td>
+                        <td><code>[single-trilha]</code></td>
+                        <td>
+                            Exibe a lista de cursos que pertencem à trilha atual.
+                            <br>(Alternativa: use o widget nativo de Posts do Elementor filtrando por meta 'trilha').
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cursos</strong> (<code>curso</code>)</td>
+                        <td><em>Nenhum / Opcional</em></td>
+                        <td>
+                            Use widgets nativos do Elementor (Título, Imagem Destacada, Conteúdo) para criar uma Landing Page de
+                            venda.
+                            <br><strong>Ou</strong> use <code>[lista-aulas]</code> se quiser que o curso abra direto no player
+                            (modo "estilo Netflix").
+                        </td>
+                    </tr>
+                </tbody>
             </table>
 
             <h3>💡 Dicas Adicionais</h3>
