@@ -12,7 +12,7 @@ class System_Cursos_Shortcode_Barra_Lateral
      * Renderiza a barra lateral do aluno com navegação e progresso.
      *
      * @package SistemaCursos
-     * @version 1.0.1
+     * @version 1.0.2
      */
     public function __construct()
     {
@@ -209,7 +209,7 @@ class System_Cursos_Shortcode_Barra_Lateral
                             </a>
                         </li>
 
-                        <?php if (current_user_can('manage_options') && !empty($atts['link_admin']) && $atts['link_admin'] !== '#'): ?>
+                        <?php if (in_array('administrator', (array) $current_user->roles) && !empty($atts['link_admin']) && $atts['link_admin'] !== '#'): ?>
                             <li class="sc-sidebar-divider">
                                 <a class="sc-sidebar-link" href="<?php echo esc_url($atts['link_admin']); ?>">
                                     <i class="sc-sidebar-icon" data-lucide="wrench"></i>
