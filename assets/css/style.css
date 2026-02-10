@@ -300,6 +300,46 @@
 }
 
 /* =========================================
+   Componente: Grid e Card de Certificados
+   ========================================= */
+.lms-sr .cert-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+    gap: var(--space-lg) !important;
+    padding: var(--space-md) 0 !important;
+}
+
+.lms-sr .cert-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: var(--space-xl) var(--space-md) !important;
+    text-decoration: none !important;
+    color: var(--color-text-primary) !important;
+    cursor: pointer !important;
+    gap: var(--space-sm) !important;
+}
+
+.lms-sr .cert-card .cert-icon {
+    color: var(--color-accent) !important;
+    stroke: var(--color-accent) !important;
+    margin-bottom: var(--space-sm) !important;
+}
+
+.lms-sr .cert-card h4 {
+    margin: 0 !important;
+    font-size: var(--font-size-base) !important;
+    font-weight: 600 !important;
+    color: var(--color-text-heading) !important;
+    line-height: 1.4 !important;
+}
+
+.lms-sr .cert-card .mc-btn {
+    margin-top: auto !important;
+}
+
+/* =========================================
    Componente: Barra de Progresso
    ========================================= */
 .progress,

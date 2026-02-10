@@ -401,6 +401,16 @@ class System_Cursos_Shortcode_Painel
                         return;
                     }
 
+                    // --- Cert card click (SPA navigation para ver certificado) ---
+                    var certCard = e.target.closest('.cert-card[data-view]');
+                    if (certCard) {
+                        e.preventDefault();
+                        var certView = certCard.getAttribute('data-view');
+                        var certCursoId = certCard.getAttribute('data-curso-id');
+                        if (certView && certCursoId) loadView(certView, true, certCursoId);
+                        return;
+                    }
+
                     // --- Botão voltar para meus cursos (dentro da view curso) ---
                     var voltarBtn = e.target.closest('.lms-voltar-cursos');
                     if (voltarBtn) {
@@ -483,6 +493,14 @@ class System_Cursos_Shortcode_Painel
 
             case 'certificados':
                 $html = do_shortcode('[certificado]');
+                break;
+
+            case 'certificado-view':
+                if ($curso_id > 0) {
+                    $html = do_shortcode('[certificado curso_id="' . $curso_id . '"]');
+                } else {
+                    $html = do_shortcode('[certificado]');
+                }
                 break;
 
             case 'cadastro':

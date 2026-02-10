@@ -23,7 +23,7 @@ class System_Cursos_Shortcode_Certificado
 
     public function render_shortcode($atts)
     {
-        $atts = shortcode_atts([], $atts, 'certificado');
+        $atts = shortcode_atts(['curso_id' => 0], $atts, 'certificado');
 
         $user_id = 0;
 
@@ -45,7 +45,11 @@ class System_Cursos_Shortcode_Certificado
             $user_id = get_current_user_id();
         }
 
-        $curso_id = isset($_GET['curso_id']) ? intval($_GET['curso_id']) : 0;
+        // Aceitar curso_id via atts (AJAX/painel) ou via GET (acesso direto)
+        $curso_id = intval($atts['curso_id']);
+        if ($curso_id <= 0) {
+            $curso_id = isset($_GET['curso_id']) ? intval($_GET['curso_id']) : 0;
+        }
 
         if ($curso_id <= 0) {
             return $this->render_list($user_id);
@@ -93,7 +97,7 @@ class System_Cursos_Shortcode_Certificado
                 $titulo = get_the_title($id);
                 $link = add_query_arg('curso_id', $id, get_permalink());
                 ?>
-                <a href="<?php echo esc_url($link); ?>" class="cert-card">
+                <a href="#" class="cert-card" data-curso-id="<?php echo esc_attr($id); ?>" data-view="certificado-view">
                     <svg class="cert-icon" style="width: 48px; height: 48px; display: block; margin: 0 auto 15px;"
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
                         stroke-linejoin="round">
