@@ -104,7 +104,7 @@ class System_Cursos_Shortcode_Barra_Lateral
                 flex-direction: column;
                 align-items: center;
                 padding: 2rem 1.5rem;
-                color: white;
+                color: var(--color-text-primary, #e0e0e0);
                 overflow: hidden;
                 margin: 0 auto;
                 /* Center if single */
@@ -182,11 +182,11 @@ class System_Cursos_Shortcode_Barra_Lateral
 
             .sc-sidebar-link:hover {
                 opacity: 0.8;
-                background: rgba(255, 255, 255, 0.05);
+                background: var(--color-bg-secondary, rgba(255, 255, 255, 0.05));
             }
 
             .sc-sidebar-link.lms-nav-active {
-                background: rgba(252, 196, 25, 0.1);
+                background: var(--color-bg-secondary, rgba(252, 196, 25, 0.1));
                 opacity: 1;
             }
 
@@ -200,7 +200,7 @@ class System_Cursos_Shortcode_Barra_Lateral
             .sc-sidebar-text {
                 font-size: 1rem;
                 font-weight: 700;
-                color: white;
+                color: var(--color-text-primary, #e0e0e0);
             }
 
             .sc-sidebar-divider {
