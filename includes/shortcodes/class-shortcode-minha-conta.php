@@ -13,11 +13,85 @@ class System_Cursos_Shortcode_Minha_Conta
      * (como nome, CPF e endereço). Também exibe a foto de perfil (avatar).
      *
      * @package SistemaCursos
-     * @version 1.0.8
+     * @version 1.0.9
      */
+    private $message = '';
+
     public function __construct()
     {
         add_shortcode('minha-conta', [$this, 'render_shortcode']);
+        add_action('template_redirect', [$this, 'handle_form_submission']);
+    }
+
+    public function handle_form_submission()
+    {
+        if (!isset($_POST['mc_action']) || $_POST['mc_action'] !== 'save') {
+            return;
+        }
+
+        if (!is_user_logged_in()) {
+            return;
+        }
+
+        if (!isset($_POST['mc_nonce']) || !wp_verify_nonce($_POST['mc_nonce'], 'save_minha_conta')) {
+            return;
+        }
+
+        $user_id = get_current_user_id();
+
+        // Dados Pessoais
+        if (isset($_POST['first_name']))
+            update_user_meta($user_id, 'first_name', sanitize_text_field($_POST['first_name']));
+        if (isset($_POST['last_name']))
+            update_user_meta($user_id, 'last_name', sanitize_text_field($_POST['last_name']));
+        if (isset($_POST['cpf']))
+            update_user_meta($user_id, 'cpf', sanitize_text_field($_POST['cpf']));
+        if (isset($_POST['aniversario'])) {
+            $data_iso = $this->convert_date_to_iso(sanitize_text_field($_POST['aniversario']));
+            update_user_meta($user_id, 'aniversario', $data_iso);
+        }
+        if (isset($_POST['telefone']))
+            update_user_meta($user_id, 'telefone', sanitize_text_field($_POST['telefone']));
+        if (isset($_POST['instagram']))
+            update_user_meta($user_id, 'instagram', sanitize_text_field($_POST['instagram']));
+
+        // Endereço
+        if (isset($_POST['cep']))
+            update_user_meta($user_id, 'cep', sanitize_text_field($_POST['cep']));
+        if (isset($_POST['rua']))
+            update_user_meta($user_id, 'rua', sanitize_text_field($_POST['rua']));
+        if (isset($_POST['numero']))
+            update_user_meta($user_id, 'numero', sanitize_text_field($_POST['numero']));
+        if (isset($_POST['complemento']))
+            update_user_meta($user_id, 'complemento', sanitize_text_field($_POST['complemento']));
+        if (isset($_POST['bairro']))
+            update_user_meta($user_id, 'bairro', sanitize_text_field($_POST['bairro']));
+        if (isset($_POST['cidade']))
+            update_user_meta($user_id, 'cidade', sanitize_text_field($_POST['cidade']));
+        if (isset($_POST['estado']))
+            update_user_meta($user_id, 'estado', sanitize_text_field($_POST['estado']));
+
+        // Foto de Perfil
+        if (isset($_FILES['profile_photo']) && !empty($_FILES['profile_photo']['name'])) {
+            require_once(ABSPATH . 'wp-admin/includes/image.php');
+            require_once(ABSPATH . 'wp-admin/includes/file.php');
+            require_once(ABSPATH . 'wp-admin/includes/media.php');
+
+            $attachment_id = media_handle_upload('profile_photo', 0);
+
+            if (!is_wp_error($attachment_id)) {
+                update_user_meta($user_id, 'local_user_avatar_attachment_id', $attachment_id);
+            }
+        }
+
+        // Alterar Senha
+        if (!empty($_POST['new_password'])) {
+            if (!empty($_POST['confirm_password']) && $_POST['new_password'] === $_POST['confirm_password']) {
+                wp_update_user(['ID' => $user_id, 'user_pass' => $_POST['new_password']]);
+            }
+        }
+
+        $this->message = System_Cursos_Config::get_message('save_success');
     }
 
     public function convert_date_to_iso($date)
@@ -70,67 +144,9 @@ class System_Cursos_Shortcode_Minha_Conta
         }
 
         $user_id = get_current_user_id();
-        $message = '';
+        $message = $this->message;
 
-        // 2. Processar Salvamento (Formulário enviado)
-        if (isset($_POST['mc_submit']) && wp_verify_nonce($_POST['mc_nonce'], 'save_minha_conta')) {
-
-            // Dados Pessoais
-            if (isset($_POST['first_name']))
-                update_user_meta($user_id, 'first_name', sanitize_text_field($_POST['first_name']));
-            if (isset($_POST['last_name']))
-                update_user_meta($user_id, 'last_name', sanitize_text_field($_POST['last_name']));
-            if (isset($_POST['cpf']))
-                update_user_meta($user_id, 'cpf', sanitize_text_field($_POST['cpf']));
-            if (isset($_POST['aniversario'])) {
-                $data_iso = $this->convert_date_to_iso(sanitize_text_field($_POST['aniversario']));
-                update_user_meta($user_id, 'aniversario', $data_iso);
-            }
-
-            if (isset($_POST['instagram']))
-                update_user_meta($user_id, 'instagram', sanitize_text_field($_POST['instagram']));
-
-            // Endereço
-            if (isset($_POST['cep']))
-                update_user_meta($user_id, 'cep', sanitize_text_field($_POST['cep']));
-            if (isset($_POST['rua']))
-                update_user_meta($user_id, 'rua', sanitize_text_field($_POST['rua']));
-            if (isset($_POST['numero']))
-                update_user_meta($user_id, 'numero', sanitize_text_field($_POST['numero']));
-            if (isset($_POST['complemento']))
-                update_user_meta($user_id, 'complemento', sanitize_text_field($_POST['complemento']));
-            if (isset($_POST['bairro']))
-                update_user_meta($user_id, 'bairro', sanitize_text_field($_POST['bairro']));
-            if (isset($_POST['cidade']))
-                update_user_meta($user_id, 'cidade', sanitize_text_field($_POST['cidade']));
-            if (isset($_POST['estado']))
-                update_user_meta($user_id, 'estado', sanitize_text_field($_POST['estado']));
-
-            // Foto de Perfil
-            if (isset($_FILES['profile_photo']) && !empty($_FILES['profile_photo']['name'])) {
-                require_once(ABSPATH . 'wp-admin/includes/image.php');
-                require_once(ABSPATH . 'wp-admin/includes/file.php');
-                require_once(ABSPATH . 'wp-admin/includes/media.php');
-
-                $attachment_id = media_handle_upload('profile_photo', 0);
-
-                if (!is_wp_error($attachment_id)) {
-                    update_user_meta($user_id, 'local_user_avatar_attachment_id', $attachment_id);
-                }
-            }
-
-            // Alterar Senha
-            if (!empty($_POST['new_password'])) {
-                if (!empty($_POST['confirm_password']) && $_POST['new_password'] === $_POST['confirm_password']) {
-                    wp_update_user(['ID' => $user_id, 'user_pass' => $_POST['new_password']]);
-                    // Nota: Alterar a senha faz o logout do usuário por segurança no WP.
-                }
-            }
-
-            $message = System_Cursos_Config::get_message('save_success');
-        }
-
-        // 3. Recuperar Dados (Recarrega após salvar para mostrar atualizado)
+        // 2. Recuperar Dados (Recarrega após salvar para mostrar atualizado)
         $user_data = get_userdata($user_id);
 
         $first_name = get_user_meta($user_id, 'first_name', true);
@@ -140,6 +156,7 @@ class System_Cursos_Shortcode_Minha_Conta
         $aniversario = get_user_meta($user_id, 'aniversario', true);
         $aniversario = $this->convert_date_to_br($aniversario);
 
+        $telefone = get_user_meta($user_id, 'telefone', true);
         $instagram = get_user_meta($user_id, 'instagram', true);
 
         $cep = get_user_meta($user_id, 'cep', true);
@@ -181,6 +198,7 @@ class System_Cursos_Shortcode_Minha_Conta
             <!-- Form de Edição -->
             <form method="post" action="" enctype="multipart/form-data">
                 <?php wp_nonce_field('save_minha_conta', 'mc_nonce'); ?>
+                <input type="hidden" name="mc_action" value="save">
 
                 <div class="mc-body">
 
@@ -210,6 +228,11 @@ class System_Cursos_Shortcode_Minha_Conta
                                 value="<?php echo esc_attr($aniversario); ?>" placeholder="DD/MM/AAAA">
                         </div>
                         <div class="mc-field-group">
+                            <label class="mc-field-label">Telefone</label>
+                            <input type="text" name="telefone" id="mc_telefone" class="mc-input" value="<?php echo esc_attr($telefone); ?>"
+                                placeholder="(00) 00000-0000">
+                        </div>
+                        <div class="mc-field-group">
                             <label class="mc-field-label">Instagram</label>
                             <input type="text" name="instagram" class="mc-input" value="<?php echo esc_attr($instagram); ?>"
                                 placeholder="@seu.insta">
@@ -226,32 +249,32 @@ class System_Cursos_Shortcode_Minha_Conta
                         </div>
                         <div class="mc-field-group">
                             <label class="mc-field-label">Rua / Logradouro</label>
-                            <input type="text" name="rua" class="mc-input" value="<?php echo esc_attr($rua); ?>"
+                            <input type="text" name="rua" id="rua" class="mc-input" value="<?php echo esc_attr($rua); ?>"
                                 placeholder="Av. Principal">
                         </div>
                         <div class="mc-field-group">
                             <label class="mc-field-label">Número</label>
-                            <input type="text" name="numero" class="mc-input" value="<?php echo esc_attr($numero); ?>"
+                            <input type="text" name="numero" id="numero" class="mc-input" value="<?php echo esc_attr($numero); ?>"
                                 placeholder="123">
                         </div>
                         <div class="mc-field-group">
                             <label class="mc-field-label">Complemento</label>
-                            <input type="text" name="complemento" class="mc-input" value="<?php echo esc_attr($complemento); ?>"
+                            <input type="text" name="complemento" id="complemento" class="mc-input" value="<?php echo esc_attr($complemento); ?>"
                                 placeholder="Apto 101">
                         </div>
                         <div class="mc-field-group">
                             <label class="mc-field-label">Bairro</label>
-                            <input type="text" name="bairro" class="mc-input" value="<?php echo esc_attr($bairro); ?>"
+                            <input type="text" name="bairro" id="bairro" class="mc-input" value="<?php echo esc_attr($bairro); ?>"
                                 placeholder="Centro">
                         </div>
                         <div class="mc-field-group">
                             <label class="mc-field-label">Cidade</label>
-                            <input type="text" name="cidade" class="mc-input" value="<?php echo esc_attr($cidade); ?>"
+                            <input type="text" name="cidade" id="cidade" class="mc-input" value="<?php echo esc_attr($cidade); ?>"
                                 placeholder="São Paulo">
                         </div>
                         <div class="mc-field-group">
                             <label class="mc-field-label">Estado (UF)</label>
-                            <input type="text" name="estado" class="mc-input" value="<?php echo esc_attr($estado); ?>"
+                            <input type="text" name="estado" id="estado" class="mc-input" value="<?php echo esc_attr($estado); ?>"
                                 placeholder="SP" maxlength="2">
                         </div>
                     </div>
@@ -279,7 +302,7 @@ class System_Cursos_Shortcode_Minha_Conta
                 </div>
 
                 <div class="mc-footer">
-                    <button type="submit" name="mc_submit" class="mc-btn-save">Salvar Alterações</button>
+                    <button type="submit" name="mc_submit" value="1" class="mc-btn-save">Salvar Alterações</button>
                 </div>
             </form>
         </div>

@@ -27,6 +27,22 @@ document.addEventListener('DOMContentLoaded', function () {
         return v;
     };
 
+    // Máscara Telefone: (00) 00000-0000 ou (00) 0000-0000
+    const maskTelefone = (v) => {
+        v = v.replace(/\D/g, "");
+        if (v.length > 11) v = v.substring(0, 11);
+        if (v.length > 10) {
+            v = v.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+        } else if (v.length > 6) {
+            v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+        } else if (v.length > 2) {
+            v = v.replace(/(\d{2})(\d{0,5})/, "($1) $2");
+        } else if (v.length > 0) {
+            v = v.replace(/(\d{0,2})/, "($1");
+        }
+        return v;
+    };
+
     // Máscara CEP: 00000-000
     const maskCEP = (v) => {
         v = v.replace(/\D/g, "");
@@ -39,15 +55,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const cpfInput = document.getElementById('mc_cpf');
     const dataInput = document.getElementById('mc_aniversario');
     const cepInput = document.getElementById('mc_cep');
+    const telInput = document.getElementById('mc_telefone');
 
     if (cpfInput) applyMask(cpfInput, maskCPF);
     if (dataInput) applyMask(dataInput, maskDate);
     if (cepInput) applyMask(cepInput, maskCEP);
+    if (telInput) applyMask(telInput, maskTelefone);
 
     // Auto-initialize masks based on classes (future proofing)
     document.querySelectorAll('.mask-cpf').forEach(el => applyMask(el, maskCPF));
     document.querySelectorAll('.mask-date').forEach(el => applyMask(el, maskDate));
     document.querySelectorAll('.mask-cep').forEach(el => applyMask(el, maskCEP));
+    document.querySelectorAll('.mask-telefone').forEach(el => applyMask(el, maskTelefone));
 
     // CEP Address Fetch Logic
     const initAddressFetch = (cepInputId) => {

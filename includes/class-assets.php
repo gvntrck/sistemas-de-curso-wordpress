@@ -38,7 +38,7 @@ class System_Cursos_Assets
             'sistema-cursos-script',
             $plugin_url . 'assets/js/script.js',
             [],
-            '1.3.4', // Updated version to force cache refresh
+            '1.3.5', // Updated version to force cache refresh
             true
         );
     }
