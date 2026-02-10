@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.3.11
+ * Version: 1.3.12
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.3.11');
+define('SISTEMA_CURSOS_VERSION', '1.3.12');
 
 /**
  * sistema-cursos-plugin.php
@@ -46,6 +46,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-cu
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-single-trilha.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-barra-lateral.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-redireciona-aula.php';
+require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-painel.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-woocommerce-integration.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-quiz-builder.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-quiz-process.php';
@@ -69,6 +70,7 @@ new System_Cursos_Shortcode_Cursos_Trilha();
 new System_Cursos_Shortcode_Single_Trilha();
 new System_Cursos_Shortcode_Barra_Lateral();
 new System_Cursos_Shortcode_Redireciona_Aula();
+new System_Cursos_Shortcode_Painel();
 new System_Cursos_Quiz_Builder();
 new System_Cursos_Quiz_Process();
 
@@ -107,7 +109,7 @@ add_action('init', 'sistema_cursos_check_version', 99);
 
 function sistema_cursos_check_version()
 {
-    $current_version = '1.3.10';
+    $current_version = '1.3.12';
     $db_version = get_option('sistema_cursos_version');
 
     if ($db_version !== $current_version) {
@@ -637,6 +639,31 @@ function sistema_cursos_render_admin_page()
                 </thead>
                 <tbody>
 
+                    <!-- [lms-painel] ★ NOVO -->
+                    <tr style="background: linear-gradient(135deg, rgba(252, 196, 25, 0.08), rgba(252, 196, 25, 0.02));">
+                        <td><span class="sc-tag" style="border-color: #fcc419; color: #b8860b;">⭐ [lms-painel]</span></td>
+                        <td>
+                            <div class="sc-desc-text"><strong>Shortcode Universal (Recomendado).</strong> Renderiza um painel
+                                completo estilo SPA com sidebar permanente e carregamento dinâmico de seções via AJAX.
+                                Substitui a necessidade de múltiplas páginas e shortcodes individuais.</div>
+                            <div class="sc-params">
+                                <strong>Views integradas:</strong>
+                                <ul>
+                                    <li><strong>Início</strong> — Meus Cursos (padrão)</li>
+                                    <li><strong>Minha Conta</strong> — Perfil do usuário</li>
+                                    <li><strong>Meus Cursos</strong> — Cursos matriculados</li>
+                                    <li><strong>Todos os Cursos</strong> — Catálogo completo</li>
+                                    <li><strong>Certificados</strong> — Certificados do aluno</li>
+                                    <li><strong>Admin</strong> — Cadastro de alunos (somente administradores)</li>
+                                </ul>
+                                <strong>Uso:</strong>
+                                <p>Basta criar <strong>UMA</strong> página e inserir:</p>
+                                <pre
+                                    style="background: #f0f0f1; padding: 15px; border-radius: 4px; border-left: 4px solid #fcc419; overflow-x: auto;"><code>[lms-painel]</code></pre>
+                            </div>
+                        </td>
+                    </tr>
+
                     <!-- [barra-lateral-aluno] -->
                     <tr>
                         <td><span class="sc-tag">[barra-lateral-aluno]</span></td>
@@ -657,13 +684,13 @@ function sistema_cursos_render_admin_page()
                                 <p>Copie o exemplo abaixo, cole na sua página e ajuste as URLs conforme necessário:</p>
                                 <pre
                                     style="background: #f0f0f1; padding: 15px; border-radius: 4px; border-left: 4px solid #2271b1; overflow-x: auto;"><code>[barra-lateral-aluno 
-            link_inicio="/inicio" 
-            link_minha_conta="/perfil"
-            link_meus_cursos="/meus-cursos" 
-            link_todos_cursos="/loja"
-            link_certificados="/certificados"
-            link_admin="/wp-admin"
-        ]</code></pre>
+                                    link_inicio="/inicio" 
+                                    link_minha_conta="/perfil"
+                                    link_meus_cursos="/meus-cursos" 
+                                    link_todos_cursos="/loja"
+                                    link_certificados="/certificados"
+                                    link_admin="/wp-admin"
+                                ]</code></pre>
                             </div>
                         </td>
                     </tr>
@@ -814,7 +841,21 @@ function sistema_cursos_render_admin_page()
         <?php elseif ($active_tab == 'instrucoes'): ?>
 
             <h2>Instruções de Configuração Inicial</h2>
-            <p>Para o funcionamento correto do sistema, você deve criar as páginas abaixo e inserir os respectivos shortcodes.
+
+            <div
+                style="background: linear-gradient(135deg, rgba(252, 196, 25, 0.12), rgba(252, 196, 25, 0.03)); border: 1px solid rgba(252, 196, 25, 0.3); border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+                <h3 style="margin-top: 0; color: #b8860b;">⭐ Modo Simplificado (Recomendado)</h3>
+                <p>Crie <strong>apenas 1 página</strong> e insira o shortcode abaixo. Todas as seções (cursos, conta,
+                    certificados, admin) ficam acessíveis via sidebar automática:</p>
+                <pre
+                    style="background: #fff; padding: 12px; border-radius: 4px; border-left: 4px solid #fcc419; font-size: 14px;"><code>[lms-painel]</code></pre>
+                <p style="margin-bottom: 0; font-size: 13px; color: #666;">💡 Se preferir mais controle, use o <strong>modo
+                        avançado</strong> abaixo com múltiplas páginas e shortcodes individuais.</p>
+            </div>
+
+            <h3>Modo Avançado — Páginas e Shortcodes Individuais</h3>
+            <p>Para o funcionamento correto do sistema usando páginas separadas, você deve criar as páginas abaixo e inserir os
+                respectivos shortcodes.
             </p>
 
             <table class="sc-table">

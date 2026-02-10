@@ -10,15 +10,19 @@ class System_Cursos_Shortcode_Barra_Lateral
      *
      * Shortcode [barra-lateral-aluno]
      * Renderiza a barra lateral do aluno com navegação e progresso.
+     * Possui método estático render_sidebar_html() reutilizável pelo [lms-painel].
      *
      * @package SistemaCursos
-     * @version 1.0.2
+     * @version 1.1.0
      */
     public function __construct()
     {
         add_shortcode('barra-lateral-aluno', [$this, 'render_shortcode']);
     }
 
+    /**
+     * Renderiza a sidebar como shortcode standalone (retrocompatível).
+     */
     public function render_shortcode($atts)
     {
         $atts = shortcode_atts([
@@ -30,11 +34,56 @@ class System_Cursos_Shortcode_Barra_Lateral
             'link_admin' => '#',
         ], $atts, 'barra-lateral-aluno');
 
-        // Current User Data
+        return self::render_sidebar_html(false, $atts);
+    }
+
+    /**
+     * Método estático reutilizável para renderizar a sidebar.
+     *
+     * @param bool  $painel_mode  Se true, links usam data-view para navegação SPA.
+     * @param array $link_atts    Atributos de link (usado somente quando painel_mode = false).
+     * @return string HTML da sidebar.
+     */
+    public static function render_sidebar_html($painel_mode = false, $link_atts = [])
+    {
         $current_user = wp_get_current_user();
         $user_id = $current_user->ID;
         $user_name = $current_user->display_name;
         $avatar_url = get_avatar_url($user_id, ['size' => 96]);
+
+        // Definir itens de navegação
+        $nav_items = [
+            [
+                'icon' => 'home',
+                'label' => 'Inicio',
+                'view' => 'inicio',
+                'link_key' => 'link_inicio',
+            ],
+            [
+                'icon' => 'user',
+                'label' => 'Minha conta',
+                'view' => 'minha-conta',
+                'link_key' => 'link_minha_conta',
+            ],
+            [
+                'icon' => 'folder',
+                'label' => 'Meus cursos',
+                'view' => 'meus-cursos',
+                'link_key' => 'link_meus_cursos',
+            ],
+            [
+                'icon' => 'folder-open',
+                'label' => 'Todos os cursos',
+                'view' => 'todos-cursos',
+                'link_key' => 'link_todos_cursos',
+            ],
+            [
+                'icon' => 'award',
+                'label' => 'Meus certificados',
+                'view' => 'certificados',
+                'link_key' => 'link_certificados',
+            ],
+        ];
 
         ob_start();
         ?>
@@ -128,12 +177,20 @@ class System_Cursos_Shortcode_Barra_Lateral
                 align-items: center;
                 gap: 1rem;
                 text-decoration: none;
-                transition: opacity 0.2s;
-                padding: 0.25rem 0;
+                transition: opacity 0.2s, background 0.2s;
+                padding: 0.5rem 0.75rem;
+                border-radius: 8px;
+                cursor: pointer;
             }
 
             .sc-sidebar-link:hover {
                 opacity: 0.8;
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .sc-sidebar-link.lms-nav-active {
+                background: rgba(252, 196, 25, 0.1);
+                opacity: 1;
             }
 
             .sc-sidebar-icon {
@@ -178,45 +235,45 @@ class System_Cursos_Shortcode_Barra_Lateral
                 <!-- Navigation -->
                 <nav class="sc-sidebar-nav">
                     <ul>
-                        <li>
-                            <a class="sc-sidebar-link" href="<?php echo esc_url($atts['link_inicio']); ?>">
-                                <i class="sc-sidebar-icon" data-lucide="home"></i>
-                                <span class="sc-sidebar-text">Inicio</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="sc-sidebar-link" href="<?php echo esc_url($atts['link_minha_conta']); ?>">
-                                <i class="sc-sidebar-icon" data-lucide="user"></i>
-                                <span class="sc-sidebar-text">Minha conta</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="sc-sidebar-link" href="<?php echo esc_url($atts['link_meus_cursos']); ?>">
-                                <i class="sc-sidebar-icon" data-lucide="folder"></i>
-                                <span class="sc-sidebar-text">Meus cursos</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="sc-sidebar-link" href="<?php echo esc_url($atts['link_todos_cursos']); ?>">
-                                <i class="sc-sidebar-icon" data-lucide="folder-open"></i>
-                                <span class="sc-sidebar-text">Todos os cursos</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="sc-sidebar-link" href="<?php echo esc_url($atts['link_certificados']); ?>">
-                                <i class="sc-sidebar-icon" data-lucide="award"></i>
-                                <span class="sc-sidebar-text">Meus certificados</span>
-                            </a>
-                        </li>
+                        <?php foreach ($nav_items as $index => $item):
+                            $is_first = ($index === 0);
+                            if ($painel_mode): ?>
+                                <li>
+                                    <a class="sc-sidebar-link lms-nav-link<?php echo $is_first ? ' lms-nav-active' : ''; ?>" href="#"
+                                        data-view="<?php echo esc_attr($item['view']); ?>">
+                                        <i class="sc-sidebar-icon" data-lucide="<?php echo esc_attr($item['icon']); ?>"></i>
+                                        <span class="sc-sidebar-text"><?php echo esc_html($item['label']); ?></span>
+                                    </a>
+                                </li>
+                            <?php else:
+                                $link = isset($link_atts[$item['link_key']]) ? $link_atts[$item['link_key']] : '#';
+                                ?>
+                                <li>
+                                    <a class="sc-sidebar-link" href="<?php echo esc_url($link); ?>">
+                                        <i class="sc-sidebar-icon" data-lucide="<?php echo esc_attr($item['icon']); ?>"></i>
+                                        <span class="sc-sidebar-text"><?php echo esc_html($item['label']); ?></span>
+                                    </a>
+                                </li>
+                            <?php endif;
+                        endforeach; ?>
 
-                        <?php if (in_array('administrator', (array) $current_user->roles) && !empty($atts['link_admin']) && $atts['link_admin'] !== '#'): ?>
-                            <li class="sc-sidebar-divider">
-                                <a class="sc-sidebar-link" href="<?php echo esc_url($atts['link_admin']); ?>">
-                                    <i class="sc-sidebar-icon" data-lucide="wrench"></i>
-                                    <span class="sc-sidebar-text">Admin</span>
-                                </a>
-                            </li>
-                        <?php endif; ?>
+                        <?php if (in_array('administrator', (array) $current_user->roles)):
+                            if ($painel_mode): ?>
+                                <li class="sc-sidebar-divider">
+                                    <a class="sc-sidebar-link lms-nav-link" href="#" data-view="cadastro">
+                                        <i class="sc-sidebar-icon" data-lucide="wrench"></i>
+                                        <span class="sc-sidebar-text">Admin</span>
+                                    </a>
+                                </li>
+                            <?php elseif (!empty($link_atts['link_admin']) && $link_atts['link_admin'] !== '#'): ?>
+                                <li class="sc-sidebar-divider">
+                                    <a class="sc-sidebar-link" href="<?php echo esc_url($link_atts['link_admin']); ?>">
+                                        <i class="sc-sidebar-icon" data-lucide="wrench"></i>
+                                        <span class="sc-sidebar-text">Admin</span>
+                                    </a>
+                                </li>
+                            <?php endif;
+                        endif; ?>
                     </ul>
                 </nav>
             </aside>
