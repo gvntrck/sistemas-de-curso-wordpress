@@ -51,22 +51,34 @@ document.addEventListener('DOMContentLoaded', function () {
         return v;
     };
 
-    // Auto-initialize masks based on IDs (as used in Minha Conta)
-    const cpfInput = document.getElementById('mc_cpf');
-    const dataInput = document.getElementById('mc_aniversario');
-    const cepInput = document.getElementById('mc_cep');
-    const telInput = document.getElementById('mc_telefone');
+    // Função global para (re)inicializar máscaras — chamada no DOMContentLoaded e após AJAX
+    function initMasks(scope) {
+        var root = scope || document;
 
-    if (cpfInput) applyMask(cpfInput, maskCPF);
-    if (dataInput) applyMask(dataInput, maskDate);
-    if (cepInput) applyMask(cepInput, maskCEP);
-    if (telInput) applyMask(telInput, maskTelefone);
+        // IDs específicos (Minha Conta)
+        var cpfInput = root.querySelector('#mc_cpf');
+        var dataInput = root.querySelector('#mc_aniversario');
+        var cepInput = root.querySelector('#mc_cep');
+        var telInput = root.querySelector('#mc_telefone');
 
-    // Auto-initialize masks based on classes (future proofing)
-    document.querySelectorAll('.mask-cpf').forEach(el => applyMask(el, maskCPF));
-    document.querySelectorAll('.mask-date').forEach(el => applyMask(el, maskDate));
-    document.querySelectorAll('.mask-cep').forEach(el => applyMask(el, maskCEP));
-    document.querySelectorAll('.mask-telefone').forEach(el => applyMask(el, maskTelefone));
+        if (cpfInput && !cpfInput._masked) { applyMask(cpfInput, maskCPF); cpfInput._masked = true; }
+        if (dataInput && !dataInput._masked) { applyMask(dataInput, maskDate); dataInput._masked = true; }
+        if (cepInput && !cepInput._masked) { applyMask(cepInput, maskCEP); cepInput._masked = true; }
+        if (telInput && !telInput._masked) { applyMask(telInput, maskTelefone); telInput._masked = true; }
+
+        // Classes genéricas
+        root.querySelectorAll('.mask-cpf').forEach(el => { if (!el._masked) { applyMask(el, maskCPF); el._masked = true; } });
+        root.querySelectorAll('.mask-date').forEach(el => { if (!el._masked) { applyMask(el, maskDate); el._masked = true; } });
+        root.querySelectorAll('.mask-cep').forEach(el => { if (!el._masked) { applyMask(el, maskCEP); el._masked = true; } });
+        root.querySelectorAll('.mask-telefone').forEach(el => { if (!el._masked) { applyMask(el, maskTelefone); el._masked = true; } });
+    }
+
+    // Expor globalmente para o painel SPA poder chamar após AJAX
+    window.SystemCursos = window.SystemCursos || {};
+    window.SystemCursos.initMasks = initMasks;
+
+    // Inicialização no carregamento da página
+    initMasks(document);
 
     // CEP Address Fetch Logic
     const initAddressFetch = (cepInputId) => {
@@ -115,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function () {
     initAddressFetch('mc_cep');
 });
 
-// Global Namespace for specific component logic
+// Global Namespace for specific component logic (initMasks já registrado acima)
 window.SystemCursos = window.SystemCursos || {};
 
 window.SystemCursos.initListaAulas = function (containerId) {

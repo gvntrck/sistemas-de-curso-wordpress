@@ -300,6 +300,39 @@ class System_Cursos_Shortcode_Painel
                 }
 
                 function reinitScripts() {
+                    // Re-inicializar máscaras de input (CPF, telefone, CEP, data)
+                    if (window.SystemCursos && window.SystemCursos.initMasks) {
+                        var viewContent = document.getElementById('lms-view-content');
+                        window.SystemCursos.initMasks(viewContent || document);
+                    }
+
+                    // Re-inicializar auto-preenchimento de CEP
+                    var cepField = document.getElementById('mc_cep');
+                    if (cepField && !cepField._cepBound) {
+                        cepField._cepBound = true;
+                        cepField.addEventListener('blur', function () {
+                            var cep = this.value.replace(/\D/g, '');
+                            if (cep.length === 8) {
+                                document.body.style.cursor = 'wait';
+                                fetch('https://viacep.com.br/ws/' + cep + '/json/')
+                                    .then(function (r) { return r.json(); })
+                                    .then(function (data) {
+                                        document.body.style.cursor = 'default';
+                                        if (!data.erro) {
+                                            var map = { 'rua': data.logradouro, 'bairro': data.bairro, 'cidade': data.localidade, 'estado': data.uf };
+                                            for (var id in map) {
+                                                var input = document.getElementById(id);
+                                                if (input) input.value = map[id] || '';
+                                            }
+                                            var numInput = document.getElementById('numero');
+                                            if (numInput) numInput.focus();
+                                        }
+                                    })
+                                    .catch(function () { document.body.style.cursor = 'default'; });
+                            }
+                        });
+                    }
+
                     // Re-inicializar Lucide icons
                     if (typeof lucide !== 'undefined') {
                         lucide.createIcons();
