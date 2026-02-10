@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.4.0
+ * Version: 1.4.1
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.4.0');
+define('SISTEMA_CURSOS_VERSION', '1.4.1');
 
 /**
  * sistema-cursos-plugin.php
@@ -109,7 +109,7 @@ add_action('init', 'sistema_cursos_check_version', 99);
 
 function sistema_cursos_check_version()
 {
-    $current_version = '1.4.0';
+    $current_version = '1.4.1';
     $db_version = get_option('sistema_cursos_version');
 
     if ($db_version !== $current_version) {
@@ -686,13 +686,13 @@ function sistema_cursos_render_admin_page()
                                 <p>Copie o exemplo abaixo, cole na sua página e ajuste as URLs conforme necessário:</p>
                                 <pre
                                     style="background: #f0f0f1; padding: 15px; border-radius: 4px; border-left: 4px solid #2271b1; overflow-x: auto;"><code>[barra-lateral-aluno 
-                                            link_inicio="/inicio" 
-                                            link_minha_conta="/perfil"
-                                            link_meus_cursos="/meus-cursos" 
-                                            link_todos_cursos="/loja"
-                                            link_certificados="/certificados"
-                                            link_admin="/wp-admin"
-                                        ]</code></pre>
+                                                    link_inicio="/inicio" 
+                                                    link_minha_conta="/perfil"
+                                                    link_meus_cursos="/meus-cursos" 
+                                                    link_todos_cursos="/loja"
+                                                    link_certificados="/certificados"
+                                                    link_admin="/wp-admin"
+                                                ]</code></pre>
                             </div>
                         </td>
                     </tr>
