@@ -56,7 +56,7 @@ class System_Cursos_Shortcode_Painel
             /* ===== LMS Painel Layout ===== */
             .lms-painel-wrapper {
                 display: flex;
-                gap: 2rem;
+                gap: 1rem;
                 align-items: flex-start;
                 max-width: 100%;
                 font-family: var(--font-family, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);

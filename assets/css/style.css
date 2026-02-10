@@ -365,8 +365,8 @@
    ========================================= */
 .lms-sr .mc-container {
     font-family: var(--font-family) !important;
-    max-width: 800px !important;
-    margin: 0 auto var(--space-xl) !important;
+    max-width: 100% !important;
+    margin: 0 0 var(--space-xl) 0 !important;
     background-color: var(--color-bg-primary) !important;
     color: var(--color-text-primary) !important;
     border-radius: var(--radius-xl) !important;

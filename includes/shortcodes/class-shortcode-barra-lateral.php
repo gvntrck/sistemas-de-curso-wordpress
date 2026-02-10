@@ -181,13 +181,14 @@ class System_Cursos_Shortcode_Barra_Lateral
             }
 
             .sc-sidebar-link:hover {
-                opacity: 0.8;
-                background: var(--color-bg-secondary, rgba(255, 255, 255, 0.05));
+                opacity: 1;
+                background: rgba(128, 128, 128, 0.15);
             }
 
             .sc-sidebar-link.lms-nav-active {
-                background: var(--color-bg-secondary, rgba(252, 196, 25, 0.1));
+                background: rgba(128, 128, 128, 0.2);
                 opacity: 1;
+                border-left: 3px solid var(--color-accent, #fcc419);
             }
 
             .sc-sidebar-icon {

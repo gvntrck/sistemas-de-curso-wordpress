@@ -252,10 +252,10 @@ class System_Cursos_Shortcode_Meus_Cursos
         <style>
             /* Inline styles fallback or enhancement if theme CSS differs */
             .curso-item {
-                background: #1a1a1a;
+                background: var(--color-bg-secondary, #1a1a1a);
                 padding: 12px;
                 border-radius: 8px;
-                border: 1px solid #333;
+                border: 1px solid var(--color-border-input, #333);
                 transition: transform 0.2s, border-color 0.2s;
                 display: flex;
                 flex-direction: column;
@@ -277,7 +277,7 @@ class System_Cursos_Shortcode_Meus_Cursos
 
             .curso-item:hover {
                 transform: translateY(-3px);
-                border-color: var(--accent-color, #FDC110);
+                border-color: var(--color-accent, #FDC110);
             }
 
             .curso-link {
@@ -296,7 +296,7 @@ class System_Cursos_Shortcode_Meus_Cursos
                 width: 100%;
                 /* 9/16 aspect ratio roughly or fixed height */
                 height: 280px;
-                background: #222;
+                background: var(--color-border-input, #222);
             }
 
             .curso-thumb-wrapper img {
@@ -310,7 +310,7 @@ class System_Cursos_Shortcode_Meus_Cursos
                 font-weight: 600;
                 font-size: 0.95rem;
                 line-height: 1.3;
-                color: #fff;
+                color: var(--color-text-heading, #fff);
                 margin-bottom: 8px;
                 text-align: center;
             }
