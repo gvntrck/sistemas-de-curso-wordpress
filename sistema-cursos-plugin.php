@@ -165,6 +165,8 @@ function sistema_cursos_render_admin_page()
                 class="nav-tab <?php echo $active_tab == 'shortcodes' ? 'nav-tab-active' : ''; ?>">Shortcodes</a>
             <a href="?page=lms-suporte-rapido&tab=cpts"
                 class="nav-tab <?php echo $active_tab == 'cpts' ? 'nav-tab-active' : ''; ?>">Estrutura de Dados (CPTs)</a>
+            <a href="?page=lms-suporte-rapido&tab=instrucoes"
+                class="nav-tab <?php echo $active_tab == 'instrucoes' ? 'nav-tab-active' : ''; ?>">Instruções de Uso</a>
         </nav>
 
         <style>
@@ -775,6 +777,67 @@ function sistema_cursos_render_admin_page()
 
                 </tbody>
             </table>
+
+        <?php elseif ($active_tab == 'instrucoes'): ?>
+
+            <h2>Instruções de Configuração Inicial</h2>
+            <p>Para o funcionamento correto do sistema, você deve criar as páginas abaixo e inserir os respectivos shortcodes.
+            </p>
+
+            <table class="sc-table">
+                <thead>
+                    <tr>
+                        <th style="width: 250px;">Página Sugerida</th>
+                        <th>Shortcode Obrigatório</th>
+                        <th>Descrição da Funcionalidade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Cadastro / Login</strong></td>
+                        <td><code>[cadastro-usuario]</code></td>
+                        <td>
+                            Permite o cadastro de novos alunos e login no sistema.
+                            <br><small>Redireciona automaticamente se já logado.</small>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Minha Conta</strong></td>
+                        <td><code>[minha-conta]</code></td>
+                        <td>
+                            Painel onde o aluno edita seus dados pessoais (nome, senha, foto).
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Meus Certificados</strong></td>
+                        <td><code>[certificado]</code></td>
+                        <td>
+                            Lista os certificados conquistados pelo aluno.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Meus Cursos (Dashboard)</strong></td>
+                        <td><code>[meus-cursos]</code></td>
+                        <td>
+                            Lista todos os cursos em que o aluno está matriculado, com barra de progresso.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Busca de Cursos</strong></td>
+                        <td><code>[resultado-busca]</code></td>
+                        <td>
+                            Página de resultados da pesquisa (o formulário de busca deve apontar para esta página).
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>💡 Dicas Adicionais</h3>
+            <ul style="list-style: disc; margin-left: 20px;">
+                <li>Crie uma página para cada item acima.</li>
+                <li>No editor da página, cole apenas o shortcode correspondente.</li>
+                <li>Adicione essas páginas ao menu principal do site para facilitar a navegação.</li>
+            </ul>
 
         <?php elseif ($active_tab == 'cpts'): ?>
 
