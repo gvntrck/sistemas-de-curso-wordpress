@@ -59,7 +59,7 @@ class System_Cursos_Shortcode_Painel
                 gap: 2rem;
                 align-items: flex-start;
                 max-width: 100%;
-                font-family: 'Inter', sans-serif;
+                font-family: var(--font-family, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
             }
 
             .lms-painel-sidebar {
@@ -94,8 +94,8 @@ class System_Cursos_Shortcode_Painel
             .lms-spinner {
                 width: 40px;
                 height: 40px;
-                border: 3px solid rgba(252, 196, 25, 0.2);
-                border-top-color: #fcc419;
+                border: 3px solid var(--color-accent-shadow, rgba(252, 196, 25, 0.2));
+                border-top-color: var(--color-accent, #fcc419);
                 border-radius: 50%;
                 animation: lms-spin 0.8s linear infinite;
             }
@@ -147,7 +147,7 @@ class System_Cursos_Shortcode_Painel
             }
         </style>
 
-        <div class="lms-painel-wrapper" id="lms-painel">
+        <div class="lms-sr lms-painel-wrapper" id="lms-painel">
             <!-- Sidebar permanente -->
             <div class="lms-painel-sidebar">
                 <?php echo System_Cursos_Shortcode_Barra_Lateral::render_sidebar_html(true); ?>

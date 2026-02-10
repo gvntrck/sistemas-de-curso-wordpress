@@ -90,14 +90,14 @@ class System_Cursos_Shortcode_Barra_Lateral
         <style>
             /* Scoped Styles for Sidebar Shortcode */
             .sc-sidebar-container {
-                font-family: 'Inter', sans-serif;
+                font-family: var(--font-family, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
                 box-sizing: border-box;
             }
 
             .sc-sidebar-card {
                 width: 300px;
                 min-height: 514px;
-                background-color: #111111;
+                background-color: var(--color-bg-tertiary, #111111);
                 border-radius: 24px;
                 box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
                 display: flex;
@@ -122,8 +122,7 @@ class System_Cursos_Shortcode_Barra_Lateral
                 /* 96px */
                 height: 6rem;
                 border-radius: 9999px;
-                border: 2px solid #fcc419;
-                /* brand-gold */
+                border: 2px solid var(--color-accent, #fcc419);
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -137,11 +136,9 @@ class System_Cursos_Shortcode_Barra_Lateral
                 object-fit: cover;
             }
 
-            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-
             .sc-sidebar-username {
-                color: #7a7a7a !important;
-                font-family: 'Roboto', sans-serif !important;
+                color: var(--color-text-muted, #7a7a7a) !important;
+                font-family: var(--font-family, 'Roboto', sans-serif) !important;
                 font-size: 16px !important;
                 font-weight: 400 !important;
                 margin: 0;
@@ -196,8 +193,7 @@ class System_Cursos_Shortcode_Barra_Lateral
             .sc-sidebar-icon {
                 width: 1.25rem;
                 height: 1.25rem;
-                color: #fcc419;
-                /* brand-gold */
+                color: var(--color-accent, #fcc419);
                 flex-shrink: 0;
             }
 
@@ -210,7 +206,7 @@ class System_Cursos_Shortcode_Barra_Lateral
             .sc-sidebar-divider {
                 padding-top: 1rem;
                 margin-top: 1rem;
-                border-top: 1px solid #2a2a2a;
+                border-top: 1px solid var(--color-border, #2a2a2a);
             }
         </style>
 

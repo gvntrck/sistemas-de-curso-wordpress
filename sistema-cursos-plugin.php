@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.4.1
+ * Version: 1.5.1
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.4.1');
+define('SISTEMA_CURSOS_VERSION', '1.5.1');
 
 /**
  * sistema-cursos-plugin.php
@@ -50,6 +50,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-pa
 require_once plugin_dir_path(__FILE__) . 'includes/class-woocommerce-integration.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-quiz-builder.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-quiz-process.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-customizer.php';
 
 // 2. Inicializar Assets Globais
 new System_Cursos_CPT_Manager();
@@ -73,6 +74,7 @@ new System_Cursos_Shortcode_Redireciona_Aula();
 new System_Cursos_Shortcode_Painel();
 new System_Cursos_Quiz_Builder();
 new System_Cursos_Quiz_Process();
+new System_Cursos_Customizer();
 
 add_action('plugins_loaded', 'sistema_cursos_init_woocommerce_integration');
 
@@ -109,7 +111,7 @@ add_action('init', 'sistema_cursos_check_version', 99);
 
 function sistema_cursos_check_version()
 {
-    $current_version = '1.4.1';
+    $current_version = '1.5.0';
     $db_version = get_option('sistema_cursos_version');
 
     if ($db_version !== $current_version) {
@@ -171,6 +173,8 @@ function sistema_cursos_render_admin_page()
                 class="nav-tab <?php echo $active_tab == 'cpts' ? 'nav-tab-active' : ''; ?>">Estrutura de Dados (CPTs)</a>
             <a href="?page=lms-suporte-rapido&tab=instrucoes"
                 class="nav-tab <?php echo $active_tab == 'instrucoes' ? 'nav-tab-active' : ''; ?>">Instruções de Uso</a>
+            <a href="?page=lms-suporte-rapido&tab=personalizar"
+                class="nav-tab <?php echo $active_tab == 'personalizar' ? 'nav-tab-active' : ''; ?>">🎨 Personalizar</a>
         </nav>
 
         <style>
@@ -1060,6 +1064,303 @@ function sistema_cursos_render_admin_page()
                     </tr>
                 </tbody>
             </table>
+
+        <?php elseif ($active_tab == 'personalizar'): ?>
+
+            <?php
+            $cust_settings = System_Cursos_Customizer::get_settings();
+            $cust_defaults = System_Cursos_Customizer::get_defaults();
+            $font_options = System_Cursos_Customizer::get_font_options();
+            ?>
+
+            <style>
+                .lms-cust-wrap { max-width: 900px; }
+                .lms-cust-section { background: #fff; border: 1px solid #c3c4c7; border-radius: 6px; padding: 24px; margin-bottom: 20px; }
+                .lms-cust-section h3 { margin: 0 0 16px; padding-bottom: 10px; border-bottom: 2px solid #2271b1; color: #1d2327; font-size: 15px; }
+                .lms-cust-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+                .lms-cust-field { display: flex; flex-direction: column; gap: 6px; }
+                .lms-cust-field label { font-size: 12px; font-weight: 600; color: #1d2327; text-transform: uppercase; letter-spacing: 0.5px; }
+                .lms-cust-field .description { font-size: 11px; color: #666; margin: 0; }
+                .lms-cust-color-wrap { display: flex; align-items: center; gap: 8px; }
+                .lms-cust-color-wrap input[type="color"] { width: 40px; height: 34px; border: 1px solid #c3c4c7; border-radius: 4px; padding: 2px; cursor: pointer; }
+                .lms-cust-color-wrap input[type="text"] { width: 90px; font-family: monospace; font-size: 13px; padding: 4px 8px; border: 1px solid #c3c4c7; border-radius: 4px; }
+                .lms-cust-field select, .lms-cust-field input[type="number"] { padding: 6px 10px; border: 1px solid #c3c4c7; border-radius: 4px; font-size: 13px; }
+                .lms-cust-field select { max-width: 300px; }
+                .lms-cust-field input[type="number"] { width: 80px; }
+                .lms-cust-actions { display: flex; gap: 10px; align-items: center; margin-top: 20px; }
+                .lms-cust-notice { padding: 8px 14px; border-radius: 4px; display: none; font-size: 13px; }
+                .lms-cust-notice.success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; display: block; }
+                .lms-cust-notice.error { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; display: block; }
+                .lms-cust-preview { border: 1px solid #c3c4c7; border-radius: 8px; overflow: hidden; margin-top: 16px; }
+                .lms-cust-preview-inner { padding: 24px; transition: all 0.3s; }
+                .lms-cust-preview-card { padding: 16px; border-radius: 8px; border: 1px solid; margin-bottom: 12px; }
+                .lms-cust-preview-btn { display: inline-block; padding: 8px 20px; border-radius: 6px; font-weight: 600; font-size: 14px; border: none; cursor: default; color: #fff; }
+                .lms-cust-preview-progress { height: 6px; border-radius: 3px; overflow: hidden; margin-top: 8px; }
+                .lms-cust-preview-progress-fill { height: 100%; width: 65%; border-radius: 3px; }
+            </style>
+
+            <div class="lms-cust-wrap">
+                <h2>Personalizar Aparência do LMS</h2>
+                <p>Configure cores, fontes e bordas do sistema. Todas as alterações são <strong>isoladas do tema WordPress</strong> e afetam exclusivamente os componentes do LMS.</p>
+
+                <!-- Preview -->
+                <div class="lms-cust-section">
+                    <h3>👁️ Preview em Tempo Real</h3>
+                    <div class="lms-cust-preview">
+                        <div class="lms-cust-preview-inner" id="lms-preview">
+                            <h3 style="margin:0 0 8px;" class="lms-prev-heading">Título de Exemplo</h3>
+                            <p style="margin:0 0 12px;" class="lms-prev-text">Texto de exemplo do conteúdo do LMS.</p>
+                            <p style="margin:0 0 16px; font-size:12px;" class="lms-prev-muted">Texto secundário / muted</p>
+                            <div class="lms-cust-preview-card" id="lms-prev-card">
+                                <strong class="lms-prev-heading" style="display:block; margin-bottom:6px;">Card de Curso</strong>
+                                <span class="lms-prev-muted" style="font-size:12px;">Descrição do curso aqui</span>
+                                <div class="lms-cust-preview-progress" id="lms-prev-progress-bg">
+                                    <div class="lms-cust-preview-progress-fill" id="lms-prev-progress-fill"></div>
+                                </div>
+                            </div>
+                            <span class="lms-cust-preview-btn" id="lms-prev-btn">Botão Primário</span>
+                            <span class="lms-cust-preview-btn" id="lms-prev-btn-success" style="margin-left:8px;">Concluído</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cores de Fundo -->
+                <div class="lms-cust-section">
+                    <h3>🎨 Cores de Fundo</h3>
+                    <div class="lms-cust-grid">
+                        <?php
+                        $bg_fields = [
+                            'color_bg_primary' => 'Fundo Principal',
+                            'color_bg_secondary' => 'Fundo Secundário',
+                            'color_bg_tertiary' => 'Fundo Terciário',
+                            'color_bg_header_start' => 'Header (Início)',
+                            'color_bg_header_end' => 'Header (Fim)',
+                            'color_bg_footer' => 'Footer',
+                        ];
+                        foreach ($bg_fields as $key => $label):
+                        ?>
+                        <div class="lms-cust-field">
+                            <label><?php echo esc_html($label); ?></label>
+                            <div class="lms-cust-color-wrap">
+                                <input type="color" id="<?php echo $key; ?>_picker" value="<?php echo esc_attr($cust_settings[$key]); ?>" data-target="<?php echo $key; ?>">
+                                <input type="text" id="<?php echo $key; ?>" name="<?php echo $key; ?>" value="<?php echo esc_attr($cust_settings[$key]); ?>" maxlength="7">
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Cores de Texto -->
+                <div class="lms-cust-section">
+                    <h3>✏️ Cores de Texto</h3>
+                    <div class="lms-cust-grid">
+                        <?php
+                        $text_fields = [
+                            'color_text_primary' => 'Texto Principal',
+                            'color_text_heading' => 'Títulos',
+                            'color_text_muted' => 'Texto Secundário',
+                            'color_text_label' => 'Labels',
+                        ];
+                        foreach ($text_fields as $key => $label):
+                        ?>
+                        <div class="lms-cust-field">
+                            <label><?php echo esc_html($label); ?></label>
+                            <div class="lms-cust-color-wrap">
+                                <input type="color" id="<?php echo $key; ?>_picker" value="<?php echo esc_attr($cust_settings[$key]); ?>" data-target="<?php echo $key; ?>">
+                                <input type="text" id="<?php echo $key; ?>" name="<?php echo $key; ?>" value="<?php echo esc_attr($cust_settings[$key]); ?>" maxlength="7">
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Cores de Destaque e Estado -->
+                <div class="lms-cust-section">
+                    <h3>⚡ Cores de Destaque e Estado</h3>
+                    <div class="lms-cust-grid">
+                        <?php
+                        $accent_fields = [
+                            'color_accent' => 'Cor de Destaque (Accent)',
+                            'color_accent_hover' => 'Accent Hover',
+                            'color_success' => 'Sucesso (Verde)',
+                            'color_error' => 'Erro (Vermelho)',
+                            'color_border' => 'Borda Principal',
+                            'color_border_input' => 'Borda dos Inputs',
+                        ];
+                        foreach ($accent_fields as $key => $label):
+                        ?>
+                        <div class="lms-cust-field">
+                            <label><?php echo esc_html($label); ?></label>
+                            <div class="lms-cust-color-wrap">
+                                <input type="color" id="<?php echo $key; ?>_picker" value="<?php echo esc_attr($cust_settings[$key]); ?>" data-target="<?php echo $key; ?>">
+                                <input type="text" id="<?php echo $key; ?>" name="<?php echo $key; ?>" value="<?php echo esc_attr($cust_settings[$key]); ?>" maxlength="7">
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Tipografia -->
+                <div class="lms-cust-section">
+                    <h3>🔤 Tipografia</h3>
+                    <div class="lms-cust-grid">
+                        <div class="lms-cust-field">
+                            <label>Família da Fonte</label>
+                            <select id="font_family" name="font_family">
+                                <?php foreach ($font_options as $value => $label): ?>
+                                    <option value="<?php echo esc_attr($value); ?>" <?php selected($cust_settings['font_family'], $value); ?>>
+                                        <?php echo esc_html($label); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <p class="description">Fontes Google são carregadas automaticamente.</p>
+                        </div>
+                        <div class="lms-cust-field">
+                            <label>Tamanho Base (px)</label>
+                            <input type="number" id="font_size_base" name="font_size_base" value="<?php echo esc_attr($cust_settings['font_size_base']); ?>" min="12" max="22" step="1">
+                            <p class="description">Padrão: 16px</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bordas -->
+                <div class="lms-cust-section">
+                    <h3>📐 Bordas e Arredondamento</h3>
+                    <div class="lms-cust-grid">
+                        <div class="lms-cust-field">
+                            <label>Raio Base (px)</label>
+                            <input type="number" id="radius_base" name="radius_base" value="<?php echo esc_attr($cust_settings['radius_base']); ?>" min="0" max="20" step="1">
+                            <p class="description">Padrão: 6px. Afeta botões e inputs.</p>
+                        </div>
+                        <div class="lms-cust-field">
+                            <label>Raio dos Cards (px)</label>
+                            <input type="number" id="radius_card" name="radius_card" value="<?php echo esc_attr($cust_settings['radius_card']); ?>" min="0" max="30" step="1">
+                            <p class="description">Padrão: 12px. Afeta cards e containers.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="lms-cust-actions">
+                    <button type="button" class="button button-primary button-hero" id="lms-cust-save">💾 Salvar Personalização</button>
+                    <button type="button" class="button" id="lms-cust-reset">Restaurar Padrão</button>
+                    <span id="lms-cust-notice" class="lms-cust-notice"></span>
+                </div>
+            </div>
+
+            <script>
+            jQuery(document).ready(function($) {
+                // Sincronizar color picker com input text
+                $('input[type="color"]').on('input', function() {
+                    var target = $(this).data('target');
+                    $('#' + target).val($(this).val());
+                    updatePreview();
+                });
+
+                $('input[type="text"][maxlength="7"]').on('input', function() {
+                    var val = $(this).val();
+                    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+                        var id = $(this).attr('id');
+                        $('#' + id + '_picker').val(val);
+                        updatePreview();
+                    }
+                });
+
+                $('select[name="font_family"], input[type="number"]').on('change', function() {
+                    updatePreview();
+                });
+
+                function updatePreview() {
+                    var preview = $('#lms-preview');
+                    var bgPrimary = $('#color_bg_primary').val();
+                    var bgSecondary = $('#color_bg_secondary').val();
+                    var textPrimary = $('#color_text_primary').val();
+                    var textHeading = $('#color_text_heading').val();
+                    var textMuted = $('#color_text_muted').val();
+                    var accent = $('#color_accent').val();
+                    var success = $('#color_success').val();
+                    var border = $('#color_border_input').val();
+                    var fontFamily = $('#font_family').val();
+                    var fontSize = $('#font_size_base').val() + 'px';
+                    var radiusCard = $('#radius_card').val() + 'px';
+                    var radiusBase = $('#radius_base').val() + 'px';
+
+                    preview.css({
+                        'background-color': bgPrimary,
+                        'font-family': fontFamily,
+                        'font-size': fontSize,
+                        'color': textPrimary,
+                        'border-radius': radiusCard
+                    });
+                    preview.find('.lms-prev-heading').css('color', textHeading);
+                    preview.find('.lms-prev-text').css('color', textPrimary);
+                    preview.find('.lms-prev-muted').css('color', textMuted);
+                    $('#lms-prev-card').css({
+                        'background-color': bgSecondary,
+                        'border-color': border,
+                        'border-radius': radiusCard
+                    });
+                    $('#lms-prev-btn').css({ 'background-color': accent, 'border-radius': radiusBase });
+                    $('#lms-prev-btn-success').css({ 'background-color': success, 'border-radius': radiusBase });
+                    $('#lms-prev-progress-bg').css({ 'background': 'rgba(255,255,255,0.1)', 'border-radius': '3px' });
+                    $('#lms-prev-progress-fill').css({ 'background-color': accent, 'border-radius': '3px' });
+                }
+
+                // Inicializar preview
+                updatePreview();
+
+                // Salvar
+                $('#lms-cust-save').on('click', function() {
+                    var $btn = $(this);
+                    var $notice = $('#lms-cust-notice');
+                    $btn.prop('disabled', true).text('Salvando...');
+                    $notice.removeClass('success error').hide();
+
+                    var data = {
+                        action: 'lms_sr_save_customizer',
+                        nonce: '<?php echo wp_create_nonce('lms_sr_customizer_nonce'); ?>'
+                    };
+
+                    // Coletar todos os campos
+                    <?php foreach (array_keys($cust_defaults) as $key): ?>
+                    data['<?php echo $key; ?>'] = $('#<?php echo $key; ?>').val();
+                    <?php endforeach; ?>
+
+                    $.post(ajaxurl, data, function(response) {
+                        $btn.prop('disabled', false).text('💾 Salvar Personalização');
+                        if (response.success) {
+                            $notice.text('✅ ' + response.data).addClass('success').show();
+                            setTimeout(function() { $notice.fadeOut(); }, 4000);
+                        } else {
+                            $notice.text('❌ Erro: ' + response.data).addClass('error').show();
+                        }
+                    }).fail(function() {
+                        $btn.prop('disabled', false).text('💾 Salvar Personalização');
+                        $notice.text('❌ Erro de conexão').addClass('error').show();
+                    });
+                });
+
+                // Restaurar Padrão
+                $('#lms-cust-reset').on('click', function() {
+                    if (!confirm('Tem certeza que deseja restaurar todas as configurações para o padrão?')) return;
+
+                    var $notice = $('#lms-cust-notice');
+                    $notice.removeClass('success error').hide();
+
+                    $.post(ajaxurl, {
+                        action: 'lms_sr_reset_customizer',
+                        nonce: '<?php echo wp_create_nonce('lms_sr_customizer_nonce'); ?>'
+                    }, function(response) {
+                        if (response.success) {
+                            $notice.text('✅ ' + response.data).addClass('success').show();
+                            setTimeout(function() { location.reload(); }, 1000);
+                        } else {
+                            $notice.text('❌ Erro: ' + response.data).addClass('error').show();
+                        }
+                    });
+                });
+            });
+            </script>
 
         <?php endif; ?>
 

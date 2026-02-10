@@ -2,40 +2,40 @@
  * frontend-quiz.css
  * Estilos para o Quiz no Frontend
  * Segue o padrão do modelo.html (dark mode, accent #FDC110)
- * @version 1.0.0
+ * @version 1.1.0
  */
 
-:root {
-    --bg-color: #121212;
-    --bg-card: #121212;
-    --bg-header: linear-gradient(180deg, #1f1f1f 0%, #161616 100%);
-    --bg-input-hover: #1a1a1a;
-    --bg-input-focus: #222;
-    --bg-footer: #161616;
+.lms-sr {
+    --bg-color: var(--color-bg-primary, #121212);
+    --bg-card: var(--color-bg-primary, #121212);
+    --bg-header: var(--color-bg-header, linear-gradient(180deg, #1f1f1f 0%, #161616 100%));
+    --bg-input-hover: var(--color-bg-input-hover, #1a1a1a);
+    --bg-input-focus: var(--color-bg-input-focus, #222);
+    --bg-footer: var(--color-bg-footer, #161616);
 
-    --text-color: #e0e0e0;
-    --text-heading: #fff;
-    --text-muted: #888;
-    --text-label: #666;
+    --text-color: var(--color-text-primary, #e0e0e0);
+    --text-heading: var(--color-text-heading, #fff);
+    --text-muted: var(--color-text-muted, #888);
+    --text-label: var(--color-text-label, #666);
 
-    --border-color: #2a2a2a;
-    --border-input: #333;
-    --border-input-hover: #444;
+    --border-color: var(--color-border, #2a2a2a);
+    --border-input: var(--color-border-input, #333);
+    --border-input-hover: var(--color-border-input-hover, #444);
 
-    --accent-color: #FDC110;
-    --accent-shadow: rgba(253, 193, 16, 0.2);
+    --accent-color: var(--color-accent, #FDC110);
+    --accent-shadow: var(--color-accent-shadow, rgba(253, 193, 16, 0.2));
 
-    --success-bg: rgba(46, 213, 115, 0.15);
-    --success-text: #2ed573;
-    --success-border: rgba(46, 213, 115, 0.2);
+    --success-bg: var(--color-success-bg, rgba(46, 213, 115, 0.15));
+    --success-text: var(--color-success, #2ed573);
+    --success-border: var(--color-success-border, rgba(46, 213, 115, 0.2));
 
-    --error-bg: rgba(255, 71, 87, 0.15);
-    --error-text: #ff4757;
-    --error-border: rgba(255, 71, 87, 0.2);
+    --error-bg: var(--color-error-bg, rgba(255, 71, 87, 0.15));
+    --error-text: var(--color-error, #ff4757);
+    --error-border: var(--color-error-border, rgba(255, 71, 87, 0.2));
 
     --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    --radius-card: 12px;
-    --radius-btn: 6px;
+    --radius-card: var(--radius-xl, 12px);
+    --radius-btn: var(--radius-md, 6px);
 }
 
 /* =========================================
