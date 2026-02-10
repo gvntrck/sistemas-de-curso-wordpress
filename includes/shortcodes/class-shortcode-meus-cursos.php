@@ -17,7 +17,7 @@ class System_Cursos_Shortcode_Meus_Cursos
      *   Define se exibe apenas os cursos do aluno ou o catálogo completo.
      *
      * @package SistemaCursos
-     * @version 1.2.27
+     * @version 1.2.28
      */
     public function __construct()
     {
@@ -404,6 +404,7 @@ class System_Cursos_Shortcode_Meus_Cursos
         $id = $curso->ID;
         $titulo = get_the_title($id);
         $link = get_permalink($id);
+        $painel_mode = !empty($GLOBALS['lms_painel_mode']);
 
         // Imagem Capa Vertical
         $thumb_url = '';
@@ -436,32 +437,37 @@ class System_Cursos_Shortcode_Meus_Cursos
         ob_start();
         ?>
         <div class="curso-item">
-            <a href="<?php echo esc_url($link); ?>" class="curso-link">
-                <div class="curso-thumb-wrapper">
-                    <img src="<?php echo esc_url($thumb_url); ?>" alt="<?php echo esc_attr($titulo); ?>">
-
-                    <!-- Overlay de Progresso (Opcional, se quiser mostrar "Concluído" visualmente) -->
-                    <?php if ($porcentagem >= 100): ?>
-                        <div
-                            style="position:absolute; top: 10px; right: 10px; background: #2ed573; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px;">
-                            ✔</div>
+            <?php if ($painel_mode): ?>
+                <a href="#" class="curso-link" data-curso-id="<?php echo esc_attr($id); ?>" data-view="curso">
+                <?php else: ?>
+                    <a href="<?php echo esc_url($link); ?>" class="curso-link">
                     <?php endif; ?>
+                    <div class="curso-thumb-wrapper">
+                        <img src="<?php echo esc_url($thumb_url); ?>" alt="<?php echo esc_attr($titulo); ?>">
 
-                    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: rgba(0,0,0,0.5);">
+                        <!-- Overlay de Progresso (Opcional, se quiser mostrar "Concluído" visualmente) -->
+                        <?php if ($porcentagem >= 100): ?>
+                            <div
+                                style="position:absolute; top: 10px; right: 10px; background: #2ed573; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px;">
+                                ✔</div>
+                        <?php endif; ?>
+
                         <div
-                            style="height: 100%; background: var(--accent-color, #FDC110); width: <?php echo $porcentagem; ?>%;">
+                            style="position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: rgba(0,0,0,0.5);">
+                            <div
+                                style="height: 100%; background: var(--accent-color, #FDC110); width: <?php echo $porcentagem; ?>%;">
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <span class="curso-title">
-                    <?php echo esc_html($titulo); ?>
-                </span>
+                    <span class="curso-title">
+                        <?php echo esc_html($titulo); ?>
+                    </span>
 
-                <span style="font-size: 0.8rem; color: #888; text-align: center; margin-top: auto;">
-                    <?php echo $porcentagem; ?>% concluído
-                </span>
-            </a>
+                    <span style="font-size: 0.8rem; color: #888; text-align: center; margin-top: auto;">
+                        <?php echo $porcentagem; ?>% concluído
+                    </span>
+                </a>
         </div>
         <?php
         return ob_get_clean();

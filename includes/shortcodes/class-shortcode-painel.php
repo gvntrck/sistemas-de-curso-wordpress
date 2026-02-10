@@ -21,7 +21,7 @@ class System_Cursos_Shortcode_Painel
      * - cadastro      → Cadastro de Usuários (admin only)
      *
      * @package SistemaCursos
-     * @version 1.0.0
+     * @version 1.1.0
      */
     public function __construct()
     {
@@ -46,7 +46,9 @@ class System_Cursos_Shortcode_Painel
         }
 
         // Conteúdo inicial: Meus Cursos
+        $GLOBALS['lms_painel_mode'] = true;
         $initial_content = do_shortcode('[meus-cursos]');
+        unset($GLOBALS['lms_painel_mode']);
 
         ob_start();
         ?>
@@ -167,6 +169,7 @@ class System_Cursos_Shortcode_Painel
                 'use strict';
 
                 var currentView = 'inicio';
+                var currentCursoId = null;
                 var viewCache = {};
                 var ajaxUrl = '<?php echo admin_url('admin-ajax.php'); ?>';
                 var nonce = '<?php echo wp_create_nonce('lms_painel_nonce'); ?>';
@@ -178,15 +181,26 @@ class System_Cursos_Shortcode_Painel
                     viewCache['meus-cursos'] = initialContent.innerHTML;
                 }
 
-                // Verificar se há view na URL (?lms_view=xxx)
+                // Verificar se há view na URL (?lms_view=xxx&curso_id=yyy)
                 var urlParams = new URLSearchParams(window.location.search);
                 var urlView = urlParams.get('lms_view');
+                var urlCursoId = urlParams.get('curso_id');
 
-                function loadView(viewName, pushState) {
+                /**
+                 * Carrega uma view no painel via AJAX.
+                 * @param {string} viewName - Nome da view (inicio, meus-cursos, curso, etc.)
+                 * @param {boolean} pushState - Se deve atualizar a URL no histórico.
+                 * @param {string|null} cursoId - ID do curso (apenas para view 'curso').
+                 */
+                function loadView(viewName, pushState, cursoId) {
                     if (typeof pushState === 'undefined') pushState = true;
+                    if (typeof cursoId === 'undefined') cursoId = null;
 
                     // Se já é a view atual (e não é a primeira carga), ignorar
-                    if (viewName === currentView && !urlView) return;
+                    // Para view de curso, verificar também se é o mesmo curso
+                    if (viewName === currentView && !urlView) {
+                        if (viewName !== 'curso' || cursoId === currentCursoId) return;
+                    }
 
                     // Mostrar loading
                     var loader = document.getElementById('lms-loading');
@@ -196,18 +210,28 @@ class System_Cursos_Shortcode_Painel
                     var links = document.querySelectorAll('.lms-nav-link');
                     links.forEach(function (link) {
                         link.classList.remove('lms-nav-active');
-                        if (link.getAttribute('data-view') === viewName) {
+                        // Para view curso, marcar 'meus-cursos' como ativo
+                        var linkView = link.getAttribute('data-view');
+                        if (viewName === 'curso') {
+                            if (linkView === 'meus-cursos' || linkView === 'inicio') {
+                                link.classList.add('lms-nav-active');
+                            }
+                        } else if (linkView === viewName) {
                             link.classList.add('lms-nav-active');
                         }
                     });
 
+                    // Cache key: para curso, usar 'curso-ID' para diferenciar
+                    var cacheKey = viewName === 'curso' ? 'curso-' + cursoId : viewName;
+
                     // Se a view está em cache, usar cache
-                    if (viewCache[viewName]) {
-                        content.innerHTML = viewCache[viewName];
+                    if (viewCache[cacheKey]) {
+                        content.innerHTML = viewCache[cacheKey];
                         content.className = 'lms-view-content';
                         currentView = viewName;
+                        currentCursoId = cursoId;
                         reinitScripts();
-                        if (pushState) updateUrl(viewName);
+                        if (pushState) updateUrl(viewName, cursoId);
                         return;
                     }
 
@@ -218,6 +242,9 @@ class System_Cursos_Shortcode_Painel
                     formData.append('action', 'lms_painel_load_view');
                     formData.append('view', viewName);
                     formData.append('nonce', nonce);
+                    if (cursoId) {
+                        formData.append('curso_id', cursoId);
+                    }
 
                     fetch(ajaxUrl, {
                         method: 'POST',
@@ -232,15 +259,16 @@ class System_Cursos_Shortcode_Painel
                                 // Não cachear views com formulário para evitar problemas com nonces
                                 var noCache = ['minha-conta', 'cadastro'];
                                 if (noCache.indexOf(viewName) === -1) {
-                                    viewCache[viewName] = data.data.html;
+                                    viewCache[cacheKey] = data.data.html;
                                 }
 
                                 content.innerHTML = data.data.html;
                                 content.className = 'lms-view-content';
                                 currentView = viewName;
+                                currentCursoId = cursoId;
                                 reinitScripts();
 
-                                if (pushState) updateUrl(viewName);
+                                if (pushState) updateUrl(viewName, cursoId);
                             } else {
                                 content.innerHTML = '<div class="mc-alert mc-error" style="padding:20px; text-align:center; color:#fff;">Erro ao carregar conteúdo. Tente novamente.</div>';
                             }
@@ -252,15 +280,21 @@ class System_Cursos_Shortcode_Painel
                         });
                 }
 
-                function updateUrl(viewName) {
+                function updateUrl(viewName, cursoId) {
                     if (window.history && window.history.pushState) {
                         var url = new URL(window.location);
                         if (viewName === 'inicio') {
                             url.searchParams.delete('lms_view');
+                            url.searchParams.delete('curso_id');
                         } else {
                             url.searchParams.set('lms_view', viewName);
+                            if (viewName === 'curso' && cursoId) {
+                                url.searchParams.set('curso_id', cursoId);
+                            } else {
+                                url.searchParams.delete('curso_id');
+                            }
                         }
-                        window.history.pushState({ lmsView: viewName }, '', url);
+                        window.history.pushState({ lmsView: viewName, cursoId: cursoId || null }, '', url);
                     }
                 }
 
@@ -304,6 +338,15 @@ class System_Cursos_Shortcode_Painel
                         updateCarousel();
                     });
 
+                    // Re-inicializar Lista de Aulas (do shortcode lista-aulas)
+                    var listaAulasContainers = document.querySelectorAll('#lms-view-content .lista-aulas');
+                    listaAulasContainers.forEach(function (container) {
+                        var containerId = container.id;
+                        if (containerId && window.SystemCursos && window.SystemCursos.initListaAulas) {
+                            window.SystemCursos.initListaAulas(containerId);
+                        }
+                    });
+
                     // Re-inicializar tabs (do shortcode cadastro-usuario)
                     var tabLinks = document.querySelectorAll('#lms-view-content .cadastro-tab');
                     tabLinks.forEach(function (tab) {
@@ -330,22 +373,47 @@ class System_Cursos_Shortcode_Painel
                     // Re-inicializar aba ativa
                     var activeTab = document.querySelector('#lms-view-content .cadastro-content.active');
                     if (activeTab) activeTab.style.display = 'block';
+
+                    // Scroll suave para o topo do conteúdo
+                    var painelEl = document.getElementById('lms-painel');
+                    if (painelEl) {
+                        painelEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                 }
 
                 // Event Listeners para links da sidebar
                 document.addEventListener('click', function (e) {
+                    // --- Sidebar navigation links ---
                     var link = e.target.closest('.lms-nav-link');
                     if (link) {
                         e.preventDefault();
                         var view = link.getAttribute('data-view');
                         if (view) loadView(view);
+                        return;
+                    }
+
+                    // --- Curso card click (SPA navigation) ---
+                    var cursoLink = e.target.closest('.curso-link[data-curso-id]');
+                    if (cursoLink) {
+                        e.preventDefault();
+                        var cursoId = cursoLink.getAttribute('data-curso-id');
+                        if (cursoId) loadView('curso', true, cursoId);
+                        return;
+                    }
+
+                    // --- Botão voltar para meus cursos (dentro da view curso) ---
+                    var voltarBtn = e.target.closest('.lms-voltar-cursos');
+                    if (voltarBtn) {
+                        e.preventDefault();
+                        loadView('meus-cursos');
+                        return;
                     }
                 });
 
                 // Suporte ao botão voltar/avançar do navegador
                 window.addEventListener('popstate', function (e) {
                     if (e.state && e.state.lmsView) {
-                        loadView(e.state.lmsView, false);
+                        loadView(e.state.lmsView, false, e.state.cursoId || null);
                     } else {
                         loadView('inicio', false);
                     }
@@ -353,7 +421,7 @@ class System_Cursos_Shortcode_Painel
 
                 // Carregar view da URL se especificada
                 if (urlView && urlView !== 'inicio') {
-                    loadView(urlView, false);
+                    loadView(urlView, false, urlCursoId || null);
                     urlView = null; // Limpa para evitar reload
                 }
             })();
@@ -374,8 +442,9 @@ class System_Cursos_Shortcode_Painel
         }
 
         $view = isset($_POST['view']) ? sanitize_key($_POST['view']) : '';
+        $curso_id = isset($_POST['curso_id']) ? (int) $_POST['curso_id'] : 0;
 
-        $html = $this->get_view_html($view);
+        $html = $this->get_view_html($view, $curso_id);
 
         if ($html !== false) {
             wp_send_json_success(['html' => $html]);
@@ -388,32 +457,63 @@ class System_Cursos_Shortcode_Painel
      * Retorna o HTML de uma view específica.
      *
      * @param string $view Nome da view.
+     * @param int    $curso_id ID do curso (usado na view 'curso').
      * @return string|false HTML da view ou false se inválida.
      */
-    private function get_view_html($view)
+    private function get_view_html($view, $curso_id = 0)
     {
+        // Ativar modo painel para sub-shortcodes
+        $GLOBALS['lms_painel_mode'] = true;
+
+        $html = false;
+
         switch ($view) {
             case 'inicio':
             case 'meus-cursos':
-                return do_shortcode('[meus-cursos]');
+                $html = do_shortcode('[meus-cursos]');
+                break;
 
             case 'todos-cursos':
-                return do_shortcode('[meus-cursos mostrar="todos"]');
+                $html = do_shortcode('[meus-cursos mostrar="todos"]');
+                break;
 
             case 'minha-conta':
-                return do_shortcode('[minha-conta]');
+                $html = do_shortcode('[minha-conta]');
+                break;
 
             case 'certificados':
-                return do_shortcode('[certificado]');
+                $html = do_shortcode('[certificado]');
+                break;
 
             case 'cadastro':
                 if (!current_user_can('administrator')) {
-                    return '<div class="mc-alert mc-error" style="padding:20px; text-align:center; color:#fff;">Acesso restrito a administradores.</div>';
+                    $html = '<div class="mc-alert mc-error" style="padding:20px; text-align:center; color:#fff;">Acesso restrito a administradores.</div>';
+                } else {
+                    $html = do_shortcode('[cadastro-usuario]');
                 }
-                return do_shortcode('[cadastro-usuario]');
+                break;
+
+            case 'curso':
+                if ($curso_id > 0) {
+                    // Botão voltar + player de aulas
+                    $voltar = '<div style="margin-bottom: 1rem;">';
+                    $voltar .= '<a href="#" class="lms-voltar-cursos" style="display: inline-flex; align-items: center; gap: 0.5rem; color: #fcc419; text-decoration: none; font-weight: 600; font-size: 0.95rem; padding: 0.5rem 0; transition: opacity 0.2s;">';
+                    $voltar .= '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
+                    $voltar .= 'Voltar para Meus Cursos';
+                    $voltar .= '</a></div>';
+
+                    $html = $voltar . do_shortcode('[lista-aulas curso_id="' . $curso_id . '"]');
+                } else {
+                    $html = '<div class="mc-alert mc-error" style="padding:20px; text-align:center; color:#fff;">Curso não especificado.</div>';
+                }
+                break;
 
             default:
-                return false;
+                $html = false;
+                break;
         }
+
+        unset($GLOBALS['lms_painel_mode']);
+        return $html;
     }
 }

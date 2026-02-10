@@ -221,6 +221,9 @@ window.SystemCursos.initListaAulas = function (containerId) {
         });
     }
 
+    // Detectar se está dentro do painel SPA
+    var isInsidePainel = !!document.getElementById('lms-painel');
+
     // Handle Item Click (Navigation)
     items.forEach(function (item) {
         item.addEventListener('click', function (e) {
@@ -236,10 +239,20 @@ window.SystemCursos.initListaAulas = function (containerId) {
             // Update Button
             atualizarBotaoConcluir(aulaId);
 
-            // Update URL
-            var newUrl = this.getAttribute('href');
+            // Update URL (SPA-aware)
             if (window.history && window.history.pushState) {
-                window.history.pushState({ target_aula: aulaId }, '', newUrl);
+                if (isInsidePainel) {
+                    // Dentro do painel SPA: usar parâmetros do painel
+                    var url = new URL(window.location);
+                    url.searchParams.set('lms_view', 'curso');
+                    url.searchParams.set('target_aula', aulaId);
+                    // curso_id já está na URL se estamos na view de curso
+                    window.history.pushState({ target_aula: aulaId, lmsView: 'curso', cursoId: url.searchParams.get('curso_id') }, '', url);
+                } else {
+                    // Fora do painel: usar URL original
+                    var newUrl = this.getAttribute('href');
+                    window.history.pushState({ target_aula: aulaId }, '', newUrl);
+                }
             }
 
             // AJAX Fetch Lesson
