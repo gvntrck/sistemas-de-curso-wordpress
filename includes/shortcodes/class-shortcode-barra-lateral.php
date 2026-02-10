@@ -12,7 +12,7 @@ class System_Cursos_Shortcode_Barra_Lateral
      * Renderiza a barra lateral do aluno com navegação e progresso.
      *
      * @package SistemaCursos
-     * @version 1.0.0
+     * @version 1.0.1
      */
     public function __construct()
     {

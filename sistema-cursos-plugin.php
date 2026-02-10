@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.3.10
+ * Version: 1.3.11
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.3.10');
+define('SISTEMA_CURSOS_VERSION', '1.3.11');
 
 /**
  * sistema-cursos-plugin.php
@@ -641,20 +641,29 @@ function sistema_cursos_render_admin_page()
                     <tr>
                         <td><span class="sc-tag">[barra-lateral-aluno]</span></td>
                         <td>
-                            <div class="sc-desc-text">Renderiza uma barra lateral de navegação com avatar do aluno, nome, barra
-                                de progresso geral e links configuráveis.</div>
+                            <div class="sc-desc-text">Renderiza uma barra lateral de navegação completa com avatar do aluno,
+                                nome, progresso geral e links personalizados.</div>
                             <div class="sc-params">
-                                <strong>Parâmetros (Links):</strong>
+                                <strong>Configuração de Links:</strong>
                                 <ul>
-                                    <li><code>link_inicio</code> URL para Home.</li>
-                                    <li><code>link_minha_conta</code> URL para Minha Conta.</li>
-                                    <li><code>link_meus_cursos</code> URL para Meus Cursos.</li>
-                                    <li><code>link_todos_cursos</code> URL para Todos os Cursos.</li>
-                                    <li><code>link_certificados</code> URL para Certificados.</li>
-                                    <li><code>link_admin</code> URL para Admin (visível apenas para admins).</li>
+                                    <li><code>link_inicio</code> Home / Dashboard</li>
+                                    <li><code>link_minha_conta</code> Perfil do Aluno</li>
+                                    <li><code>link_meus_cursos</code> Listagem de Matrículas</li>
+                                    <li><code>link_todos_cursos</code> Catálogo Completo</li>
+                                    <li><code>link_certificados</code> Conquistas</li>
+                                    <li><code>link_admin</code> Painel WordPress (apenas Administradores)</li>
                                 </ul>
-                                <strong>Exemplo:</strong>
-                                <code>[barra-lateral-aluno link_inicio="/inicio" link_meus_cursos="/cursos"]</code>
+                                <strong>Uso Recomendado:</strong>
+                                <p>Copie o exemplo abaixo, cole na sua página e ajuste as URLs conforme necessário:</p>
+                                <pre
+                                    style="background: #f0f0f1; padding: 15px; border-radius: 4px; border-left: 4px solid #2271b1; overflow-x: auto;"><code>[barra-lateral-aluno 
+            link_inicio="/inicio" 
+            link_minha_conta="/perfil"
+            link_meus_cursos="/meus-cursos" 
+            link_todos_cursos="/loja"
+            link_certificados="/certificados"
+            link_admin="/wp-admin"
+        ]</code></pre>
                             </div>
                         </td>
                     </tr>

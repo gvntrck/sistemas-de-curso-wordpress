@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated": "2026-01-21T15:47:51.849Z",
+  "generated": "2026-02-10T19:59:27.851Z",
   "stack": {
     "primaryLanguage": "javascript",
     "languages": [
@@ -16,15 +16,23 @@
     "hasCI": false
   },
   "structure": {
-    "totalFiles": 33,
+    "totalFiles": 36,
     "topDirectories": [
+      {
+        "name": "AGENTS.md",
+        "fileCount": 1
+      },
       {
         "name": "assets",
         "fileCount": 8
       },
       {
         "name": "includes",
-        "fileCount": 22
+        "fileCount": 23
+      },
+      {
+        "name": "modelo-barra-lateral.html",
+        "fileCount": 1
       },
       {
         "name": "modelo.html",
@@ -42,7 +50,7 @@
     "languageDistribution": [
       {
         "extension": ".php",
-        "count": 23
+        "count": 24
       },
       {
         "extension": ".js",
@@ -54,10 +62,14 @@
       },
       {
         "extension": ".html",
-        "count": 1
+        "count": 2
       },
       {
         "extension": ".txt",
+        "count": 1
+      },
+      {
+        "extension": ".md",
         "count": 1
       }
     ]
@@ -81,13 +93,6 @@
     "classes": [],
     "interfaces": [],
     "functions": [
-      {
-        "name": "applyMask",
-        "kind": "function",
-        "file": "assets\\js\\script.js",
-        "line": 3,
-        "exported": false
-      },
       {
         "name": "atualizarBarraProgresso",
         "kind": "function",
@@ -124,38 +129,10 @@
         "exported": false
       },
       {
-        "name": "initAddressFetch",
-        "kind": "function",
-        "file": "assets\\js\\script.js",
-        "line": 53,
-        "exported": false
-      },
-      {
         "name": "isAulaConcluida",
         "kind": "function",
         "file": "assets\\js\\script.js",
         "line": 130,
-        "exported": false
-      },
-      {
-        "name": "maskCEP",
-        "kind": "function",
-        "file": "assets\\js\\script.js",
-        "line": 31,
-        "exported": false
-      },
-      {
-        "name": "maskCPF",
-        "kind": "function",
-        "file": "assets\\js\\script.js",
-        "line": 12,
-        "exported": false
-      },
-      {
-        "name": "maskDate",
-        "kind": "function",
-        "file": "assets\\js\\script.js",
-        "line": 22,
         "exported": false
       },
       {
@@ -195,8 +172,8 @@
     "mostImported": []
   },
   "stats": {
-    "totalSymbols": 15,
+    "totalSymbols": 10,
     "exportedSymbols": 0,
-    "analysisTimeMs": 21
+    "analysisTimeMs": 88
   }
 }

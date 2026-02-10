@@ -1,35 +1,10 @@
-# DevOps Specialist - LMS SuporteRapido
-
-## Deploy
-
-### FTP Sync (Atual)
-```python
-python sync_ftp.py  # Sincroniza com servidor
-```
-
-### Checklist Deploy
-- [ ] Código testado localmente
-- [ ] Versão atualizada (3 lugares)
-- [ ] Backup FTP (se crítico)
-- [ ] Sync FTP executado
-- [ ] Verificar versão em produção
-- [ ] Teste smoke
-
-## Ambientes
-
-- **Local:** XAMPP/Local/Laragon
-- **Produção:** Via FTP
-
-## Monitoramento
-
-### Logs
-```
-wp-content/debug.log - Erros PHP
-wp-content/uploads/ - Arquivos gerados
-```
-
-### Query Monitor
-Plugin para ver performance de queries.
-
-## Recursos
-- **Tooling:** `../docs/tooling.md`
+---
+type: agent
+name: Devops Specialist
+description: Design and maintain CI/CD pipelines
+agentType: devops-specialist
+phases: [E, C]
+generated: 2026-02-10
+status: unfilled
+scaffoldVersion: "2.0.0"
+---

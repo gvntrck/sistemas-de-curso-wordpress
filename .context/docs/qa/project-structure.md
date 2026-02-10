@@ -1,7 +1,7 @@
 ---
 slug: project-structure
 category: architecture
-generatedAt: 2026-01-21T15:47:51.917Z
+generatedAt: 2026-02-10T19:59:27.964Z
 ---
 
 # How is the codebase organized?
