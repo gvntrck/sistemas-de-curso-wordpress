@@ -8,3 +8,10 @@
  • cerrificado por grupo de alunos
 
 Avaliar integração com woocommerce 
+
+consertar tela minha ocnta que nao aplica as ediçoes
+
+foto na barra lateral nao mostra a foto correta
+
+na tela de configuração informar quais tabelas personalizadas
+os istema usa e quais metakeys personalizadas usa

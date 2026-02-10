@@ -197,9 +197,10 @@ class System_Cursos_Shortcode_Painel
                     if (typeof cursoId === 'undefined') cursoId = null;
 
                     // Se já é a view atual (e não é a primeira carga), ignorar
-                    // Para view de curso, verificar também se é o mesmo curso
+                    // Para views com cursoId (curso, certificado-view), permitir se cursoId mudou
                     if (viewName === currentView && !urlView) {
-                        if (viewName !== 'curso' || cursoId === currentCursoId) return;
+                        if (viewName !== 'curso' && viewName !== 'certificado-view') return;
+                        if (cursoId === currentCursoId) return;
                     }
 
                     // Mostrar loading
@@ -221,8 +222,8 @@ class System_Cursos_Shortcode_Painel
                         }
                     });
 
-                    // Cache key: para curso, usar 'curso-ID' para diferenciar
-                    var cacheKey = viewName === 'curso' ? 'curso-' + cursoId : viewName;
+                    // Cache key: para views com cursoId, usar 'view-ID' para diferenciar
+                    var cacheKey = (viewName === 'curso' || viewName === 'certificado-view') ? viewName + '-' + cursoId : viewName;
 
                     // Se a view está em cache, usar cache
                     if (viewCache[cacheKey]) {
@@ -288,7 +289,7 @@ class System_Cursos_Shortcode_Painel
                             url.searchParams.delete('curso_id');
                         } else {
                             url.searchParams.set('lms_view', viewName);
-                            if (viewName === 'curso' && cursoId) {
+                            if ((viewName === 'curso' || viewName === 'certificado-view') && cursoId) {
                                 url.searchParams.set('curso_id', cursoId);
                             } else {
                                 url.searchParams.delete('curso_id');
