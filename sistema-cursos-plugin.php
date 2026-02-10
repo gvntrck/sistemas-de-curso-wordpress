@@ -44,6 +44,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-re
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-barra-progresso.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-cursos-trilha.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-single-trilha.php';
+require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-barra-lateral.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-redireciona-aula.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-woocommerce-integration.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-quiz-builder.php';
@@ -66,6 +67,7 @@ new System_Cursos_Shortcode_Resultado_Busca();
 new System_Cursos_Shortcode_Barra_Progresso();
 new System_Cursos_Shortcode_Cursos_Trilha();
 new System_Cursos_Shortcode_Single_Trilha();
+new System_Cursos_Shortcode_Barra_Lateral();
 new System_Cursos_Shortcode_Redireciona_Aula();
 new System_Cursos_Quiz_Builder();
 new System_Cursos_Quiz_Process();
@@ -634,6 +636,28 @@ function sistema_cursos_render_admin_page()
                     </tr>
                 </thead>
                 <tbody>
+
+                    <!-- [barra-lateral-aluno] -->
+                    <tr>
+                        <td><span class="sc-tag">[barra-lateral-aluno]</span></td>
+                        <td>
+                            <div class="sc-desc-text">Renderiza uma barra lateral de navegação com avatar do aluno, nome, barra
+                                de progresso geral e links configuráveis.</div>
+                            <div class="sc-params">
+                                <strong>Parâmetros (Links):</strong>
+                                <ul>
+                                    <li><code>link_inicio</code> URL para Home.</li>
+                                    <li><code>link_minha_conta</code> URL para Minha Conta.</li>
+                                    <li><code>link_meus_cursos</code> URL para Meus Cursos.</li>
+                                    <li><code>link_todos_cursos</code> URL para Todos os Cursos.</li>
+                                    <li><code>link_certificados</code> URL para Certificados.</li>
+                                    <li><code>link_admin</code> URL para Admin (visível apenas para admins).</li>
+                                </ul>
+                                <strong>Exemplo:</strong>
+                                <code>[barra-lateral-aluno link_inicio="/inicio" link_meus_cursos="/cursos"]</code>
+                            </div>
+                        </td>
+                    </tr>
 
                     <!-- [barra-progresso-geral] -->
                     <tr>
