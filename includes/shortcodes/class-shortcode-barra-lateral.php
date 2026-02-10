@@ -88,10 +88,13 @@ class System_Cursos_Shortcode_Barra_Lateral
                 object-fit: cover;
             }
 
+            @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
             .sc-sidebar-username {
-                color: #71717a;
-                font-size: 1rem;
-                font-weight: 500;
+                color: #7a7a7a !important;
+                font-family: 'Roboto', sans-serif !important;
+                font-size: 16px !important;
+                font-weight: 400 !important;
                 margin: 0;
             }
 
