@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.5.1
+ * Version: 1.5.2
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.5.1');
+define('SISTEMA_CURSOS_VERSION', '1.5.2');
 
 /**
  * sistema-cursos-plugin.php
@@ -1071,6 +1071,7 @@ function sistema_cursos_render_admin_page()
             $cust_settings = System_Cursos_Customizer::get_settings();
             $cust_defaults = System_Cursos_Customizer::get_defaults();
             $font_options = System_Cursos_Customizer::get_font_options();
+            $presets = System_Cursos_Customizer::get_presets();
             ?>
 
             <style>
@@ -1097,6 +1098,19 @@ function sistema_cursos_render_admin_page()
                 .lms-cust-preview-btn { display: inline-block; padding: 8px 20px; border-radius: 6px; font-weight: 600; font-size: 14px; border: none; cursor: default; color: #fff; }
                 .lms-cust-preview-progress { height: 6px; border-radius: 3px; overflow: hidden; margin-top: 8px; }
                 .lms-cust-preview-progress-fill { height: 100%; width: 65%; border-radius: 3px; }
+
+                .lms-presets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+                .lms-preset-card { border: 2px solid #dcdcde; border-radius: 10px; padding: 0; cursor: pointer; transition: all 0.2s ease; overflow: hidden; background: #fff; }
+                .lms-preset-card:hover { border-color: #2271b1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+                .lms-preset-card.is-active { border-color: #2271b1; box-shadow: 0 0 0 1px #2271b1, 0 4px 12px rgba(34,113,177,0.15); }
+                .lms-preset-swatch { height: 80px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px; }
+                .lms-preset-swatch-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.25); flex-shrink: 0; }
+                .lms-preset-swatch-accent { width: 30px; height: 30px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3); flex-shrink: 0; }
+                .lms-preset-info { padding: 10px 12px; border-top: 1px solid #eee; }
+                .lms-preset-name { font-weight: 600; font-size: 13px; color: #1d2327; margin: 0 0 2px; display: flex; align-items: center; gap: 5px; }
+                .lms-preset-desc { font-size: 11px; color: #666; margin: 0; line-height: 1.3; }
+                .lms-preset-badge { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 3px; background: #f0f0f1; color: #50575e; font-weight: 500; margin-left: auto; }
+                .lms-preset-card.is-active .lms-preset-badge { background: #2271b1; color: #fff; }
             </style>
 
             <div class="lms-cust-wrap">
@@ -1121,6 +1135,27 @@ function sistema_cursos_render_admin_page()
                             <span class="lms-cust-preview-btn" id="lms-prev-btn">Botão Primário</span>
                             <span class="lms-cust-preview-btn" id="lms-prev-btn-success" style="margin-left:8px;">Concluído</span>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Presets -->
+                <div class="lms-cust-section">
+                    <h3>🎨 Presets de Cores</h3>
+                    <p style="margin:0 0 14px; font-size:13px; color:#666;">Selecione um preset para aplicar uma combinação harmoniosa de cores. Você pode personalizar individualmente após aplicar.</p>
+                    <div class="lms-presets-grid">
+                        <?php foreach ($presets as $key => $preset): ?>
+                        <div class="lms-preset-card" data-preset="<?php echo esc_attr($key); ?>">
+                            <div class="lms-preset-swatch" style="background: linear-gradient(135deg, <?php echo esc_attr($preset['colors']['color_bg_primary']); ?> 0%, <?php echo esc_attr($preset['colors']['color_bg_secondary']); ?> 100%);">
+                                <span class="lms-preset-swatch-dot" style="background:<?php echo esc_attr($preset['colors']['color_text_heading']); ?>;"></span>
+                                <span class="lms-preset-swatch-accent" style="background:<?php echo esc_attr($preset['colors']['color_accent']); ?>;"></span>
+                                <span class="lms-preset-swatch-dot" style="background:<?php echo esc_attr($preset['colors']['color_success']); ?>;"></span>
+                            </div>
+                            <div class="lms-preset-info">
+                                <p class="lms-preset-name"><?php echo $preset['emoji']; ?> <?php echo esc_html($preset['name']); ?><span class="lms-preset-badge">Aplicar</span></p>
+                                <p class="lms-preset-desc"><?php echo esc_html($preset['desc']); ?></p>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
 
@@ -1305,6 +1340,28 @@ function sistema_cursos_render_admin_page()
                     $('#lms-prev-progress-bg').css({ 'background': 'rgba(255,255,255,0.1)', 'border-radius': '3px' });
                     $('#lms-prev-progress-fill').css({ 'background-color': accent, 'border-radius': '3px' });
                 }
+
+                // Presets de cores
+                var lmsPresets = <?php echo wp_json_encode(array_map(function($p) { return $p['colors']; }, $presets)); ?>;
+
+                $('.lms-preset-card').on('click', function() {
+                    var presetKey = $(this).data('preset');
+                    var colors = lmsPresets[presetKey];
+                    if (!colors) return;
+
+                    // Aplicar cada cor nos campos
+                    $.each(colors, function(field, value) {
+                        $('#' + field).val(value);
+                        $('#' + field + '_picker').val(value);
+                    });
+
+                    // Marcar card ativo
+                    $('.lms-preset-card').removeClass('is-active');
+                    $(this).addClass('is-active');
+
+                    // Atualizar preview
+                    updatePreview();
+                });
 
                 // Inicializar preview
                 updatePreview();
