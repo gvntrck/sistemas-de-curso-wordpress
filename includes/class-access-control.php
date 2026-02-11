@@ -272,13 +272,6 @@ class System_Cursos_Access_Control
     <td align="center" style="padding:28px 12px;">
       <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px; margin:0 auto;">
         <tr>
-          <td align="center" style="padding-bottom:18px;">
-            <div style="display:inline-block; background:#111111; color:#ffffff; font-size:22px; font-weight:700; line-height:1; border-radius:999px; width:56px; height:56px; text-align:center;">
-              <span style="display:inline-block; line-height:56px;">O</span>
-            </div>
-          </td>
-        </tr>
-        <tr>
           <td style="background:#ffffff; border:1px solid #d9dde3; border-radius:8px; padding:32px;">
             <p style="margin:0 0 16px; font-size:38px; line-height:1.2; color:#111111;">Oi <strong>' . $nome_escaped . '</strong>,</p>
             <p style="margin:0 0 24px; font-size:18px; line-height:1.55; color:#374151;">
