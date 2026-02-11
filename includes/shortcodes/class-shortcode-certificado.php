@@ -186,7 +186,8 @@ class System_Cursos_Shortcode_Certificado
         <!-- Carrega a fonte do Google Fonts -->
         <link href="<?php echo esc_url($font_url); ?>" rel="stylesheet">
 
-        <div class="cert-wrapper">
+        <div class="mc-container" style="max-width: 100%; margin-left: 0; margin-right: 0;">
+        <div class="mc-body cert-wrapper">
             <h2 style="margin-bottom: 20px; color: var(--color-text-heading, #fff);">Parabéns,
                 <?php echo esc_html($user_data->first_name); ?>!
             </h2>
@@ -238,6 +239,7 @@ class System_Cursos_Shortcode_Certificado
                     Imprimir / Salvar PDF
                 </button>
             </div>
+        </div>
         </div>
 
         <?php
