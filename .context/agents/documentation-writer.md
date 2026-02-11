@@ -1,4 +1,4 @@
----
+﻿---
 type: agent
 name: Documentation Writer
 description: Create clear, comprehensive documentation

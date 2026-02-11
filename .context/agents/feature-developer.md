@@ -1,4 +1,4 @@
----
+﻿---
 type: agent
 name: Feature Developer
 description: Implement new features according to specifications

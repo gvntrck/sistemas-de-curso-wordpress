@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated": "2026-02-10T19:59:27.851Z",
+  "generated": "2026-02-11T22:41:51.098Z",
   "stack": {
     "primaryLanguage": "javascript",
     "languages": [
@@ -16,7 +16,7 @@
     "hasCI": false
   },
   "structure": {
-    "totalFiles": 36,
+    "totalFiles": 41,
     "topDirectories": [
       {
         "name": "AGENTS.md",
@@ -28,7 +28,7 @@
       },
       {
         "name": "includes",
-        "fileCount": 23
+        "fileCount": 27
       },
       {
         "name": "modelo-barra-lateral.html",
@@ -36,6 +36,10 @@
       },
       {
         "name": "modelo.html",
+        "fileCount": 1
+      },
+      {
+        "name": "referencias",
         "fileCount": 1
       },
       {
@@ -50,7 +54,7 @@
     "languageDistribution": [
       {
         "extension": ".php",
-        "count": 24
+        "count": 28
       },
       {
         "extension": ".js",
@@ -70,6 +74,10 @@
       },
       {
         "extension": ".md",
+        "count": 1
+      },
+      {
+        "extension": ".png",
         "count": 1
       }
     ]
@@ -97,21 +105,35 @@
         "name": "atualizarBarraProgresso",
         "kind": "function",
         "file": "assets\\js\\script.js",
-        "line": 134,
+        "line": 346,
         "exported": false
       },
       {
         "name": "atualizarBotaoConcluir",
         "kind": "function",
         "file": "assets\\js\\script.js",
-        "line": 145,
+        "line": 357,
+        "exported": false
+      },
+      {
+        "name": "atualizarComentariosSection",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 468,
         "exported": false
       },
       {
         "name": "atualizarItemLista",
         "kind": "function",
         "file": "assets\\js\\script.js",
-        "line": 158,
+        "line": 370,
+        "exported": false
+      },
+      {
+        "name": "ensureLessonLoadingEl",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 388,
         "exported": false
       },
       {
@@ -129,10 +151,24 @@
         "exported": false
       },
       {
+        "name": "initMasks",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 55,
+        "exported": false
+      },
+      {
         "name": "isAulaConcluida",
         "kind": "function",
         "file": "assets\\js\\script.js",
-        "line": 130,
+        "line": 342,
+        "exported": false
+      },
+      {
+        "name": "normalizeMainSectionsOrder",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 429,
         "exported": false
       },
       {
@@ -157,6 +193,48 @@
         "exported": false
       },
       {
+        "name": "setLessonLoading",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 403,
+        "exported": false
+      },
+      {
+        "name": "showSlide",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 159,
+        "exported": false
+      },
+      {
+        "name": "sistemaCursosApplyOverallProgress",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 244,
+        "exported": false
+      },
+      {
+        "name": "sistemaCursosResolveAjaxUrl",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 228,
+        "exported": false
+      },
+      {
+        "name": "startAutoplay",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 180,
+        "exported": false
+      },
+      {
+        "name": "stopAutoplay",
+        "kind": "function",
+        "file": "assets\\js\\script.js",
+        "line": 174,
+        "exported": false
+      },
+      {
         "name": "updateJson",
         "kind": "function",
         "file": "assets\\js\\admin-quiz-builder.js",
@@ -172,8 +250,8 @@
     "mostImported": []
   },
   "stats": {
-    "totalSymbols": 10,
+    "totalSymbols": 20,
     "exportedSymbols": 0,
-    "analysisTimeMs": 88
+    "analysisTimeMs": 84
   }
 }

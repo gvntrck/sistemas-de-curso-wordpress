@@ -1,4 +1,4 @@
----
+﻿---
 type: agent
 name: Performance Optimizer
 description: Identify performance bottlenecks

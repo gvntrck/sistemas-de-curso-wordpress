@@ -1,4 +1,4 @@
----
+﻿---
 type: doc
 name: testing-strategy
 description: Test frameworks, patterns, coverage requirements, and quality gates

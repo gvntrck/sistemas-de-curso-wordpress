@@ -1,4 +1,4 @@
----
+﻿---
 type: agent
 name: Security Auditor
 description: Identify security vulnerabilities

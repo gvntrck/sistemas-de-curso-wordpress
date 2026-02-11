@@ -1,4 +1,4 @@
----
+﻿---
 type: agent
 name: Frontend Specialist
 description: Design and implement user interfaces

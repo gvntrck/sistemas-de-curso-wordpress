@@ -1,4 +1,4 @@
----
+﻿---
 type: agent
 name: Refactoring Specialist
 description: Identify code smells and improvement opportunities

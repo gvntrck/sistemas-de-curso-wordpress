@@ -1,4 +1,4 @@
----
+﻿---
 type: doc
 name: tooling
 description: Scripts, IDE settings, automation, and developer productivity tips

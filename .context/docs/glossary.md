@@ -1,4 +1,4 @@
----
+﻿---
 type: doc
 name: glossary
 description: Project terminology, type definitions, domain entities, and business rules

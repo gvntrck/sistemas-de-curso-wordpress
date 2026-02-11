@@ -1,4 +1,4 @@
----
+﻿---
 type: doc
 name: security
 description: Security policies, authentication, secrets management, and compliance requirements

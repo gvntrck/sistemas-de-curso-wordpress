@@ -1,4 +1,4 @@
----
+﻿---
 type: agent
 name: Mobile Specialist
 description: Develop native and cross-platform mobile applications

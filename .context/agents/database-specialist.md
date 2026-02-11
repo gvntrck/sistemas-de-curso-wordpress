@@ -1,4 +1,4 @@
----
+﻿---
 type: agent
 name: Database Specialist
 description: Design and optimize database schemas

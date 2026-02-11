@@ -1763,7 +1763,7 @@ class System_Cursos_Access_Control
                     style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; flex: 1; min-width: 300px;">
                     <h2 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px;">
                         <?php echo get_avatar($user->ID, 48, '', '', ['style' => 'vertical-align: middle; margin-right: 10px; border-radius: 50%;']); ?>
-                        <?php echo esc_html($user->display_name); ?>
+                        <?php echo esc_html($user->first_name ? $user->first_name : $user->display_name); ?>
                     </h2>
 
                     <table class="form-table" style="margin: 0;">

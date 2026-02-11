@@ -1,4 +1,4 @@
----
+﻿---
 type: agent
 name: Bug Fixer
 description: Analyze bug reports and error messages

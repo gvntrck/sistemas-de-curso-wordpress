@@ -1,4 +1,4 @@
----
+﻿---
 type: agent
 name: Architect Specialist
 description: Design overall system architecture and patterns
