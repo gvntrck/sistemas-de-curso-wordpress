@@ -213,12 +213,23 @@
 
 .sc-quiz-option input[type="radio"],
 .sc-quiz-option input[type="checkbox"] {
-    margin-right: 15px;
+    /* Override global/reset rules and theme input styles */
+    -webkit-appearance: auto !important;
+    appearance: auto !important;
+    box-sizing: border-box !important;
+    display: inline-block !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    margin: 0 12px 0 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
     cursor: pointer;
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
+    flex: 0 0 18px;
     accent-color: var(--accent-color);
+    vertical-align: middle;
 }
 
 .sc-quiz-option:has(input:checked) {
