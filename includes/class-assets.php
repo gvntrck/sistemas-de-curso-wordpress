@@ -12,7 +12,7 @@ class System_Cursos_Assets
      * Registra e enfileira os assets necessários para o funcionamento correto do frontend e do painel administrativo.
      *
      * @package SistemaCursos
-     * @version 1.0.9
+     * @version 1.1.0
      */
     public function __construct()
     {
@@ -30,7 +30,7 @@ class System_Cursos_Assets
             'sistema-cursos-style',
             $plugin_url . 'assets/css/style.css',
             [],
-            '1.5.4' // Bump version to force refresh
+            '1.5.5' // Bump version to force refresh
         );
 
         // JS Principal
@@ -39,6 +39,15 @@ class System_Cursos_Assets
             $plugin_url . 'assets/js/script.js',
             [],
             '1.3.6', // Updated version to force cache refresh
+            true
+        );
+
+        // JS Certificado (global para funcionar via AJAX no painel SPA)
+        wp_enqueue_script(
+            'sistema-cursos-certificado-js',
+            $plugin_url . 'assets/js/certificado.js',
+            [],
+            '1.1.0',
             true
         );
     }

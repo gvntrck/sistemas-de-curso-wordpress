@@ -1001,6 +1001,49 @@
 }
 
 /* =========================================
+   Componente: Certificado (Visualização Frontend)
+   ========================================= */
+.lms-sr .cert-wrapper {
+    padding: var(--space-lg) !important;
+}
+
+.lms-sr .cert-container,
+.cert-container {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 1000px !important;
+    margin: 0 auto !important;
+    line-height: 0 !important;
+}
+
+.lms-sr .cert-bg,
+.cert-bg {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+}
+
+.lms-sr .cert-element,
+.cert-element {
+    position: absolute !important;
+    transform: translateX(-50%) !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+    pointer-events: none !important;
+}
+
+.lms-sr .cert-actions,
+.cert-actions {
+    display: flex !important;
+    gap: var(--space-md) !important;
+    justify-content: center !important;
+    margin-top: var(--space-lg) !important;
+}
+
+/* =========================================
    Print Styles - Certificado
    ========================================= */
 @media print {

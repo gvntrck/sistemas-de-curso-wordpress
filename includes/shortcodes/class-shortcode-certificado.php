@@ -14,7 +14,7 @@ class System_Cursos_Shortcode_Certificado
      * Se houver ID, renderiza o certificado visualmente usando o modelo configurado.
      *
      * @package SistemaCursos
-     * @version 1.1.9
+     * @version 1.2.0
      */
     public function __construct()
     {
@@ -238,14 +238,6 @@ class System_Cursos_Shortcode_Certificado
         </div>
 
         <?php
-        wp_enqueue_script(
-            'sistema-cursos-certificado-js',
-            plugins_url('assets/js/certificado.js', dirname(dirname(__FILE__))),
-            [],
-            '1.0.0',
-            true
-        );
-
         return ob_get_clean();
     }
 }
