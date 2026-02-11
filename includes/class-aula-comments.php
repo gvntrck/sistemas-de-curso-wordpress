@@ -68,7 +68,13 @@ class System_Cursos_Aula_Comments
 
         $curso_id = (int) get_post_meta($aula_id, 'curso', true);
         if ($curso_id > 0 && class_exists('System_Cursos_Access_Control')) {
-            return (bool) System_Cursos_Access_Control::has_access($user_id, $curso_id);
+            if (!System_Cursos_Access_Control::has_access($user_id, $curso_id)) {
+                return false;
+            }
+        }
+
+        if (class_exists('System_Cursos_Lesson_Schedule') && System_Cursos_Lesson_Schedule::is_locked_for_user($aula_id, $user_id)) {
+            return false;
         }
 
         return true;

@@ -445,6 +445,22 @@ class System_Cursos_CPT_Manager
         // Field: descricao
         $descricao = get_post_meta($post->ID, 'descricao', true);
         $comments_lesson_override = get_post_meta($post->ID, '_sistema_cursos_comments_lesson_override', true);
+        $release_datetime = class_exists('System_Cursos_Lesson_Schedule')
+            ? System_Cursos_Lesson_Schedule::get_release_datetime($post->ID)
+            : '';
+        $release_datetime_input = '';
+
+        if ($release_datetime !== '') {
+            $release_date_obj = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $release_datetime, wp_timezone());
+            if ($release_date_obj instanceof DateTimeImmutable) {
+                $release_datetime_input = $release_date_obj->format('Y-m-d\TH:i');
+            }
+        }
+
+        $site_timezone = wp_timezone_string();
+        if ($site_timezone === '') {
+            $site_timezone = 'UTC';
+        }
 
         // Field: arquivos (Repeater)
         // O formato salvo pelo ACF é um array serializado contendo array('anexos' => URL/ID)
@@ -487,6 +503,22 @@ class System_Cursos_CPT_Manager
                 'media_buttons' => true
             ]);
             ?>
+        </p>
+
+        <p>
+            <label for="sistema_cursos_lesson_release_at" style="font-weight:bold; display:block; margin-bottom:5px;">
+                Data e hora de liberacao (opcional):
+            </label>
+            <input
+                type="datetime-local"
+                id="sistema_cursos_lesson_release_at"
+                name="sistema_cursos_lesson_release_at"
+                value="<?php echo esc_attr($release_datetime_input); ?>"
+                class="widefat">
+            <span class="description" style="display:block; margin-top:4px;">
+                Alunos so podem assistir esta aula a partir da data e hora informadas. Fuso horario do site:
+                <strong><?php echo esc_html($site_timezone); ?></strong>.
+            </span>
         </p>
 
         <hr>
@@ -619,6 +651,20 @@ class System_Cursos_CPT_Manager
         if ($post_type === 'aula' && isset($_POST['sistema_cursos_comments_lesson_override'])) {
             $lesson_comments_override = ($_POST['sistema_cursos_comments_lesson_override'] === '1') ? '1' : '0';
             update_post_meta($post_id, '_sistema_cursos_comments_lesson_override', $lesson_comments_override);
+        }
+
+        // 3.3 Data/hora de liberacao da aula
+        if ($post_type === 'aula' && isset($_POST['sistema_cursos_lesson_release_at'])) {
+            $release_raw = $_POST['sistema_cursos_lesson_release_at'];
+            $release_datetime = class_exists('System_Cursos_Lesson_Schedule')
+                ? System_Cursos_Lesson_Schedule::normalize_datetime_local_input($release_raw)
+                : '';
+
+            if ($release_datetime !== '') {
+                update_post_meta($post_id, '_sistema_cursos_lesson_release_at', $release_datetime);
+            } else {
+                delete_post_meta($post_id, '_sistema_cursos_lesson_release_at');
+            }
         }
 
         // --- NOVO: Salvar Aulas do Curso (Bidirecional) ---

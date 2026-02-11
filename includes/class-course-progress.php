@@ -209,6 +209,13 @@ class System_Cursos_Progress
             wp_send_json_error(['message' => 'ID da aula invalido.']);
         }
 
+        if (class_exists('System_Cursos_Lesson_Schedule') && System_Cursos_Lesson_Schedule::is_locked_for_user($aula_id, $user_id)) {
+            wp_send_json_error([
+                'code' => 'lesson_locked',
+                'message' => System_Cursos_Lesson_Schedule::get_lock_message($aula_id),
+            ]);
+        }
+
         $quiz_requirement = self::get_quiz_requirement_for_lesson($aula_id);
         if ($quiz_requirement['requires_quiz_approval']) {
             wp_send_json_error([

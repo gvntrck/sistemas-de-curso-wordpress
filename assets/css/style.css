@@ -636,6 +636,24 @@
     padding: var(--space-lg) !important;
 }
 
+.lms-sr .lista-aulas__placeholder--locked {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 220px !important;
+    background: #0f0f0f !important;
+}
+
+.lms-sr .lista-aulas__alerta-bloqueio {
+    margin: 0 !important;
+    max-width: 560px !important;
+    background: rgba(253, 193, 16, 0.1) !important;
+    border: 1px solid rgba(253, 193, 16, 0.35) !important;
+    color: #f7d67a !important;
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+}
+
 .lms-sr .lista-aulas__header {
     display: flex !important;
     align-items: center !important;
@@ -717,6 +735,16 @@
     outline: 2px solid var(--color-border-hover) !important;
 }
 
+.lms-sr .lista-aulas__item.is-locked {
+    background: rgba(253, 193, 16, 0.06) !important;
+}
+
+.lms-sr .lista-aulas__item-main {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+}
+
 .lms-sr .lista-aulas__item-index {
     width: 32px !important;
     height: 32px !important;
@@ -742,6 +770,13 @@
     font-size: 14px !important;
     line-height: 1.25 !important;
     color: var(--color-text-primary) !important;
+    font-family: var(--font-family) !important;
+}
+
+.lms-sr .lista-aulas__item-meta {
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    color: rgba(253, 193, 16, 0.95) !important;
     font-family: var(--font-family) !important;
 }
 

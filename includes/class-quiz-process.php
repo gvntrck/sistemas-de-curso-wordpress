@@ -127,6 +127,10 @@ class System_Cursos_Quiz_Process
             return '';
 
         $user_id = get_current_user_id();
+        if (class_exists('System_Cursos_Lesson_Schedule') && System_Cursos_Lesson_Schedule::is_locked_for_user($aula_id, $user_id)) {
+            return '';
+        }
+
         $max_attempts = intval($quiz['max_attempts'] ?? 0);
         $used_attempts = ($user_id > 0) ? self::get_user_attempts($user_id, $aula_id) : 0;
         $attempts_exhausted = ($max_attempts > 0 && $used_attempts >= $max_attempts);
@@ -237,6 +241,13 @@ class System_Cursos_Quiz_Process
 
         $aula_id = isset($_POST['aula_id']) ? intval($_POST['aula_id']) : 0;
         $respostas = isset($_POST['answers']) ? $_POST['answers'] : [];
+
+        if (class_exists('System_Cursos_Lesson_Schedule') && System_Cursos_Lesson_Schedule::is_locked_for_user($aula_id, $user_id)) {
+            wp_send_json_error([
+                'code' => 'lesson_locked',
+                'message' => System_Cursos_Lesson_Schedule::get_lock_message($aula_id),
+            ]);
+        }
 
         $quiz_data = self::get_quiz_data($aula_id);
         if (!$quiz_data) {

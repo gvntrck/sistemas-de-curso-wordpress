@@ -9,11 +9,10 @@ class System_Cursos_Shortcode_Listar_Aulas
      * class-shortcode-listar-aulas.php
      *
      * Shortcode [lista-aulas]
-     * Renderiza o player de vídeo principal, a lista de navegação entre aulas e materiais de apoio.
-     * Gerencia o controle de acesso por curso, marcação de aula concluída e requisições AJAX para troca de conteúdo sem reaload.
+     * Renderiza o player principal e a lista lateral de aulas.
      *
      * @package SistemaCursos
-     * @version 1.1.2
+     * @version 1.2.0
      */
     public function __construct()
     {
@@ -33,7 +32,7 @@ class System_Cursos_Shortcode_Listar_Aulas
         $cursoId = (int) $atts['curso_id'];
         $limite = max(1, (int) $atts['limite']);
 
-        // URL Query Params Override
+        // URL query params override.
         $aulaFromQuery = isset($_GET['target_aula']) ? (int) $_GET['target_aula'] : 0;
         $cursoFromQuery = isset($_GET['curso']) ? (int) $_GET['curso'] : 0;
         $aulaId = $aulaFromQuery ?: (int) $atts['aula_id'];
@@ -42,7 +41,7 @@ class System_Cursos_Shortcode_Listar_Aulas
             $cursoId = $cursoFromQuery;
         }
 
-        // Auto-detect course ID from context
+        // Auto-detect course ID from context.
         if ($cursoId <= 0) {
             $maybeCurso = get_queried_object_id();
             $post = $maybeCurso ? get_post($maybeCurso) : null;
@@ -61,7 +60,7 @@ class System_Cursos_Shortcode_Listar_Aulas
             return '<div class="mc-alert mc-error">Informe o curso_id no shortcode: <code>[lista-aulas curso_id="123"]</code></div>';
         }
 
-        // Access Check
+        // Access check.
         $currentUserId = get_current_user_id();
         $isAdmin = current_user_can('manage_options');
 
@@ -75,7 +74,7 @@ class System_Cursos_Shortcode_Listar_Aulas
             }
         }
 
-        // Query Lessons
+        // Query lessons.
         $RELATION_META_KEY = 'curso';
         $aulasQuery = new WP_Query([
             'post_type' => 'aula',
@@ -102,10 +101,10 @@ class System_Cursos_Shortcode_Listar_Aulas
         $aulas = $aulasQuery->posts;
 
         if (empty($aulas)) {
-            return '<div class="mc-alert mc-info">Este curso ainda não possui aulas cadastradas. <button onclick="history.back()" class="mc-btn mc-btn-secondary" style="margin-left: 10px;">Voltar</button></div>';
+            return '<div class="mc-alert mc-info">Este curso ainda nao possui aulas cadastradas. <button onclick="history.back()" class="mc-btn mc-btn-secondary" style="margin-left: 10px;">Voltar</button></div>';
         }
 
-        // Validate selected lesson
+        // Validate selected lesson.
         $aulaIds = array_map(static fn($p) => (int) $p->ID, $aulas);
         if ($aulaId <= 0 || !in_array($aulaId, $aulaIds, true)) {
             $aulaId = (int) $aulas[0]->ID;
@@ -117,29 +116,57 @@ class System_Cursos_Shortcode_Listar_Aulas
             $aulaId = (int) $aulaAtual->ID;
         }
 
-        // Prepare Data
-        // Prepare Data
-        // Native Meta replacement
+        $aulasLockState = [];
+        foreach ($aulas as $aula) {
+            $lessonId = (int) $aula->ID;
+            $aulasLockState[$lessonId] = $this->get_lesson_lock_state($lessonId, $currentUserId);
+        }
+
+        $aulaAtualLockState = $aulasLockState[$aulaId] ?? $this->get_lesson_lock_state($aulaId, $currentUserId);
+        $isAulaAtualLocked = !empty($aulaAtualLockState['is_locked']);
+
+        // Prepare data.
         $embed = get_post_meta($aulaId, 'embed_do_vimeo', true);
         $descricao = get_post_meta($aulaId, 'descricao', true);
 
         $titulo = esc_html(get_the_title($aulaId));
         $descricaoHtml = $descricao ? wp_kses_post($descricao) : '';
-        $embedHtml = $embed ? $this->kses_embed($embed) : '<div class="lista-aulas__placeholder">Vídeo não disponível.</div>';
+        $embedHtml = $embed ? $this->kses_embed($embed) : '<div class="lista-aulas__placeholder">Video nao disponivel.</div>';
         $anexosHtml = $this->get_anexos_html($aulaId);
 
-        // URLs
+        if ($isAulaAtualLocked) {
+            $embedHtml = $this->get_locked_embed_html($aulaAtualLockState['message']);
+            $descricaoHtml = '';
+            $anexosHtml = '';
+        }
+
+        // URLs.
         $baseUrl = get_permalink($cursoId) ?: (get_permalink() ?: home_url('/'));
         $uid = 'lista-aulas-' . wp_generate_uuid4();
 
-        // Progress Data
+        // Progress data.
         $isLoggedIn = $currentUserId > 0;
         $aulasConcluidas = ($isLoggedIn && class_exists('System_Cursos_Progress'))
             ? System_Cursos_Progress::get_completed_lessons($currentUserId, $cursoId)
             : [];
         $aulaAtualConcluida = in_array($aulaId, $aulasConcluidas, true);
 
-        // Progress Calc
+        // Quiz and comments.
+        $quizHtml = '';
+        $commentsHtml = '';
+        if (!$isAulaAtualLocked) {
+            if (class_exists('System_Cursos_Quiz_Process')) {
+                $quizHtml = System_Cursos_Quiz_Process::render_quiz($aulaId);
+            }
+
+            if (class_exists('System_Cursos_Aula_Comments')) {
+                $commentsHtml = System_Cursos_Aula_Comments::render_comments_section($aulaId);
+            }
+        }
+
+        $esconderBotaoManual = $isAulaAtualLocked || (!empty($quizHtml) && !$aulaAtualConcluida);
+
+        // Progress calc.
         $totalAulas = count($aulas);
         $qtdConcluidas = 0;
         foreach ($aulas as $a) {
@@ -160,22 +187,10 @@ class System_Cursos_Shortcode_Listar_Aulas
                         Voltar para Meus Cursos
                     </a>
                 <?php endif; ?>
+
                 <div class="lista-aulas__video">
                     <?php echo $embedHtml; ?>
                 </div>
-
-                <?php
-                // Integração com Quiz
-                $quizHtml = '';
-                if (class_exists('System_Cursos_Quiz_Process')) {
-                    $quizHtml = System_Cursos_Quiz_Process::render_quiz($aulaId);
-                }
-                $commentsHtml = '';
-                if (class_exists('System_Cursos_Aula_Comments')) {
-                    $commentsHtml = System_Cursos_Aula_Comments::render_comments_section($aulaId);
-                }
-                $esconderBotaoManual = !empty($quizHtml) && !$aulaAtualConcluida;
-                ?>
 
                 <div class="lista-aulas__header">
                     <h2 class="lista-aulas__titulo">
@@ -191,7 +206,7 @@ class System_Cursos_Shortcode_Listar_Aulas
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
                             <span class="lista-aulas__btn-texto">
-                                <?php echo $aulaAtualConcluida ? 'Concluído' : 'Marcar como concluído'; ?>
+                                <?php echo $aulaAtualConcluida ? 'Concluido' : 'Marcar como concluido'; ?>
                             </span>
                         </button>
                     <?php endif; ?>
@@ -245,8 +260,17 @@ class System_Cursos_Shortcode_Listar_Aulas
                         $id = (int) $aula->ID;
                         $isActive = ($id === $aulaId);
                         $url = add_query_arg(['target_aula' => $id], $baseUrl);
+                        $lockState = $aulasLockState[$id] ?? $this->get_lesson_lock_state($id, $currentUserId);
+                        $isLocked = !empty($lockState['is_locked']);
+                        $itemClasses = 'lista-aulas__item';
+                        if ($isActive) {
+                            $itemClasses .= ' is-active';
+                        }
+                        if ($isLocked) {
+                            $itemClasses .= ' is-locked';
+                        }
                         ?>
-                        <a role="listitem" class="lista-aulas__item <?php echo $isActive ? 'is-active' : ''; ?>"
+                        <a role="listitem" class="<?php echo esc_attr($itemClasses); ?>"
                             href="<?php echo esc_url($url); ?>" data-aula-id="<?php echo $id; ?>">
                             <span
                                 class="lista-aulas__item-index <?php echo in_array($id, $aulasConcluidas, true) ? 'is-concluida' : ''; ?>">
@@ -259,8 +283,18 @@ class System_Cursos_Shortcode_Listar_Aulas
                                     <?php echo (int) ($index + 1); ?>
                                 <?php endif; ?>
                             </span>
-                            <span class="lista-aulas__item-title">
-                                <?php echo esc_html(get_the_title($id)); ?>
+                            <span class="lista-aulas__item-main">
+                                <span class="lista-aulas__item-title">
+                                    <?php echo esc_html(get_the_title($id)); ?>
+                                </span>
+                                <?php if ($isLocked): ?>
+                                    <span class="lista-aulas__item-meta">
+                                        <?php
+                                        $releaseLabel = trim((string) ($lockState['release_label'] ?? ''));
+                                        echo esc_html($releaseLabel !== '' ? 'Libera em ' . $releaseLabel : 'Aguardando liberacao');
+                                        ?>
+                                    </span>
+                                <?php endif; ?>
                             </span>
                         </a>
                     <?php endforeach; ?>
@@ -268,10 +302,6 @@ class System_Cursos_Shortcode_Listar_Aulas
             </aside>
         </div>
 
-        <?php
-        // Inline script initialized here, but using localized/data attributes would be cleaner if moved to external file.
-        // For now, mirroring legacy inline script logic but adapted to use cleaner selectors.
-        ?>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 if (window.SystemCursos && window.SystemCursos.initListaAulas) {
@@ -288,45 +318,73 @@ class System_Cursos_Shortcode_Listar_Aulas
         $aulaId = isset($_POST['aula_id']) ? (int) $_POST['aula_id'] : 0;
 
         if ($aulaId <= 0) {
-            wp_send_json_error(['message' => 'ID da aula inválido.']);
+            wp_send_json_error(['message' => 'ID da aula invalido.']);
         }
 
         $aula = get_post($aulaId);
         if (!$aula || $aula->post_type !== 'aula' || $aula->post_status !== 'publish') {
-            wp_send_json_error(['message' => 'Aula não encontrada.']);
+            wp_send_json_error(['message' => 'Aula nao encontrada.']);
+        }
+
+        $userId = get_current_user_id();
+        $isAdmin = current_user_can('manage_options');
+        $cursoId = $this->get_lesson_course_id($aulaId);
+
+        if (!$isAdmin) {
+            if ($userId <= 0) {
+                wp_send_json_error(['message' => 'Voce precisa estar logado para acessar esta aula.']);
+            }
+
+            if ($cursoId > 0 && class_exists('System_Cursos_Access_Control') && !System_Cursos_Access_Control::has_access($userId, $cursoId)) {
+                wp_send_json_error(['message' => 'Voce nao tem acesso a esta aula.']);
+            }
+        }
+
+        $lockState = $this->get_lesson_lock_state($aulaId, $userId);
+        if (!empty($lockState['is_locked'])) {
+            wp_send_json_success([
+                'titulo' => esc_html(get_the_title($aulaId)),
+                'embed' => $this->get_locked_embed_html($lockState['message']),
+                'descricao' => '',
+                'anexos' => '',
+                'quiz' => '',
+                'comentarios' => '',
+                'esconder_botao_manual' => true,
+                'bloqueada' => true,
+                'mensagem_bloqueio' => $lockState['message'],
+            ]);
         }
 
         $embed = get_post_meta($aulaId, 'embed_do_vimeo', true);
         $descricao = get_post_meta($aulaId, 'descricao', true);
 
-        // Quiz Integration (AJAX Navigation Fix)
         $quizHtml = '';
         if (class_exists('System_Cursos_Quiz_Process')) {
             $quizHtml = System_Cursos_Quiz_Process::render_quiz($aulaId);
         }
+
         $commentsHtml = '';
         if (class_exists('System_Cursos_Aula_Comments')) {
             $commentsHtml = System_Cursos_Aula_Comments::render_comments_section($aulaId);
         }
 
-        // Check if user already completed this lesson
-        $user_id = get_current_user_id();
         $isCompleted = false;
-        if ($user_id > 0 && class_exists('System_Cursos_Progress')) {
-            $isCompleted = System_Cursos_Progress::is_lesson_completed($user_id, $aulaId);
+        if ($userId > 0 && class_exists('System_Cursos_Progress')) {
+            $isCompleted = System_Cursos_Progress::is_lesson_completed($userId, $aulaId);
         }
 
-        // Should hide manual button if quiz is active and not completed
         $esconderBotaoManual = !empty($quizHtml) && !$isCompleted;
 
         wp_send_json_success([
             'titulo' => esc_html(get_the_title($aulaId)),
-            'embed' => $embed ? $this->kses_embed($embed) : '<div class="lista-aulas__placeholder">Vídeo não disponível.</div>',
+            'embed' => $embed ? $this->kses_embed($embed) : '<div class="lista-aulas__placeholder">Video nao disponivel.</div>',
             'descricao' => $descricao ? wp_kses_post($descricao) : '',
             'anexos' => $this->get_anexos_html($aulaId),
             'quiz' => $quizHtml,
             'comentarios' => $commentsHtml,
-            'esconder_botao_manual' => $esconderBotaoManual
+            'esconder_botao_manual' => $esconderBotaoManual,
+            'bloqueada' => false,
+            'mensagem_bloqueio' => '',
         ]);
     }
 
@@ -345,8 +403,9 @@ class System_Cursos_Shortcode_Listar_Aulas
             <ul class="lista-aulas__anexos-lista">
                 <?php foreach ($arquivos as $item):
                     $url = $item['anexos'] ?? '';
-                    if (!$url)
+                    if (!$url) {
                         continue;
+                    }
                     $nome = basename($url);
                     ?>
                     <li>
@@ -365,6 +424,51 @@ class System_Cursos_Shortcode_Listar_Aulas
         </div>
         <?php
         return ob_get_clean();
+    }
+
+    private function get_lesson_course_id($aulaId)
+    {
+        $cursoMeta = get_post_meta((int) $aulaId, 'curso', true);
+
+        if (is_array($cursoMeta)) {
+            foreach ($cursoMeta as $item) {
+                $candidate = (int) $item;
+                if ($candidate > 0) {
+                    return $candidate;
+                }
+            }
+            return 0;
+        }
+
+        return (int) $cursoMeta;
+    }
+
+    private function get_lesson_lock_state($aulaId, $userId = 0)
+    {
+        $state = [
+            'is_locked' => false,
+            'message' => '',
+            'release_label' => '',
+        ];
+
+        if (!class_exists('System_Cursos_Lesson_Schedule')) {
+            return $state;
+        }
+
+        $state['is_locked'] = System_Cursos_Lesson_Schedule::is_locked_for_user($aulaId, $userId);
+        $state['release_label'] = System_Cursos_Lesson_Schedule::get_release_label($aulaId);
+
+        if ($state['is_locked']) {
+            $state['message'] = System_Cursos_Lesson_Schedule::get_lock_message($aulaId);
+        }
+
+        return $state;
+    }
+
+    private function get_locked_embed_html($message)
+    {
+        $safeMessage = esc_html($message ?: 'Esta aula ainda nao foi liberada.');
+        return '<div class="lista-aulas__placeholder lista-aulas__placeholder--locked"><div class="mc-alert lista-aulas__alerta-bloqueio">' . $safeMessage . '</div></div>';
     }
 
     private function kses_embed($html)

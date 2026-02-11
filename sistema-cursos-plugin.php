@@ -29,6 +29,7 @@ define('SISTEMA_CURSOS_VERSION', '1.6.2');
 require_once plugin_dir_path(__FILE__) . 'includes/class-cpt-manager.php';
 require_once plugin_dir_path(__FILE__) . 'includes/role-aluno.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-config.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-lesson-schedule.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-assets.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-minha-conta.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-cadastro-usuario.php';
