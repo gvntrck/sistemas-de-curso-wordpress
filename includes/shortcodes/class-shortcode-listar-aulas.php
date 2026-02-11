@@ -154,6 +154,12 @@ class System_Cursos_Shortcode_Listar_Aulas
         <div id="<?php echo esc_attr($uid); ?>" class="lista-aulas"
             data-ajax-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>">
             <div class="lista-aulas__main">
+                <?php if (!empty($GLOBALS['lms_painel_mode'])): ?>
+                    <a href="#" class="lms-voltar-cursos lista-aulas__voltar">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        Voltar para Meus Cursos
+                    </a>
+                <?php endif; ?>
                 <div class="lista-aulas__video">
                     <?php echo $embedHtml; ?>
                 </div>

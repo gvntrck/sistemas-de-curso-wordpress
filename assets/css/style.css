@@ -564,6 +564,23 @@
     position: relative !important;
 }
 
+.lms-sr .lista-aulas__voltar {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    color: var(--color-text-muted, #aaa) !important;
+    text-decoration: none !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    padding: 4px 0 !important;
+    margin-bottom: var(--space-sm, 8px) !important;
+    transition: color 0.2s !important;
+}
+
+.lms-sr .lista-aulas__voltar:hover {
+    color: var(--color-accent, #fcc419) !important;
+}
+
 .lms-sr .lista-aulas__main.is-loading {
     cursor: progress !important;
 }

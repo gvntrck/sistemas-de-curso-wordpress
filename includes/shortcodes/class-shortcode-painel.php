@@ -547,14 +547,7 @@ class System_Cursos_Shortcode_Painel
 
             case 'curso':
                 if ($curso_id > 0) {
-                    // Botão voltar + player de aulas
-                    $voltar = '<div style="margin-bottom: 1rem;">';
-                    $voltar .= '<a href="#" class="lms-voltar-cursos" style="display: inline-flex; align-items: center; gap: 0.5rem; color: #fcc419; text-decoration: none; font-weight: 600; font-size: 0.95rem; padding: 0.5rem 0; transition: opacity 0.2s;">';
-                    $voltar .= '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
-                    $voltar .= 'Voltar para Meus Cursos';
-                    $voltar .= '</a></div>';
-
-                    $html = $voltar . do_shortcode('[lista-aulas curso_id="' . $curso_id . '"]');
+                    $html = do_shortcode('[lista-aulas curso_id="' . $curso_id . '"]');
                 } else {
                     $html = '<div class="mc-alert mc-error" style="padding:20px; text-align:center; color:#fff;">Curso não especificado.</div>';
                 }
