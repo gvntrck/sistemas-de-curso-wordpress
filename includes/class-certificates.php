@@ -71,7 +71,7 @@ class System_Cursos_Certificates
             'Certificado de Conclusão',
             [$this, 'render_metabox_selection'],
             'curso',
-            'side',
+            'normal',
             'default'
         );
 
@@ -81,7 +81,7 @@ class System_Cursos_Certificates
             'Certificado Específico da Turma',
             [$this, 'render_metabox_selection'],
             'grupo',
-            'side',
+            'normal',
             'default'
         );
     }

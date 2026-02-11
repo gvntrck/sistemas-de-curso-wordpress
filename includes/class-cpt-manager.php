@@ -177,7 +177,7 @@ class System_Cursos_CPT_Manager
             'Conteúdos do Grupo (Cursos e Trilhas)',
             [$this, 'render_grupo_conteudos_metabox'],
             'grupo',
-            'side',
+            'normal',
             'default'
         );
 
