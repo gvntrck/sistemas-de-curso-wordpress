@@ -160,6 +160,24 @@ function sistema_cursos_add_admin_menu()
 function sistema_cursos_render_admin_page()
 {
     $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'ordenacao';
+    $settings_notice = '';
+
+    if (isset($_POST['lms_sr_save_acesso_settings'])) {
+        if (!current_user_can('manage_options')) {
+            wp_die('Sem permissão para salvar esta configuração.');
+        }
+
+        check_admin_referer('lms_sr_save_acesso_settings', 'lms_sr_acesso_nonce');
+
+        $redirect_page_id = isset($_POST['lms_sr_aluno_redirect_page_id']) ? absint(wp_unslash($_POST['lms_sr_aluno_redirect_page_id'])) : 0;
+
+        if ($redirect_page_id > 0 && get_post_type($redirect_page_id) !== 'page') {
+            $redirect_page_id = 0;
+        }
+
+        update_option('lms_sr_aluno_redirect_page_id', $redirect_page_id);
+        $settings_notice = '<div class="notice notice-success is-dismissible"><p>Configuração de redirecionamento salva com sucesso.</p></div>';
+    }
     ?>
     <div class="wrap">
         <h1>LMS SuporteRapido - Configuração do Sistema</h1>
@@ -175,6 +193,8 @@ function sistema_cursos_render_admin_page()
                 class="nav-tab <?php echo $active_tab == 'cpts' ? 'nav-tab-active' : ''; ?>">Estrutura de Dados (CPTs)</a>
             <a href="?page=lms-suporte-rapido&tab=instrucoes"
                 class="nav-tab <?php echo $active_tab == 'instrucoes' ? 'nav-tab-active' : ''; ?>">Instruções de Uso</a>
+            <a href="?page=lms-suporte-rapido&tab=acesso"
+                class="nav-tab <?php echo $active_tab == 'acesso' ? 'nav-tab-active' : ''; ?>">Acesso</a>
             <a href="?page=lms-suporte-rapido&tab=personalizar"
                 class="nav-tab <?php echo $active_tab == 'personalizar' ? 'nav-tab-active' : ''; ?>">🎨 Personalizar</a>
         </nav>
@@ -1066,6 +1086,51 @@ function sistema_cursos_render_admin_page()
                     </tr>
                 </tbody>
             </table>
+
+        <?php elseif ($active_tab == 'acesso'): ?>
+
+            <?php
+            $aluno_redirect_page_id = (int) get_option('lms_sr_aluno_redirect_page_id', 0);
+            $aluno_redirect_page_url = $aluno_redirect_page_id > 0 ? get_permalink($aluno_redirect_page_id) : '';
+            ?>
+
+            <?php if (!empty($settings_notice)): ?>
+                <?php echo wp_kses_post($settings_notice); ?>
+            <?php endif; ?>
+
+            <h2>Configuração de Acesso</h2>
+            <p>Escolha para qual página usuários com role <code>aluno</code> devem ser redirecionados depois do login.</p>
+
+            <form method="post" action="">
+                <?php wp_nonce_field('lms_sr_save_acesso_settings', 'lms_sr_acesso_nonce'); ?>
+
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th scope="row">
+                            <label for="lms_sr_aluno_redirect_page_id">Página de redirecionamento do aluno</label>
+                        </th>
+                        <td>
+                            <?php
+                            wp_dropdown_pages([
+                                'name' => 'lms_sr_aluno_redirect_page_id',
+                                'id' => 'lms_sr_aluno_redirect_page_id',
+                                'selected' => $aluno_redirect_page_id,
+                                'show_option_none' => '-- Selecione uma página --',
+                                'option_none_value' => '0',
+                            ]);
+                            ?>
+                            <p class="description">Se nenhuma página for selecionada, o plugin vai redirecionar para a home.</p>
+                            <?php if (!empty($aluno_redirect_page_url)): ?>
+                                <p class="description">URL atual: <code><?php echo esc_url($aluno_redirect_page_url); ?></code></p>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                </table>
+
+                <p class="submit">
+                    <button type="submit" name="lms_sr_save_acesso_settings" class="button button-primary">Salvar configuração</button>
+                </p>
+            </form>
 
         <?php elseif ($active_tab == 'personalizar'): ?>
 
