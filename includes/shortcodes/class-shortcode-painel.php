@@ -222,8 +222,17 @@ class System_Cursos_Shortcode_Painel
                         }
                     });
 
-                    // Cache key: para views com cursoId, usar 'view-ID' para diferenciar
-                    var cacheKey = (viewName === 'curso' || viewName === 'certificado-view') ? viewName + '-' + cursoId : viewName;
+                    // Cache key: para certificados de admin, incluir aluno_id para nao misturar alunos.
+                    var currentParams = new URLSearchParams(window.location.search);
+                    var cacheScope = '';
+                    if (viewName === 'certificados' || viewName === 'certificado-view') {
+                        var cacheAlunoId = currentParams.get('aluno_id') || '';
+                        var cacheForcar = currentParams.get('forcar_emissao') || '';
+                        cacheScope = cacheAlunoId ? ('-u' + cacheAlunoId + '-f' + cacheForcar) : '';
+                    }
+                    var cacheKey = (viewName === 'curso' || viewName === 'certificado-view')
+                        ? viewName + '-' + cursoId + cacheScope
+                        : viewName + cacheScope;
 
                     // Se a view está em cache, usar cache
                     if (viewCache[cacheKey]) {
@@ -245,6 +254,16 @@ class System_Cursos_Shortcode_Painel
                     formData.append('nonce', nonce);
                     if (cursoId) {
                         formData.append('curso_id', cursoId);
+                    }
+
+                    // Propaga contexto de emissao manual para o backend do painel.
+                    var alunoIdParam = currentParams.get('aluno_id');
+                    if (alunoIdParam) {
+                        formData.append('aluno_id', alunoIdParam);
+                    }
+                    var forcarEmissaoParam = currentParams.get('forcar_emissao');
+                    if (forcarEmissaoParam) {
+                        formData.append('forcar_emissao', forcarEmissaoParam);
                     }
 
                     fetch(ajaxUrl, {
@@ -487,8 +506,10 @@ class System_Cursos_Shortcode_Painel
 
         $view = isset($_POST['view']) ? sanitize_key($_POST['view']) : '';
         $curso_id = isset($_POST['curso_id']) ? (int) $_POST['curso_id'] : 0;
+        $aluno_id = isset($_POST['aluno_id']) ? (int) $_POST['aluno_id'] : 0;
+        $forcar_emissao = isset($_POST['forcar_emissao']) ? (int) $_POST['forcar_emissao'] : 0;
 
-        $html = $this->get_view_html($view, $curso_id);
+        $html = $this->get_view_html($view, $curso_id, $aluno_id, $forcar_emissao);
 
         if ($html !== false) {
             wp_send_json_success(['html' => $html]);
@@ -502,9 +523,11 @@ class System_Cursos_Shortcode_Painel
      *
      * @param string $view Nome da view.
      * @param int    $curso_id ID do curso (usado na view 'curso').
+     * @param int    $aluno_id ID do aluno (usado para admin em certificados).
+     * @param int    $forcar_emissao Flag de emissão manual (admin).
      * @return string|false HTML da view ou false se inválida.
      */
-    private function get_view_html($view, $curso_id = 0)
+    private function get_view_html($view, $curso_id = 0, $aluno_id = 0, $forcar_emissao = 0)
     {
         // Ativar modo painel para sub-shortcodes
         $GLOBALS['lms_painel_mode'] = true;
@@ -526,14 +549,30 @@ class System_Cursos_Shortcode_Painel
                 break;
 
             case 'certificados':
-                $html = do_shortcode('[certificado]');
+                if (current_user_can('manage_options') && $aluno_id > 0) {
+                    $html = do_shortcode('[certificado aluno_id="' . (int) $aluno_id . '"]');
+                } else {
+                    $html = do_shortcode('[certificado]');
+                }
                 break;
 
             case 'certificado-view':
                 if ($curso_id > 0) {
-                    $html = do_shortcode('[certificado curso_id="' . $curso_id . '"]');
+                    $cert_shortcode = '[certificado curso_id="' . (int) $curso_id . '"';
+                    if (current_user_can('manage_options') && $aluno_id > 0) {
+                        $cert_shortcode .= ' aluno_id="' . (int) $aluno_id . '"';
+                    }
+                    if (current_user_can('manage_options') && (int) $forcar_emissao === 1) {
+                        $cert_shortcode .= ' forcar_emissao="1"';
+                    }
+                    $cert_shortcode .= ']';
+                    $html = do_shortcode($cert_shortcode);
                 } else {
-                    $html = do_shortcode('[certificado]');
+                    if (current_user_can('manage_options') && $aluno_id > 0) {
+                        $html = do_shortcode('[certificado aluno_id="' . (int) $aluno_id . '"]');
+                    } else {
+                        $html = do_shortcode('[certificado]');
+                    }
                 }
                 break;
 

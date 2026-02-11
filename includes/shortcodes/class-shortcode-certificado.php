@@ -23,13 +23,22 @@ class System_Cursos_Shortcode_Certificado
 
     public function render_shortcode($atts)
     {
-        $atts = shortcode_atts(['curso_id' => 0], $atts, 'certificado');
+        $atts = shortcode_atts([
+            'curso_id' => 0,
+            'aluno_id' => 0,
+            'forcar_emissao' => 0
+        ], $atts, 'certificado');
 
         $user_id = 0;
 
-        // Se for admin, permitir visualizar de qualquer aluno via ?aluno_id=X
-        if (current_user_can('manage_options') && isset($_GET['aluno_id'])) {
-            $user_id = intval($_GET['aluno_id']);
+        // Se for admin, permitir visualizar de qualquer aluno via atts ou ?aluno_id=X
+        if (current_user_can('manage_options')) {
+            $user_id_attr = intval($atts['aluno_id']);
+            if ($user_id_attr > 0) {
+                $user_id = $user_id_attr;
+            } elseif (isset($_GET['aluno_id'])) {
+                $user_id = intval($_GET['aluno_id']);
+            }
         }
 
         if (!is_user_logged_in() && $user_id === 0) {
@@ -51,10 +60,18 @@ class System_Cursos_Shortcode_Certificado
             $curso_id = isset($_GET['curso_id']) ? intval($_GET['curso_id']) : 0;
         }
 
+        $forcar_emissao = false;
+        if (current_user_can('manage_options')) {
+            $forcar_emissao = intval($atts['forcar_emissao']) === 1;
+            if (!$forcar_emissao && isset($_GET['forcar_emissao'])) {
+                $forcar_emissao = intval($_GET['forcar_emissao']) === 1;
+            }
+        }
+
         if ($curso_id <= 0) {
             return $this->render_list($user_id);
         } else {
-            return $this->render_certificate($user_id, $curso_id);
+            return $this->render_certificate($user_id, $curso_id, $forcar_emissao);
         }
     }
 
@@ -121,7 +138,7 @@ class System_Cursos_Shortcode_Certificado
         return ob_get_clean();
     }
 
-    private function render_certificate($user_id, $curso_id)
+    private function render_certificate($user_id, $curso_id, $forcar_emissao = false)
     {
         $cert_id = 0;
 
@@ -172,8 +189,9 @@ class System_Cursos_Shortcode_Certificado
 
         $progresso = (int) get_user_meta($user_id, "progresso_curso_{$curso_id}", true);
         $is_admin = current_user_can('manage_options');
+        $can_emitir_sem_conclusao = $is_admin || $forcar_emissao;
 
-        if ($progresso < 100 && !$is_admin) {
+        if ($progresso < 100 && !$can_emitir_sem_conclusao) {
             return '<div class="mc-container" style="text-align: center; padding: 40px;">
                 <h3 style="color: var(--text-heading, #fff);">Curso em andamento</h3>
                 <p style="color: var(--text-muted, #888);">Conclua todas as aulas para desbloquear seu certificado. Progresso atual: ' . $progresso . '%</p>
@@ -193,6 +211,12 @@ class System_Cursos_Shortcode_Certificado
 
         <div class="mc-container" style="max-width: 100%; margin-left: 0; margin-right: 0;">
         <div class="mc-body cert-wrapper">
+            <?php if ($progresso < 100 && $can_emitir_sem_conclusao): ?>
+                <div
+                    style="margin-bottom: 20px; padding: 12px 14px; border-radius: 8px; border: 1px solid #f59e0b; background: rgba(245, 158, 11, 0.12); color: #fbbf24;">
+                    Emissao manual por administrador. Progresso atual do aluno: <?php echo esc_html($progresso); ?>%.
+                </div>
+            <?php endif; ?>
             <h2 style="margin-bottom: 20px; color: var(--color-text-heading, #fff);">Parabéns,
                 <?php echo esc_html($user_data->first_name); ?>!
             </h2>

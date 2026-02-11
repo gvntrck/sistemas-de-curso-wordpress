@@ -158,6 +158,65 @@ class System_Cursos_Access_Control
         self::log_access_action($user_id, 0, $action, $actor_id, $details);
     }
 
+    /**
+     * Obtém a URL base da página do painel ([lms-painel]).
+     * Mantém fallback para a home.
+     */
+    private static function get_certificate_page_url()
+    {
+        static $cached_url = null;
+
+        if ($cached_url !== null) {
+            return $cached_url;
+        }
+
+        $cached_url = home_url('/');
+
+        // Prioriza página do painel SPA.
+        $painel_page_query = new WP_Query([
+            's' => '[lms-painel]',
+            'post_type' => 'page',
+            'posts_per_page' => 1,
+            'fields' => 'ids'
+        ]);
+
+        if (!empty($painel_page_query->posts)) {
+            $cached_url = get_permalink((int) $painel_page_query->posts[0]);
+        } else {
+            // Compatibilidade: se não existir painel, tenta página dedicada de certificado.
+            $cert_page_query = new WP_Query([
+                's' => '[certificado]',
+                'post_type' => 'page',
+                'posts_per_page' => 1,
+                'fields' => 'ids'
+            ]);
+
+            if (!empty($cert_page_query->posts)) {
+                $cached_url = get_permalink((int) $cert_page_query->posts[0]);
+            }
+        }
+
+        wp_reset_postdata();
+
+        return $cached_url;
+    }
+
+    /**
+     * Monta link administrativo para emissão de certificado de um aluno em um curso.
+     */
+    private static function get_admin_certificate_link($user_id, $curso_id)
+    {
+        return add_query_arg(
+            [
+                'lms_view' => 'certificado-view',
+                'curso_id' => (int) $curso_id,
+                'aluno_id' => (int) $user_id,
+                'forcar_emissao' => 1
+            ],
+            self::get_certificate_page_url()
+        );
+    }
+
     // =============================================================================
     // FUNÇÕES DE ACESSO
     // =============================================================================
@@ -1675,21 +1734,8 @@ class System_Cursos_Access_Control
                                 $progress = self::get_detailed_progress($user_id, $c_id);
                                 $data_conclusao = isset($progress['last_date']) ? date('d/m/Y', strtotime($progress['last_date'])) : 'Data desconhecida';
 
-                                // Link para visualizar certificado (requer update no shortcode para aceitar aluno_id)
-                                // Por enquanto vamos apontar para o shortcode, o admin precisará adaptar o shortcode para ver o certificado de outro aluno se não for ele mesmo.
-                                // Porém, no plano, prometemos alterar o shortcode. Vamos gerar o link esperando essa alteração.
-                                $cert_link = add_query_arg(['curso_id' => $c_id, 'aluno_id' => $user_id], site_url('/certificado'));
-                                // Nota: O User precisará criar uma página /certificado com o shortcode [certificado] se não existir, mas assumimos que existe.
-                                // Melhor: Tentar achar a página que tem o shortcode.
-                                // Fallback genérico se não acharmos página
-                                $cert_page_query = new WP_Query([
-                                    's' => '[certificado]',
-                                    'post_type' => 'page',
-                                    'posts_per_page' => 1
-                                ]);
-                                if ($cert_page_query->have_posts()) {
-                                    $cert_link = add_query_arg(['curso_id' => $c_id, 'aluno_id' => $user_id], get_permalink($cert_page_query->posts[0]->ID));
-                                }
+                                // Link de emissao para admin (funciona mesmo com progresso < 100%).
+                                $cert_link = self::get_admin_certificate_link($user_id, $c_id);
                                 ?>
                                 <li
                                     style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f1; display:flex; align-items:center; justify-content:space-between;">
@@ -1905,6 +1951,7 @@ class System_Cursos_Access_Control
                             $is_group_access = ($access_source && in_array($access_source['type'], ['group', 'group_trilha']));
 
                             $expirado = $acesso && $acesso->status === 'ativo' && $acesso->data_fim && strtotime($acesso->data_fim) < time();
+                            $cert_link = self::get_admin_certificate_link($user->ID, $curso->ID);
                             ?>
                             <tr>
                                 <td><strong>
@@ -1973,6 +2020,15 @@ class System_Cursos_Access_Control
                                             class="button button-primary button-small">
                                             Reativar
                                         </button>
+                                    <?php endif; ?>
+
+                                    <?php if ($tem_acesso): ?>
+                                        <div style="margin-top: 8px;">
+                                            <a href="<?php echo esc_url($cert_link); ?>" target="_blank"
+                                                class="button button-small" title="Emitir certificado para este aluno">
+                                                Gerar Certificado
+                                            </a>
+                                        </div>
                                     <?php endif; ?>
                                 </td>
                             </tr>
