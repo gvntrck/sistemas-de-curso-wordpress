@@ -14,7 +14,7 @@ class System_Cursos_Shortcode_Certificado
      * Se houver ID, renderiza o certificado visualmente usando o modelo configurado.
      *
      * @package SistemaCursos
-     * @version 1.2.1
+     * @version 1.2.2
      */
     public function __construct()
     {
@@ -187,10 +187,10 @@ class System_Cursos_Shortcode_Certificado
         <link href="<?php echo esc_url($font_url); ?>" rel="stylesheet">
 
         <div class="cert-wrapper">
-            <h2 style="margin-bottom: 20px; color: #fff;">Parabéns,
+            <h2 style="margin-bottom: 20px; color: var(--color-text-heading, #fff);">Parabéns,
                 <?php echo esc_html($user_data->first_name); ?>!
             </h2>
-            <p style="margin-bottom: 30px; color: #aaa;">Aqui está o seu certificado de conclusão do curso <strong>
+            <p style="margin-bottom: 30px; color: var(--color-text-muted, #aaa);">Aqui está o seu certificado de conclusão do curso <strong>
                     <?php echo esc_html($curso_titulo); ?>
                 </strong>.</p>
 
