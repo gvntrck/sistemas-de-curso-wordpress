@@ -125,20 +125,20 @@ class System_Cursos_Shortcode_Barra_Lateral
             }
 
             .sc-sidebar-avatar-container {
-                width: 120px;
-                height: 120px;
+                width: 6rem;
+                height: 6rem;
                 border-radius: 50%;
-                border: 3px solid var(--color-accent, #fcc419);
-                box-shadow: 0 0 20px rgba(252, 196, 25, 0.15);
+                border: 2px solid var(--color-accent, #fcc419);
                 margin-bottom: 0.75rem;
                 overflow: hidden;
             }
 
-            .sc-sidebar-avatar {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
+            .sc-sidebar-avatar-container img.sc-sidebar-avatar {
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important;
+                display: block !important;
+                max-height: none !important;
             }
 
             .sc-sidebar-username {

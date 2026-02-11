@@ -143,6 +143,13 @@
     box-shadow: none !important;
 }
 
+.lms-sr .sc-sidebar-avatar-container img.sc-sidebar-avatar {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
 .lms-sr ul,
 .lms-sr ol {
     margin: 0 !important;
