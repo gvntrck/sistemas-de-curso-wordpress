@@ -200,6 +200,16 @@ class System_Cursos_CPT_Manager
             'normal',
             'default'
         );
+
+        // Criacao rapida de aulas (estilo LearnDash)
+        add_meta_box(
+            'curso_quick_add_aulas',
+            'Adicionar Novas Aulas',
+            [$this, 'render_curso_quick_add_aulas_metabox'],
+            'curso',
+            'normal',
+            'high'
+        );
     }
 
     public function admin_scripts($hook)
@@ -216,7 +226,7 @@ class System_Cursos_CPT_Manager
                 'sistema-cursos-admin',
                 plugins_url('assets/js/admin-metaboxes.js', dirname(__DIR__) . '/sistema-cursos-plugin.php'),
                 ['jquery'],
-                '1.0.2', // Bump version again
+                '1.0.3',
                 true
             );
 
@@ -366,6 +376,37 @@ class System_Cursos_CPT_Manager
     /**
      * Renderiza Metabox de Aulas no Curso
      */
+    private function lesson_belongs_to_course($aula_id, $curso_id)
+    {
+        $aula_id = (int) $aula_id;
+        $curso_id = (int) $curso_id;
+
+        if ($aula_id <= 0 || $curso_id <= 0) {
+            return false;
+        }
+
+        $curso_meta = get_post_meta($aula_id, 'curso', true);
+
+        if (is_array($curso_meta)) {
+            $curso_meta = array_map('intval', $curso_meta);
+            return in_array($curso_id, $curso_meta, true);
+        }
+
+        if (is_numeric($curso_meta)) {
+            return ((int) $curso_meta) === $curso_id;
+        }
+
+        if (is_string($curso_meta)) {
+            if (((int) $curso_meta) === $curso_id) {
+                return true;
+            }
+
+            return strpos($curso_meta, '"' . (string) $curso_id . '"') !== false;
+        }
+
+        return false;
+    }
+
     public function render_curso_aulas_metabox($post)
     {
         // Buscar todas as aulas
@@ -374,20 +415,31 @@ class System_Cursos_CPT_Manager
             'numberposts' => -1,
             'orderby' => 'title',
             'order' => 'ASC',
-            'post_status' => 'publish'
+            'post_status' => ['publish', 'draft', 'pending', 'future', 'private']
         ]);
 
-        echo '<div style="max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid #ddd; background: #fff;">';
+        echo '<div style="margin-bottom: 10px;">';
+        echo '<label style="margin-right: 16px;">';
+        echo '<input type="radio" name="curso_aulas_filter_view" value="course" checked> Somente aulas deste curso';
+        echo '</label>';
+        echo '<label>';
+        echo '<input type="radio" name="curso_aulas_filter_view" value="all"> Todas as aulas do sistema';
+        echo '</label>';
+        echo '</div>';
+        echo '<p id="curso_aulas_manager_empty_filter" class="description" style="display:none; margin-top: 6px;">Nenhuma aula encontrada para este filtro.</p>';
+
+        echo '<div id="curso_aulas_manager_list" style="max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid #ddd; background: #fff;">';
 
         if (empty($aulas)) {
             echo '<p>Nenhuma aula encontrada.</p>';
         } else {
             foreach ($aulas as $aula) {
-                // Verifica a qual curso a aula pertence atualmente
-                $current_curso_id = get_post_meta($aula->ID, 'curso', true);
+                $belongs_to_this_course = $this->lesson_belongs_to_course($aula->ID, $post->ID);
+                $current_curso_meta = get_post_meta($aula->ID, 'curso', true);
+                $current_curso_id = is_numeric($current_curso_meta) ? absint($current_curso_meta) : 0;
 
                 // Checkbox marcado se pertencer a ESTE curso
-                $checked = ($current_curso_id == $post->ID) ? 'checked' : '';
+                $checked = $belongs_to_this_course ? 'checked' : '';
 
                 // Texto extra se pertencer a OUTRO curso
                 $extra_info = '';
@@ -397,10 +449,18 @@ class System_Cursos_CPT_Manager
                     $extra_info = ' <span style="color: #d63638; font-size: 0.9em;">(Atualmente no curso: <strong>' . esc_html($curso_name) . '</strong>)</span>';
                 }
 
-                echo '<div style="margin-bottom: 5px;">';
+                $status_label = '';
+                if ($aula->post_status !== 'publish') {
+                    $status_object = get_post_status_object($aula->post_status);
+                    $status_text = $status_object ? $status_object->label : $aula->post_status;
+                    $status_label = ' <span style="color:#646970; font-size:0.9em;">[' . esc_html($status_text) . ']</span>';
+                }
+
+                echo '<div class="sc-aula-item" data-in-course="' . ($belongs_to_this_course ? '1' : '0') . '" style="margin-bottom: 5px;">';
                 echo '<label>';
                 echo '<input type="checkbox" name="curso_aulas[]" value="' . esc_attr($aula->ID) . '" ' . $checked . '> ';
                 echo '<strong>' . esc_html($aula->post_title) . '</strong>';
+                echo $status_label;
                 echo $extra_info;
                 echo '</label>';
                 echo '</div>';
@@ -409,6 +469,43 @@ class System_Cursos_CPT_Manager
 
         echo '</div>';
         echo '<p class="description">Selecione as aulas que pertencem a este curso. Atenção: Se uma aula já estiver em outro curso, ela será movida para este.</p>';
+    }
+
+    /**
+     * Renderiza metabox de criacao rapida de aulas no curso
+     */
+    public function render_curso_quick_add_aulas_metabox($post)
+    {
+        echo '<style>
+            #curso_novas_aulas_list .sc-nova-aula-row {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 8px;
+                align-items: center;
+            }
+            #curso_novas_aulas_list .sc-nova-aula-row input[type="text"] {
+                flex: 1;
+            }
+        </style>';
+
+        echo '<p class="description">Clique em + para adicionar novas aulas rapidamente. As novas aulas serao criadas em rascunho e vinculadas a este curso quando voce salvar.</p>';
+        echo '<div id="curso_novas_aulas_list">';
+        echo '<div class="sc-nova-aula-row">';
+        echo '<input type="text" name="curso_novas_aulas[]" value="" class="widefat" placeholder="Nome da nova aula">';
+        echo '<button type="button" class="button button-link-delete btn-remove-nova-aula-row">Remover</button>';
+        echo '</div>';
+        echo '</div>';
+        echo '<p style="margin-top:10px;">';
+        echo '<button type="button" class="button" id="btn_add_nova_aula_row">+ Nova aula</button>';
+        echo '</p>';
+        echo '<p class="description">Depois de salvar, voce pode abrir cada aula para completar conteudo, video e materiais.</p>';
+
+        echo '<script type="text/template" id="tmpl-curso-nova-aula-row">';
+        echo '<div class="sc-nova-aula-row">';
+        echo '<input type="text" name="curso_novas_aulas[]" value="" class="widefat" placeholder="Nome da nova aula">';
+        echo '<button type="button" class="button button-link-delete btn-remove-nova-aula-row">Remover</button>';
+        echo '</div>';
+        echo '</script>';
     }
 
     /**
@@ -691,6 +788,36 @@ class System_Cursos_CPT_Manager
                 if (!in_array($aid, $aulas_selecionadas)) {
                     // Remover o curso desta aula
                     delete_post_meta($aid, 'curso');
+                }
+            }
+
+            // 3. Criacao rapida de novas aulas dentro da tela do curso
+            $novas_aulas = isset($_POST['curso_novas_aulas']) ? (array) $_POST['curso_novas_aulas'] : [];
+            $novas_aulas = array_map('sanitize_text_field', $novas_aulas);
+            $novas_aulas = array_filter(array_map('trim', $novas_aulas), static function ($titulo) {
+                return $titulo !== '';
+            });
+
+            if (!empty($novas_aulas)) {
+                $capability_to_create = 'edit_posts';
+                $aula_post_type = get_post_type_object('aula');
+                if ($aula_post_type && isset($aula_post_type->cap->create_posts)) {
+                    $capability_to_create = $aula_post_type->cap->create_posts;
+                }
+
+                if (current_user_can($capability_to_create)) {
+                    foreach ($novas_aulas as $titulo_aula) {
+                        $new_lesson_id = wp_insert_post([
+                            'post_type' => 'aula',
+                            'post_status' => 'draft',
+                            'post_title' => $titulo_aula,
+                            'post_author' => get_current_user_id(),
+                        ], true);
+
+                        if (!is_wp_error($new_lesson_id) && $new_lesson_id > 0) {
+                            update_post_meta($new_lesson_id, 'curso', $post_id);
+                        }
+                    }
                 }
             }
         }

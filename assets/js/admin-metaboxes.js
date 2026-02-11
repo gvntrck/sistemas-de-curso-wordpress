@@ -88,4 +88,63 @@ jQuery(document).ready(function ($) {
         customUploader.open();
     });
 
+    // --------------------------------------------------------------------------
+    // 3. Filtro do metabox "Gerenciar Aulas do Curso"
+    // --------------------------------------------------------------------------
+    function updateCourseLessonsFilter() {
+        var $list = $('#curso_aulas_manager_list');
+        if (!$list.length) {
+            return;
+        }
+
+        var selectedFilter = $('input[name="curso_aulas_filter_view"]:checked').val() || 'course';
+        var visibleCount = 0;
+
+        $list.find('.sc-aula-item').each(function () {
+            var $item = $(this);
+            var isInCourse = String($item.attr('data-in-course')) === '1';
+            var shouldShow = selectedFilter === 'all' || isInCourse;
+
+            $item.toggle(shouldShow);
+            if (shouldShow) {
+                visibleCount += 1;
+            }
+        });
+
+        $('#curso_aulas_manager_empty_filter').toggle(visibleCount === 0);
+    }
+
+    $(document).on('change', 'input[name="curso_aulas_filter_view"]', updateCourseLessonsFilter);
+    updateCourseLessonsFilter();
+
+    // --------------------------------------------------------------------------
+    // 4. Criacao rapida de aulas na tela do curso
+    // --------------------------------------------------------------------------
+    function addQuickLessonRow() {
+        var template = $('#tmpl-curso-nova-aula-row').html();
+        if (!template) {
+            return;
+        }
+
+        $('#curso_novas_aulas_list').append(template);
+        $('#curso_novas_aulas_list .sc-nova-aula-row:last-child input[type="text"]').trigger('focus');
+    }
+
+    $('#btn_add_nova_aula_row').on('click', function (e) {
+        e.preventDefault();
+        addQuickLessonRow();
+    });
+
+    $(document).on('click', '.btn-remove-nova-aula-row', function (e) {
+        e.preventDefault();
+
+        var $rows = $('#curso_novas_aulas_list .sc-nova-aula-row');
+        if ($rows.length <= 1) {
+            $rows.find('input[type="text"]').val('');
+            return;
+        }
+
+        $(this).closest('.sc-nova-aula-row').remove();
+    });
+
 });
