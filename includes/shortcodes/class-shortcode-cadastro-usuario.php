@@ -43,29 +43,43 @@ class System_Cursos_Shortcode_Cadastro
 
     public function handle_csv_download()
     {
-        if (isset($_GET['action']) && $_GET['action'] == 'download_cadastro_csv_template') {
-            // Limpa qualquer buffer de saída anterior para evitar HTML no arquivo
-            if (ob_get_level()) {
-                ob_end_clean();
-            }
-
-            $filename = 'modelo_importacao_usuarios.csv';
-            $header = ['nome', 'sobrenome', 'email', 'cpf', 'aniversario', 'instagram', 'cep', 'rua', 'numero', 'complemento', 'bairro', 'cidade', 'estado'];
-
-            header('Content-Type: text/csv; charset=utf-8');
-            header('Content-Disposition: attachment; filename=' . $filename);
-            header('Pragma: no-cache');
-            header('Expires: 0');
-
-            $output = fopen('php://output', 'w');
-
-            // Adiciona BOM para abrir corretamente no Excel (opcional, mas recomendado para UTF-8)
-            fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-            fputcsv($output, $header);
-            fclose($output);
-            exit;
+        $action = isset($_GET['action']) ? sanitize_key(wp_unslash($_GET['action'])) : '';
+        if ($action !== 'download_cadastro_csv_template') {
+            return;
         }
+
+        if (!$this->user_can_access()) {
+            wp_die('Acesso negado.', 'Acesso negado', ['response' => 403]);
+        }
+
+        if (
+            !isset($_GET['cadastro_download_nonce']) ||
+            !wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['cadastro_download_nonce'])), 'download_cadastro_csv_template')
+        ) {
+            wp_die('Requisição inválida.', 'Requisição inválida', ['response' => 403]);
+        }
+
+        // Limpa qualquer buffer de saída anterior para evitar HTML no arquivo
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        $filename = 'modelo_importacao_usuarios.csv';
+        $header = ['nome', 'sobrenome', 'email', 'cpf', 'aniversario', 'instagram', 'cep', 'rua', 'numero', 'complemento', 'bairro', 'cidade', 'estado'];
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . $filename);
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+
+        // Adiciona BOM para abrir corretamente no Excel (opcional, mas recomendado para UTF-8)
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+        fputcsv($output, $header);
+        fclose($output);
+        exit;
     }
 
     public function convert_date_to_iso($date)
@@ -98,6 +112,12 @@ class System_Cursos_Shortcode_Cadastro
         $output = '';
         $message = '';
         $import_message = '';
+        $active_tab = 'manual';
+        $download_url = wp_nonce_url(
+            add_query_arg('action', 'download_cadastro_csv_template', home_url('/')),
+            'download_cadastro_csv_template',
+            'cadastro_download_nonce'
+        );
 
         // [PROCESSAR FORMULÁRIO MANUAL]
         if (isset($_POST['submit_cadastro_usuario']) && isset($_POST['cadastro_nonce_field']) && wp_verify_nonce($_POST['cadastro_nonce_field'], 'cadastro_usuario_action')) {
@@ -148,6 +168,7 @@ class System_Cursos_Shortcode_Cadastro
 
         // [PROCESSAR IMPORTAÇÃO CSV]
         if (isset($_POST['submit_csv_import']) && isset($_POST['import_nonce_field']) && wp_verify_nonce($_POST['import_nonce_field'], 'import_usuario_action')) {
+            $active_tab = 'import';
             if (!empty($_FILES['csv_file']['tmp_name'])) {
                 $file = $_FILES['csv_file']['tmp_name'];
                 $handle = fopen($file, "r");
@@ -229,6 +250,8 @@ class System_Cursos_Shortcode_Cadastro
             } else {
                 $import_message = '<div class="mc-alert mc-error">Por favor, selecione um arquivo CSV.</div>';
             }
+        } elseif (isset($_POST['submit_csv_import'])) {
+            $active_tab = 'import';
         }
 
         ob_start();
@@ -292,13 +315,13 @@ class System_Cursos_Shortcode_Cadastro
             </style>
 
             <div class="cadastro-tabs">
-                <div class="cadastro-tab active" onclick="openTab(event, 'tab-manual')">Cadastro Manual</div>
-                <div class="cadastro-tab" onclick="openTab(event, 'tab-import')">Importar CSV</div>
+                <div class="cadastro-tab <?php echo $active_tab === 'manual' ? 'active' : ''; ?>" data-tab="tab-manual">Cadastro Manual</div>
+                <div class="cadastro-tab <?php echo $active_tab === 'import' ? 'active' : ''; ?>" data-tab="tab-import">Importar CSV</div>
             </div>
 
             <div class="mc-body">
                 <!-- ABA MANUAL -->
-                <div id="tab-manual" class="cadastro-content active">
+                <div id="tab-manual" class="cadastro-content <?php echo $active_tab === 'manual' ? 'active' : ''; ?>">
                     <?php echo $message; ?>
 
                     <form method="post">
@@ -398,15 +421,15 @@ class System_Cursos_Shortcode_Cadastro
                 </div>
 
                 <!-- ABA IMPORTAR -->
-                <div id="tab-import" class="cadastro-content">
+                <div id="tab-import" class="cadastro-content <?php echo $active_tab === 'import' ? 'active' : ''; ?>">
                     <?php echo $import_message; ?>
 
                     <div style="text-align: center; margin-bottom: 30px;">
                         <p style="color: var(--text-muted);">Baixe o modelo, preencha com os dados dos alunos e faça o upload
                             para cadastrar em massa.</p>
-                        <a href="?action=download_cadastro_csv_template" class="mc-btn-save"
+                        <a href="<?php echo esc_url($download_url); ?>" class="mc-btn-save"
                             style="background-color: transparent; border: 1px solid var(--border-input); color: var(--text-muted); width: auto; display: inline-block; padding: 10px 20px;"
-                            target="_blank">
+                            target="_blank" rel="noopener noreferrer">
                             <span style="margin-right: 5px;">⬇️</span> Baixar Modelo CSV
                         </a>
                     </div>
@@ -432,28 +455,35 @@ class System_Cursos_Shortcode_Cadastro
         </div>
 
         <script>
-            function openTab(evt, tabName) {
-                var i, content, tablinks;
-                content = document.getElementsByClassName("cadastro-content");
-                for (i = 0; i < content.length; i++) {
-                    content[i].classList.remove("active");
-                    content[i].style.display = "none";
-                }
-                tablinks = document.getElementsByClassName("cadastro-tab");
-                for (i = 0; i < tablinks.length; i++) {
-                    tablinks[i].classList.remove("active");
-                }
-
-                var activeContent = document.getElementById(tabName);
-                activeContent.style.display = "block";
-                setTimeout(function () {
-                    activeContent.classList.add("active");
-                }, 10);
-
-                evt.currentTarget.classList.add("active");
-            }
-
             document.addEventListener('DOMContentLoaded', function () {
+                var tabs = document.querySelectorAll('.cadastro-tab[data-tab]');
+                tabs.forEach(function (tab) {
+                    tab.addEventListener('click', function () {
+                        var tabName = this.getAttribute('data-tab');
+                        if (!tabName) return;
+
+                        var content = document.getElementsByClassName('cadastro-content');
+                        for (var i = 0; i < content.length; i++) {
+                            content[i].classList.remove('active');
+                            content[i].style.display = 'none';
+                        }
+
+                        var tablinks = document.getElementsByClassName('cadastro-tab');
+                        for (var j = 0; j < tablinks.length; j++) {
+                            tablinks[j].classList.remove('active');
+                        }
+
+                        var activeContent = document.getElementById(tabName);
+                        if (!activeContent) return;
+                        activeContent.style.display = 'block';
+                        setTimeout(function () {
+                            activeContent.classList.add('active');
+                        }, 10);
+
+                        tab.classList.add('active');
+                    });
+                });
+
                 var activeTab = document.querySelector('.cadastro-content.active');
                 if (activeTab) activeTab.style.display = 'block';
 

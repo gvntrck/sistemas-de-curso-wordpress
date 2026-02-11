@@ -45,10 +45,31 @@ class System_Cursos_Shortcode_Painel
             );
         }
 
-        // Conteúdo inicial: Meus Cursos
-        $GLOBALS['lms_painel_mode'] = true;
-        $initial_content = do_shortcode('[meus-cursos]');
-        unset($GLOBALS['lms_painel_mode']);
+        // Resolve view inicial a partir da URL para suportar POST de formulários no painel.
+        $requested_view = isset($_GET['lms_view']) ? sanitize_key(wp_unslash($_GET['lms_view'])) : 'inicio';
+        $requested_curso_id = isset($_GET['curso_id']) ? (int) $_GET['curso_id'] : 0;
+        $requested_aluno_id = isset($_GET['aluno_id']) ? (int) $_GET['aluno_id'] : 0;
+        $requested_forcar_emissao = isset($_GET['forcar_emissao']) ? (int) $_GET['forcar_emissao'] : 0;
+
+        $initial_view = 'inicio';
+        $initial_curso_id = 0;
+        $initial_content = false;
+
+        if (!empty($requested_view)) {
+            $initial_content = $this->get_view_html($requested_view, $requested_curso_id, $requested_aluno_id, $requested_forcar_emissao);
+            if ($initial_content !== false) {
+                $initial_view = $requested_view;
+                if (in_array($requested_view, ['curso', 'certificado-view'], true) && $requested_curso_id > 0) {
+                    $initial_curso_id = $requested_curso_id;
+                }
+            }
+        }
+
+        if ($initial_content === false) {
+            $initial_view = 'inicio';
+            $initial_curso_id = 0;
+            $initial_content = $this->get_view_html('inicio');
+        }
 
         ob_start();
         ?>
@@ -168,8 +189,8 @@ class System_Cursos_Shortcode_Painel
             (function () {
                 'use strict';
 
-                var currentView = 'inicio';
-                var currentCursoId = null;
+                var currentView = <?php echo wp_json_encode($initial_view); ?>;
+                var currentCursoId = <?php echo $initial_curso_id > 0 ? (int) $initial_curso_id : 'null'; ?>;
                 var viewCache = {};
                 var ajaxUrl = '<?php echo admin_url('admin-ajax.php'); ?>';
                 var nonce = '<?php echo wp_create_nonce('lms_painel_nonce'); ?>';
@@ -177,8 +198,17 @@ class System_Cursos_Shortcode_Painel
                 // Cache da view inicial
                 var initialContent = document.getElementById('lms-view-content');
                 if (initialContent) {
-                    viewCache['inicio'] = initialContent.innerHTML;
-                    viewCache['meus-cursos'] = initialContent.innerHTML;
+                    var initialCacheKey = currentView;
+                    if ((currentView === 'curso' || currentView === 'certificado-view') && currentCursoId) {
+                        initialCacheKey = currentView + '-' + currentCursoId;
+                    }
+                    viewCache[initialCacheKey] = initialContent.innerHTML;
+
+                    if (currentView === 'inicio') {
+                        viewCache['meus-cursos'] = initialContent.innerHTML;
+                    } else if (currentView === 'meus-cursos') {
+                        viewCache['inicio'] = initialContent.innerHTML;
+                    }
                 }
 
                 // Verificar se há view na URL (?lms_view=xxx&curso_id=yyy)
@@ -325,32 +355,36 @@ class System_Cursos_Shortcode_Painel
                         window.SystemCursos.initMasks(viewContent || document);
                     }
 
-                    // Re-inicializar auto-preenchimento de CEP
-                    var cepField = document.getElementById('mc_cep');
-                    if (cepField && !cepField._cepBound) {
+                    // Re-inicializar auto-preenchimento de CEP (Minha Conta e Cadastro)
+                    function bindCepAutoFill(fieldId) {
+                        var cepField = document.getElementById(fieldId);
+                        if (!cepField || cepField._cepBound) return;
+
                         cepField._cepBound = true;
                         cepField.addEventListener('blur', function () {
                             var cep = this.value.replace(/\D/g, '');
-                            if (cep.length === 8) {
-                                document.body.style.cursor = 'wait';
-                                fetch('https://viacep.com.br/ws/' + cep + '/json/')
-                                    .then(function (r) { return r.json(); })
-                                    .then(function (data) {
-                                        document.body.style.cursor = 'default';
-                                        if (!data.erro) {
-                                            var map = { 'rua': data.logradouro, 'bairro': data.bairro, 'cidade': data.localidade, 'estado': data.uf };
-                                            for (var id in map) {
-                                                var input = document.getElementById(id);
-                                                if (input) input.value = map[id] || '';
-                                            }
-                                            var numInput = document.getElementById('numero');
-                                            if (numInput) numInput.focus();
+                            if (cep.length !== 8) return;
+
+                            document.body.style.cursor = 'wait';
+                            fetch('https://viacep.com.br/ws/' + cep + '/json/')
+                                .then(function (r) { return r.json(); })
+                                .then(function (data) {
+                                    document.body.style.cursor = 'default';
+                                    if (!data.erro) {
+                                        var map = { 'rua': data.logradouro, 'bairro': data.bairro, 'cidade': data.localidade, 'estado': data.uf };
+                                        for (var id in map) {
+                                            var input = document.getElementById(id);
+                                            if (input) input.value = map[id] || '';
                                         }
-                                    })
-                                    .catch(function () { document.body.style.cursor = 'default'; });
-                            }
+                                        var numInput = document.getElementById('numero');
+                                        if (numInput) numInput.focus();
+                                    }
+                                })
+                                .catch(function () { document.body.style.cursor = 'default'; });
                         });
                     }
+                    bindCepAutoFill('mc_cep');
+                    bindCepAutoFill('cep');
 
                     // Re-inicializar Lucide icons
                     if (typeof lucide !== 'undefined') {
@@ -484,7 +518,16 @@ class System_Cursos_Shortcode_Painel
 
                 // Carregar view da URL se especificada
                 if (urlView && urlView !== 'inicio') {
-                    loadView(urlView, false, urlCursoId || null);
+                    var sameView = (urlView === currentView);
+                    var sameCourseScope = true;
+                    if (urlView === 'curso' || urlView === 'certificado-view') {
+                        sameCourseScope = String(urlCursoId || '') === String(currentCursoId || '');
+                    }
+
+                    if (!(sameView && sameCourseScope)) {
+                        loadView(urlView, false, urlCursoId || null);
+                    }
+
                     urlView = null; // Limpa para evitar reload
                 }
             })();
