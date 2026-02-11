@@ -3,7 +3,6 @@ Log de Atividades
 aulas em ordem depende do curso
 nome do curso no resultado de busca de aula
 
-liberar aula e trilha com agenda e mensagem de aula bloqueada até a data de liberação
 
 
 
