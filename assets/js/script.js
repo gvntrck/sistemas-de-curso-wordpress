@@ -130,6 +130,88 @@ document.addEventListener('DOMContentLoaded', function () {
 // Global Namespace for specific component logic (initMasks já registrado acima)
 window.SystemCursos = window.SystemCursos || {};
 
+function sistemaCursosResolveAjaxUrl(preferredUrl) {
+    if (preferredUrl) return preferredUrl;
+
+    var listaAulas = document.querySelector('.lista-aulas[data-ajax-url]');
+    if (listaAulas) {
+        var listaAulasUrl = listaAulas.getAttribute('data-ajax-url');
+        if (listaAulasUrl) return listaAulasUrl;
+    }
+
+    if (window.quizFrontend && window.quizFrontend.ajaxUrl) {
+        return window.quizFrontend.ajaxUrl;
+    }
+
+    return '';
+}
+
+function sistemaCursosApplyOverallProgress(progressValue) {
+    var progress = parseInt(progressValue, 10);
+    if (isNaN(progress)) progress = 0;
+    progress = Math.max(0, Math.min(100, progress));
+
+    var wrappers = document.querySelectorAll('.barra-progresso-geral-wrapper');
+    wrappers.forEach(function (wrapper) {
+        var fill = wrapper.querySelector('.barra-progresso-geral-fill');
+        var percentEl = wrapper.querySelector('.barra-progresso-geral-percent');
+
+        if (!percentEl) {
+            var header = wrapper.querySelector('.barra-progresso-geral-header');
+            if (header) {
+                var spans = header.querySelectorAll('span');
+                if (spans.length > 1) {
+                    percentEl = spans[spans.length - 1];
+                }
+            }
+        }
+
+        if (fill) fill.style.width = progress + '%';
+        if (percentEl) percentEl.textContent = progress + '%';
+    });
+}
+
+window.SystemCursos.refreshOverallProgressBar = function (preferredAjaxUrl) {
+    var ajaxUrl = sistemaCursosResolveAjaxUrl(preferredAjaxUrl);
+    if (!ajaxUrl) return Promise.resolve(null);
+
+    var formData = new FormData();
+    formData.append('action', 'sistema_cursos_get_overall_progress');
+
+    return fetch(ajaxUrl, {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin'
+    })
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+            if (data && data.success && data.data && typeof data.data.progress !== 'undefined') {
+                sistemaCursosApplyOverallProgress(data.data.progress);
+                return data.data.progress;
+            }
+            return null;
+        })
+        .catch(function (err) {
+            console.error('Erro ao atualizar barra de progresso geral:', err);
+            return null;
+        });
+};
+
+window.SystemCursos.applyOverallProgress = sistemaCursosApplyOverallProgress;
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.SystemCursos._quizProgressListenerBound) return;
+    if (typeof window.jQuery === 'undefined') return;
+
+    window.SystemCursos._quizProgressListenerBound = true;
+
+    window.jQuery(document).on('sistema_cursos_lesson_competed sistema_cursos_lesson_completed', function () {
+        if (window.SystemCursos && window.SystemCursos.refreshOverallProgressBar) {
+            window.SystemCursos.refreshOverallProgressBar();
+        }
+    });
+});
+
 window.SystemCursos.initListaAulas = function (containerId) {
     var container = document.getElementById(containerId);
     if (!container) return;
@@ -230,7 +312,10 @@ window.SystemCursos.initListaAulas = function (containerId) {
                     if (data.success) {
                         var concluida = data.data.concluida;
                         if (concluida) {
-                            aulasConcluidas.push(parseInt(aulaId));
+                            var parsedAulaId = parseInt(aulaId, 10);
+                            if (aulasConcluidas.indexOf(parsedAulaId) === -1) {
+                                aulasConcluidas.push(parsedAulaId);
+                            }
                             btn.classList.add('is-concluida');
                             btn.querySelector('.lista-aulas__btn-texto').textContent = 'Concluído';
                         } else {
@@ -241,6 +326,9 @@ window.SystemCursos.initListaAulas = function (containerId) {
                         }
                         atualizarItemLista(aulaId, concluida);
                         atualizarBarraProgresso();
+                        if (window.SystemCursos && window.SystemCursos.refreshOverallProgressBar) {
+                            window.SystemCursos.refreshOverallProgressBar(ajaxUrl);
+                        }
                     } else {
                         alert(data.data.message || 'Erro ao atualizar.');
                     }

@@ -19,6 +19,7 @@ class System_Cursos_Progress
     {
         add_action('init', [$this, 'create_table']);
         add_action('wp_ajax_lista_aulas_toggle_concluida', [$this, 'ajax_toggle_concluida']);
+        add_action('wp_ajax_sistema_cursos_get_overall_progress', [$this, 'ajax_get_overall_progress']);
     }
 
     public function create_table()
@@ -171,6 +172,21 @@ class System_Cursos_Progress
             self::update_user_progress($user_id, $curso_id);
             wp_send_json_success(['concluida' => true, 'message' => 'Aula concluída!']);
         }
+    }
+
+    public function ajax_get_overall_progress()
+    {
+        $user_id = get_current_user_id();
+
+        if ($user_id <= 0) {
+            wp_send_json_error(['message' => 'Voce precisa estar logado para consultar o progresso.']);
+        }
+
+        $progress = self::get_overall_progress($user_id);
+
+        wp_send_json_success([
+            'progress' => (int) $progress
+        ]);
     }
 
     /**

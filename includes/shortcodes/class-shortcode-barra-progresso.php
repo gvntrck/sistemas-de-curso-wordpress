@@ -37,7 +37,7 @@ class System_Cursos_Shortcode_Barra_Progresso
         <div class="barra-progresso-geral-wrapper">
             <div class="barra-progresso-geral-header">
                 <span>Seu Progresso</span>
-                <span>
+                <span class="barra-progresso-geral-percent">
                     <?php echo $porcentagem_geral; ?>%
                 </span>
             </div>
