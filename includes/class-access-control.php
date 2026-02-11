@@ -226,10 +226,135 @@ class System_Cursos_Access_Control
 
 
     /**
-     * Verifica acesso considerando Grupos e Trilhas
-     * Substitui ou complementa a lógica acima.
-     * Como o método has_access acima é usado em todo o plugin, vamos modificá-lo para ser o ponto central.
-     * Mas para manter compatibilidade e clareza, vamos renomear a lógica de banco para 'check_direct_access' e chamar dentro de has_access.
+     * Utilitarios para fluxo de redefinicao de senha no admin.
+     */
+    /**
+     * Monta o link padrao do WordPress para redefinicao de senha.
+     */
+    private static function get_password_reset_link($user)
+    {
+        $key = get_password_reset_key($user);
+        if (is_wp_error($key)) {
+            return $key;
+        }
+
+        return network_site_url(
+            'wp-login.php?action=rp&key=' . rawurlencode($key) . '&login=' . rawurlencode($user->user_login),
+            'login'
+        );
+    }
+
+    /**
+     * Gera o template HTML (com CSS inline) para e-mail de redefinicao.
+     */
+    private static function get_password_reset_email_html($user, $reset_url)
+    {
+        $nome = trim($user->first_name);
+        if ($nome === '') {
+            $nome = $user->display_name ?: $user->user_login;
+        }
+
+        $site_name = wp_specialchars_decode(get_option('blogname'), ENT_QUOTES);
+        $support_email = get_option('admin_email');
+        $support_email_link = is_email($support_email) ? 'mailto:' . sanitize_email($support_email) : '';
+        $home_url = home_url('/');
+        $reset_url_escaped = esc_url($reset_url);
+        $nome_escaped = esc_html($nome);
+        $site_name_escaped = esc_html($site_name);
+
+        $support_html = $support_email_link !== ''
+            ? '<a href="' . esc_url($support_email_link) . '" style="color:#6b7280; text-decoration:underline;">' . esc_html($support_email) . '</a>'
+            : '<span style="color:#6b7280;">nosso suporte</span>';
+
+        return '
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0; padding:0; background-color:#e8ecf1; font-family:Arial,Helvetica,sans-serif;">
+  <tr>
+    <td align="center" style="padding:28px 12px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px; margin:0 auto;">
+        <tr>
+          <td align="center" style="padding-bottom:18px;">
+            <div style="display:inline-block; background:#111111; color:#ffffff; font-size:22px; font-weight:700; line-height:1; border-radius:999px; width:56px; height:56px; text-align:center;">
+              <span style="display:inline-block; line-height:56px;">O</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#ffffff; border:1px solid #d9dde3; border-radius:8px; padding:32px;">
+            <p style="margin:0 0 16px; font-size:38px; line-height:1.2; color:#111111;">Oi <strong>' . $nome_escaped . '</strong>,</p>
+            <p style="margin:0 0 24px; font-size:18px; line-height:1.55; color:#374151;">
+              Precisa redefinir sua senha? Sem problema. Clique no botao abaixo para criar uma nova senha.
+            </p>
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+              <tr>
+                <td align="center" style="border-radius:4px; background:#111111;">
+                  <a href="' . $reset_url_escaped . '" style="display:inline-block; padding:14px 28px; font-size:16px; line-height:1; font-weight:700; color:#ffffff; text-decoration:none; text-transform:uppercase; letter-spacing:0.4px;">
+                    Redefinir senha
+                  </a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:0 0 18px; font-size:16px; line-height:1.6; color:#6b7280;">
+              Se voce nao solicitou esta redefinicao, ignore este e-mail ou entre em contato com ' . $support_html . '.
+            </p>
+            <p style="margin:0; font-size:16px; line-height:1.6; color:#6b7280;">
+              Obrigado,<br>' . $site_name_escaped . '
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td align="center" style="padding-top:20px; color:#6b7280; font-size:13px; line-height:1.5;">
+            <p style="margin:0 0 8px;">&copy; ' . $site_name_escaped . '</p>
+            <p style="margin:0;">
+              <a href="' . esc_url($home_url) . '" style="color:#6b7280; text-decoration:underline;">Acessar site</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>';
+    }
+
+    /**
+     * Dispara o e-mail de redefinicao para um aluno especifico.
+     */
+    private static function send_student_password_reset_email($user_id)
+    {
+        $user = get_user_by('id', (int) $user_id);
+        if (!$user || !is_a($user, 'WP_User')) {
+            return new WP_Error('invalid_user', 'Usuario invalido.');
+        }
+
+        if (!is_email($user->user_email)) {
+            return new WP_Error('invalid_email', 'Usuario sem e-mail valido.');
+        }
+
+        $reset_url = self::get_password_reset_link($user);
+        if (is_wp_error($reset_url)) {
+            return $reset_url;
+        }
+
+        $subject = sprintf(
+            '[%s] Redefinicao de senha',
+            wp_specialchars_decode(get_option('blogname'), ENT_QUOTES)
+        );
+
+        $headers = [
+            'Content-Type: text/html; charset=UTF-8'
+        ];
+
+        $message = self::get_password_reset_email_html($user, $reset_url);
+        $sent = wp_mail($user->user_email, $subject, $message, $headers);
+
+        if (!$sent) {
+            return new WP_Error('mail_failed', 'Falha ao enviar e-mail.');
+        }
+
+        return true;
+    }
+
+    /**
+     * Verifica se o aluno possui acesso ao curso.
      */
     public static function has_access($user_id, $curso_id)
     {
@@ -1235,6 +1360,21 @@ class System_Cursos_Access_Control
                 exit;
             }
         }
+
+        // Solicitar redefinicao de senha para aluno
+        if (isset($_POST['request_student_password_reset']) && wp_verify_nonce($_POST['_wpnonce'], 'aluno_request_password_reset')) {
+            $user_id = (int) $_POST['user_id'];
+
+            if ($user_id > 0 && current_user_can('edit_user', $user_id)) {
+                $result = self::send_student_password_reset_email($user_id);
+                $msg = is_wp_error($result) ? 'reset_senha_erro' : 'reset_senha_enviado';
+            } else {
+                $msg = 'reset_senha_erro';
+            }
+
+            wp_redirect(admin_url('admin.php?page=acesso-cursos-alunos&action=view&user_id=' . $user_id . '&msg=' . $msg));
+            exit;
+        }
     }
 
     public function render_admin_page()
@@ -1590,7 +1730,8 @@ class System_Cursos_Access_Control
             </h1>
 
             <?php if (isset($_GET['msg'])): ?>
-                <div class="notice notice-success is-dismissible">
+                <div
+                    class="notice <?php echo ($_GET['msg'] === 'reset_senha_erro') ? 'notice-error' : 'notice-success'; ?> is-dismissible">
                     <p>
                         <?php
                         switch ($_GET['msg']) {
@@ -1611,6 +1752,12 @@ class System_Cursos_Access_Control
                                 break;
                             case 'dados_atualizados':
                                 echo 'Dados cadastrais e senha atualizados com sucesso!';
+                                break;
+                            case 'reset_senha_enviado':
+                                echo 'E-mail de redefinicao enviado para o aluno.';
+                                break;
+                            case 'reset_senha_erro':
+                                echo 'Nao foi possivel enviar o e-mail de redefinicao.';
                                 break;
                         }
                         ?>
@@ -1678,6 +1825,12 @@ class System_Cursos_Access_Control
                             Cadastrais</button>
                         <button type="button" class="button"
                             onclick="document.getElementById('modal-alterar-senha').style.display='flex'">Alterar Senha</button>
+                        <form method="post" style="margin: 0;">
+                            <?php wp_nonce_field('aluno_request_password_reset'); ?>
+                            <input type="hidden" name="request_student_password_reset" value="1">
+                            <input type="hidden" name="user_id" value="<?php echo (int) $user->ID; ?>">
+                            <button type="submit" class="button">Solicitar redefinicao</button>
+                        </form>
                         <a href="<?php echo admin_url('user-edit.php?user_id=' . $user->ID); ?>" class="button">Editar Perfil
                             Completo</a>
                     </div>
