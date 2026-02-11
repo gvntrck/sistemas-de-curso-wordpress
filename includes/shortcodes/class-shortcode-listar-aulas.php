@@ -171,10 +171,11 @@ class System_Cursos_Shortcode_Listar_Aulas
                     <h2 class="lista-aulas__titulo">
                         <?php echo $titulo; ?>
                     </h2>
-                    <?php if ($isLoggedIn && !$esconderBotaoManual): ?>
+                    <?php if ($isLoggedIn): ?>
                         <button type="button"
                             class="lista-aulas__btn-concluir <?php echo $aulaAtualConcluida ? 'is-concluida' : ''; ?>"
-                            data-aula-id="<?php echo $aulaId; ?>" data-curso-id="<?php echo $cursoId; ?>">
+                            data-aula-id="<?php echo $aulaId; ?>" data-curso-id="<?php echo $cursoId; ?>"
+                            <?php if ($esconderBotaoManual): ?>style="display:none;"<?php endif; ?>>
                             <svg class="lista-aulas__btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="20 6 9 17 4 12"></polyline>
