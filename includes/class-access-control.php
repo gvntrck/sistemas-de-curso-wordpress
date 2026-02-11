@@ -20,6 +20,8 @@ class System_Cursos_Access_Control
         add_action('admin_menu', [$this, 'admin_menu'], 20);
         add_action('admin_init', [$this, 'admin_process']);
         add_action('wp_login', [$this, 'track_user_login'], 10, 2);
+        add_action('wp_ajax_sc_admin_get_course_lessons_progress', [$this, 'ajax_get_course_lessons_progress']);
+        add_action('wp_ajax_sc_admin_update_course_lesson_progress', [$this, 'ajax_update_course_lesson_progress']);
     }
 
     /**
@@ -737,8 +739,274 @@ class System_Cursos_Access_Control
         ];
     }
 
+    private static function get_course_lessons($curso_id)
+    {
+        $curso_id = (int) $curso_id;
+        if ($curso_id <= 0) {
+            return [];
+        }
+
+        return get_posts([
+            'post_type' => 'aula',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'orderby' => 'menu_order',
+            'order' => 'ASC',
+            'meta_query' => [
+                'relation' => 'OR',
+                [
+                    'key' => 'curso',
+                    'value' => $curso_id,
+                    'compare' => '=',
+                ],
+                [
+                    'key' => 'curso',
+                    'value' => '"' . $curso_id . '"',
+                    'compare' => 'LIKE',
+                ],
+            ],
+        ]);
+    }
+
+    private static function lesson_belongs_to_course($aula_id, $curso_id)
+    {
+        $aula_id = (int) $aula_id;
+        $curso_id = (int) $curso_id;
+
+        if ($aula_id <= 0 || $curso_id <= 0) {
+            return false;
+        }
+
+        $lesson = get_post($aula_id);
+        if (!$lesson || $lesson->post_type !== 'aula') {
+            return false;
+        }
+
+        $curso_meta = get_post_meta($aula_id, 'curso', true);
+
+        if (is_array($curso_meta)) {
+            $curso_meta = array_map('intval', $curso_meta);
+            return in_array($curso_id, $curso_meta, true);
+        }
+
+        if (is_numeric($curso_meta)) {
+            return (int) $curso_meta === $curso_id;
+        }
+
+        if (is_string($curso_meta)) {
+            if ((int) $curso_meta === $curso_id) {
+                return true;
+            }
+
+            return strpos($curso_meta, '"' . (string) $curso_id . '"') !== false;
+        }
+
+        return false;
+    }
+
+    private static function get_manual_completion_score($aula_id)
+    {
+        $aula_id = (int) $aula_id;
+        if ($aula_id <= 0) {
+            return 0;
+        }
+
+        if (!class_exists('System_Cursos_Quiz_Process') || !method_exists('System_Cursos_Quiz_Process', 'get_quiz_data')) {
+            return 0;
+        }
+
+        $quiz_data = System_Cursos_Quiz_Process::get_quiz_data($aula_id);
+        if (!is_array($quiz_data)) {
+            return 0;
+        }
+
+        $questions = isset($quiz_data['questions']) && is_array($quiz_data['questions']) ? $quiz_data['questions'] : [];
+        if (empty($questions)) {
+            return 0;
+        }
+
+        return max(0, min(100, (int) ($quiz_data['passing_score'] ?? 0)));
+    }
+
+    private static function set_manual_lesson_completion($user_id, $curso_id, $aula_id, $completed)
+    {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'progresso_aluno';
+
+        $user_id = (int) $user_id;
+        $curso_id = (int) $curso_id;
+        $aula_id = (int) $aula_id;
+
+        if ($user_id <= 0 || $curso_id <= 0 || $aula_id <= 0) {
+            return false;
+        }
+
+        if ($completed) {
+            $pontuacao = self::get_manual_completion_score($aula_id);
+            $data_conclusao = current_time('mysql');
+
+            $existing_id = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM $table_name WHERE user_id = %d AND aula_id = %d",
+                $user_id,
+                $aula_id
+            ));
+
+            if ($existing_id > 0) {
+                $updated = $wpdb->update(
+                    $table_name,
+                    [
+                        'curso_id' => $curso_id,
+                        'pontuacao' => $pontuacao,
+                        'tentativas' => 1,
+                        'data_conclusao' => $data_conclusao
+                    ],
+                    ['id' => $existing_id],
+                    ['%d', '%d', '%d', '%s'],
+                    ['%d']
+                );
+
+                if ($updated === false) {
+                    return false;
+                }
+            } else {
+                $inserted = $wpdb->insert(
+                    $table_name,
+                    [
+                        'user_id' => $user_id,
+                        'aula_id' => $aula_id,
+                        'curso_id' => $curso_id,
+                        'pontuacao' => $pontuacao,
+                        'tentativas' => 1,
+                        'data_conclusao' => $data_conclusao
+                    ],
+                    ['%d', '%d', '%d', '%d', '%d', '%s']
+                );
+
+                if (!$inserted) {
+                    return false;
+                }
+            }
+        } else {
+            $deleted = $wpdb->delete(
+                $table_name,
+                ['user_id' => $user_id, 'aula_id' => $aula_id],
+                ['%d', '%d']
+            );
+
+            if ($deleted === false) {
+                return false;
+            }
+        }
+
+        if (class_exists('System_Cursos_Progress') && method_exists('System_Cursos_Progress', 'update_user_progress')) {
+            System_Cursos_Progress::update_user_progress($user_id, $curso_id);
+        }
+
+        return true;
+    }
+
+    public function ajax_get_course_lessons_progress()
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Sem permissao para esta acao.'], 403);
+        }
+
+        $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+        if (!$nonce || !wp_verify_nonce($nonce, 'sc_admin_lesson_progress')) {
+            wp_send_json_error(['message' => 'Falha de seguranca. Recarregue a pagina e tente novamente.'], 403);
+        }
+
+        $user_id = isset($_POST['user_id']) ? (int) $_POST['user_id'] : 0;
+        $curso_id = isset($_POST['curso_id']) ? (int) $_POST['curso_id'] : 0;
+
+        if ($user_id <= 0 || $curso_id <= 0) {
+            wp_send_json_error(['message' => 'Usuario ou curso invalido.']);
+        }
+
+        $user = get_user_by('ID', $user_id);
+        $curso = get_post($curso_id);
+        if (!$user || !$curso || $curso->post_type !== 'curso') {
+            wp_send_json_error(['message' => 'Nao foi possivel localizar o aluno ou o curso.']);
+        }
+
+        if (!self::has_access($user_id, $curso_id)) {
+            wp_send_json_error(['message' => 'O aluno nao possui acesso ativo a este curso.']);
+        }
+
+        $aulas = self::get_course_lessons($curso_id);
+        $aulas_concluidas = [];
+        if (class_exists('System_Cursos_Progress') && method_exists('System_Cursos_Progress', 'get_completed_lessons')) {
+            $aulas_concluidas = System_Cursos_Progress::get_completed_lessons($user_id, $curso_id);
+        }
+
+        $concluidas_lookup = array_fill_keys(array_map('intval', $aulas_concluidas), true);
+        $lessons_payload = [];
+
+        foreach ($aulas as $index => $aula) {
+            $aula_id = (int) $aula->ID;
+            $lessons_payload[] = [
+                'id' => $aula_id,
+                'title' => $aula->post_title,
+                'order' => $index + 1,
+                'completed' => isset($concluidas_lookup[$aula_id]),
+                'passing_score' => self::get_manual_completion_score($aula_id),
+            ];
+        }
+
+        wp_send_json_success([
+            'course_title' => get_the_title($curso_id),
+            'lessons' => $lessons_payload,
+            'progress' => self::get_detailed_progress($user_id, $curso_id),
+        ]);
+    }
+
+    public function ajax_update_course_lesson_progress()
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Sem permissao para esta acao.'], 403);
+        }
+
+        $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+        if (!$nonce || !wp_verify_nonce($nonce, 'sc_admin_lesson_progress')) {
+            wp_send_json_error(['message' => 'Falha de seguranca. Recarregue a pagina e tente novamente.'], 403);
+        }
+
+        $user_id = isset($_POST['user_id']) ? (int) $_POST['user_id'] : 0;
+        $curso_id = isset($_POST['curso_id']) ? (int) $_POST['curso_id'] : 0;
+        $aula_id = isset($_POST['aula_id']) ? (int) $_POST['aula_id'] : 0;
+        $completed = isset($_POST['completed']) && (int) $_POST['completed'] === 1;
+
+        if ($user_id <= 0 || $curso_id <= 0 || $aula_id <= 0) {
+            wp_send_json_error(['message' => 'Dados invalidos para atualizar a aula.']);
+        }
+
+        if (!self::has_access($user_id, $curso_id)) {
+            wp_send_json_error(['message' => 'O aluno nao possui acesso ativo a este curso.']);
+        }
+
+        if (!self::lesson_belongs_to_course($aula_id, $curso_id)) {
+            wp_send_json_error(['message' => 'A aula informada nao pertence a este curso.']);
+        }
+
+        $updated = self::set_manual_lesson_completion($user_id, $curso_id, $aula_id, $completed);
+        if (!$updated) {
+            wp_send_json_error(['message' => 'Nao foi possivel salvar a alteracao da aula.']);
+        }
+
+        $is_completed = false;
+        if (class_exists('System_Cursos_Progress') && method_exists('System_Cursos_Progress', 'is_lesson_completed')) {
+            $is_completed = System_Cursos_Progress::is_lesson_completed($user_id, $aula_id);
+        }
+
+        wp_send_json_success([
+            'completed' => (bool) $is_completed,
+            'progress' => self::get_detailed_progress($user_id, $curso_id),
+            'message' => $is_completed ? 'Aula marcada como concluida.' : 'Aula desmarcada como concluida.',
+        ]);
+    }
+
     /**
-     * Retorna dados de engajamento para o gráfico (Aulas concluídas por dia nos últimos 30 dias)
+     * Retorna dados de engajamento para o grafico (Aulas concluidas por dia nos ultimos 30 dias)
      */
     public static function get_engagement_data($user_id)
     {
@@ -1937,7 +2205,7 @@ class System_Cursos_Access_Control
                             <th style="width: 120px;">Status</th>
                             <th style="width: 150px;">Expiração</th>
                             <th style="width: 130px;">Desde</th>
-                            <th style="width: 250px;">Ações Rápidas</th>
+                            <th style="width: 320px;">Ações Rápidas</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -2023,7 +2291,13 @@ class System_Cursos_Access_Control
                                     <?php endif; ?>
 
                                     <?php if ($tem_acesso): ?>
-                                        <div style="margin-top: 8px;">
+                                        <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
+                                            <button type="button" class="button button-small sc-open-lesson-progress-modal"
+                                                data-user-id="<?php echo (int) $user->ID; ?>"
+                                                data-curso-id="<?php echo (int) $curso->ID; ?>"
+                                                data-curso-titulo="<?php echo esc_attr($curso->post_title); ?>">
+                                                Gerenciar Aulas
+                                            </button>
                                             <a href="<?php echo esc_url($cert_link); ?>" target="_blank"
                                                 class="button button-small" title="Emitir certificado para este aluno">
                                                 Gerar Certificado
@@ -2247,6 +2521,252 @@ class System_Cursos_Access_Control
             </div>
         </div>
 
+        <!-- Modal Gerenciar Progresso das Aulas -->
+        <div id="modal-gerenciar-aulas" class="sc-modal-overlay">
+            <div class="sc-modal-content sc-modal-content-lessons" role="dialog" aria-modal="true"
+                aria-labelledby="sc-lessons-modal-title">
+                <div class="sc-modal-header">
+                    <h2 id="sc-lessons-modal-title">Gerenciar Conclusao de Aulas</h2>
+                    <span class="sc-modal-close" data-close-lessons-modal="1">&times;</span>
+                </div>
+
+                <p id="sc-lessons-modal-course" style="margin: 0 0 8px; color: #334155; font-weight: 600;"></p>
+                <div id="sc-lessons-modal-progress" class="sc-lessons-modal-progress"></div>
+                <div id="sc-lessons-modal-status" class="sc-lessons-modal-status" aria-live="polite"></div>
+
+                <div id="sc-lessons-modal-body" class="sc-lessons-modal-body">
+                    <p style="margin: 0; color: #64748b;">Selecione um curso para carregar as aulas.</p>
+                </div>
+
+                <div style="margin-top: 16px; text-align: right;">
+                    <button type="button" class="button" data-close-lessons-modal="1">Fechar</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            (function () {
+                var modal = document.getElementById('modal-gerenciar-aulas');
+                if (!modal) {
+                    return;
+                }
+
+                var modalBody = document.getElementById('sc-lessons-modal-body');
+                var modalStatus = document.getElementById('sc-lessons-modal-status');
+                var modalProgress = document.getElementById('sc-lessons-modal-progress');
+                var modalCourse = document.getElementById('sc-lessons-modal-course');
+                var ajaxUrl = <?php echo wp_json_encode(admin_url('admin-ajax.php')); ?>;
+                var nonce = <?php echo wp_json_encode(wp_create_nonce('sc_admin_lesson_progress')); ?>;
+                var state = {
+                    userId: <?php echo (int) $user_id; ?>,
+                    cursoId: 0
+                };
+
+                function escapeHtml(value) {
+                    var div = document.createElement('div');
+                    div.textContent = value == null ? '' : String(value);
+                    return div.innerHTML;
+                }
+
+                function setStatus(message, type) {
+                    modalStatus.className = 'sc-lessons-modal-status';
+                    if (!message) {
+                        modalStatus.textContent = '';
+                        return;
+                    }
+                    if (type) {
+                        modalStatus.classList.add('is-' + type);
+                    }
+                    modalStatus.textContent = message;
+                }
+
+                function renderProgress(progress) {
+                    if (!progress || typeof progress !== 'object') {
+                        modalProgress.innerHTML = '';
+                        return;
+                    }
+
+                    var concluidas = parseInt(progress.concluidas, 10) || 0;
+                    var total = parseInt(progress.total, 10) || 0;
+                    var percent = parseInt(progress.percent, 10) || 0;
+
+                    modalProgress.innerHTML =
+                        '<strong>' + concluidas + '</strong> de <strong>' + total + '</strong> aulas concluidas (' + percent + '%)';
+                }
+
+                function closeModal() {
+                    modal.style.display = 'none';
+                    state.cursoId = 0;
+                }
+
+                function openModal(button) {
+                    state.cursoId = parseInt(button.getAttribute('data-curso-id'), 10) || 0;
+                    state.userId = parseInt(button.getAttribute('data-user-id'), 10) || state.userId;
+
+                    if (state.cursoId <= 0 || state.userId <= 0) {
+                        return;
+                    }
+
+                    var courseTitle = button.getAttribute('data-curso-titulo') || '';
+                    modalCourse.textContent = courseTitle ? ('Curso: ' + courseTitle) : '';
+                    modalBody.innerHTML = '<p style=\"margin: 0; color: #64748b;\">Carregando aulas...</p>';
+                    renderProgress(null);
+                    setStatus('Carregando dados do curso...', 'info');
+                    modal.style.display = 'flex';
+                    loadLessons();
+                }
+
+                function ajaxPost(payload) {
+                    var formData = new FormData();
+                    Object.keys(payload).forEach(function (key) {
+                        formData.append(key, payload[key]);
+                    });
+
+                    return fetch(ajaxUrl, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        body: formData
+                    }).then(function (response) {
+                        return response.json();
+                    });
+                }
+
+                function renderLessons(lessons) {
+                    if (!Array.isArray(lessons) || lessons.length === 0) {
+                        modalBody.innerHTML = '<p style=\"margin: 0; color: #64748b;\">Este curso nao possui aulas publicadas.</p>';
+                        return;
+                    }
+
+                    var html = [
+                        '<table class=\"widefat striped sc-lessons-table\">',
+                        '<thead><tr><th style=\"width: 70px;\">OK</th><th>Aula</th><th style=\"width: 120px;\">Quiz</th></tr></thead>',
+                        '<tbody>'
+                    ];
+
+                    lessons.forEach(function (lesson) {
+                        var aulaId = parseInt(lesson.id, 10) || 0;
+                        var checked = lesson.completed ? ' checked' : '';
+                        var rowClass = lesson.completed ? ' class=\"is-completed\"' : '';
+                        var title = escapeHtml((lesson.order || '-') + '. ' + (lesson.title || 'Aula sem titulo'));
+                        var quizInfo = (parseInt(lesson.passing_score, 10) || 0) > 0
+                            ? ('Min. ' + parseInt(lesson.passing_score, 10) + '%')
+                            : 'Nao';
+
+                        html.push(
+                            '<tr' + rowClass + '>' +
+                            '<td><input type=\"checkbox\" class=\"sc-lesson-completed-toggle\" data-aula-id=\"' + aulaId + '\"' + checked + '></td>' +
+                            '<td><span>' + title + '</span></td>' +
+                            '<td><small>' + escapeHtml(quizInfo) + '</small></td>' +
+                            '</tr>'
+                        );
+                    });
+
+                    html.push('</tbody></table>');
+                    modalBody.innerHTML = html.join('');
+                }
+
+                function loadLessons() {
+                    ajaxPost({
+                        action: 'sc_admin_get_course_lessons_progress',
+                        nonce: nonce,
+                        user_id: state.userId,
+                        curso_id: state.cursoId
+                    })
+                        .then(function (response) {
+                            if (!response || !response.success) {
+                                throw new Error(response && response.data && response.data.message ? response.data.message : 'Nao foi possivel carregar as aulas.');
+                            }
+
+                            renderLessons(response.data.lessons || []);
+                            renderProgress(response.data.progress || null);
+                            setStatus('Marque ou desmarque as aulas para atualizar o progresso do aluno.', 'info');
+                        })
+                        .catch(function (error) {
+                            modalBody.innerHTML = '<p style=\"margin: 0; color: #b91c1c;\">Falha ao carregar as aulas.</p>';
+                            setStatus(error.message || 'Falha ao carregar as aulas.', 'error');
+                        });
+                }
+
+                function updateLessonProgress(toggle) {
+                    var aulaId = parseInt(toggle.getAttribute('data-aula-id'), 10) || 0;
+                    if (aulaId <= 0 || state.cursoId <= 0 || state.userId <= 0) {
+                        return;
+                    }
+
+                    var desiredValue = toggle.checked ? 1 : 0;
+                    toggle.disabled = true;
+                    setStatus('Salvando alteracao...', 'info');
+
+                    ajaxPost({
+                        action: 'sc_admin_update_course_lesson_progress',
+                        nonce: nonce,
+                        user_id: state.userId,
+                        curso_id: state.cursoId,
+                        aula_id: aulaId,
+                        completed: desiredValue
+                    })
+                        .then(function (response) {
+                            if (!response || !response.success) {
+                                throw new Error(response && response.data && response.data.message ? response.data.message : 'Nao foi possivel salvar a alteracao.');
+                            }
+
+                            var finalState = !!(response.data && response.data.completed);
+                            toggle.checked = finalState;
+
+                            var row = toggle.closest('tr');
+                            if (row) {
+                                row.classList.toggle('is-completed', finalState);
+                            }
+
+                            renderProgress(response.data.progress || null);
+                            setStatus(response.data.message || 'Alteracao salva com sucesso.', 'success');
+                        })
+                        .catch(function (error) {
+                            toggle.checked = !toggle.checked;
+                            setStatus(error.message || 'Falha ao salvar alteracao.', 'error');
+                        })
+                        .then(function () {
+                            toggle.disabled = false;
+                        });
+                }
+
+                document.addEventListener('click', function (event) {
+                    var openButton = event.target.closest('.sc-open-lesson-progress-modal');
+                    if (openButton) {
+                        event.preventDefault();
+                        openModal(openButton);
+                        return;
+                    }
+
+                    var closeButton = event.target.closest('[data-close-lessons-modal=\"1\"]');
+                    if (closeButton) {
+                        closeModal();
+                    }
+                });
+
+                modal.addEventListener('click', function (event) {
+                    if (event.target === modal) {
+                        closeModal();
+                    }
+                });
+
+                modal.addEventListener('change', function (event) {
+                    var toggle = event.target.closest('.sc-lesson-completed-toggle');
+                    if (!toggle) {
+                        return;
+                    }
+
+                    updateLessonProgress(toggle);
+                });
+
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape' && modal.style.display === 'flex') {
+                        closeModal();
+                    }
+                });
+            })();
+        </script>
+
         <style>
             .sc-modal-overlay {
                 display: none;
@@ -2296,6 +2816,52 @@ class System_Cursos_Access_Control
 
             .sc-modal-close:hover {
                 color: #000;
+            }
+
+            .sc-modal-content-lessons {
+                max-width: 900px;
+            }
+
+            .sc-lessons-modal-progress {
+                margin: 0 0 10px;
+                font-size: 13px;
+                color: #0f172a;
+            }
+
+            .sc-lessons-modal-status {
+                margin: 0 0 12px;
+                font-size: 13px;
+                color: #64748b;
+            }
+
+            .sc-lessons-modal-status.is-success {
+                color: #15803d;
+            }
+
+            .sc-lessons-modal-status.is-error {
+                color: #b91c1c;
+            }
+
+            .sc-lessons-modal-body {
+                max-height: 55vh;
+                overflow-y: auto;
+                border: 1px solid #e5e7eb;
+                border-radius: 6px;
+                padding: 10px;
+                background: #f8fafc;
+            }
+
+            .sc-lessons-table {
+                margin: 0;
+                border: none;
+            }
+
+            .sc-lessons-table tr.is-completed td {
+                background: #ecfdf5;
+            }
+
+            .sc-lessons-table td {
+                vertical-align: middle;
             }
 
             @keyframes slideDown {
