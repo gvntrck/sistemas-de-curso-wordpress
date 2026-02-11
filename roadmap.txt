@@ -1,14 +1,11 @@
- • Continuar Assistindo na home
- • Log de Atividades
- • aulas em ordem depende do curso
- • nome do curso no resultado de busca de aula
+Continuar Assistindo na home
+Log de Atividades
+aulas em ordem depende do curso
+nome do curso no resultado de busca de aula
 
- • liberar aula e trilha com agenda e mensagem de aula bloqueada até a data de liberação
- 
-
+liberar aula e trilha com agenda e mensagem de aula bloqueada até a data de liberação
 
 
 
-na tela de configuração informar quais tabelas personalizadas
-o istema usa e quais metakeys personalizadas usa
 
+checkout independente de woocommerce 
