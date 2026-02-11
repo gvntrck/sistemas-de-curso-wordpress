@@ -50,6 +50,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-pa
 require_once plugin_dir_path(__FILE__) . 'includes/class-woocommerce-integration.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-quiz-builder.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-quiz-process.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-aula-comments.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-customizer.php';
 
 // 2. Inicializar Assets Globais
@@ -74,6 +75,7 @@ new System_Cursos_Shortcode_Redireciona_Aula();
 new System_Cursos_Shortcode_Painel();
 new System_Cursos_Quiz_Builder();
 new System_Cursos_Quiz_Process();
+new System_Cursos_Aula_Comments();
 new System_Cursos_Customizer();
 
 add_action('plugins_loaded', 'sistema_cursos_init_woocommerce_integration');

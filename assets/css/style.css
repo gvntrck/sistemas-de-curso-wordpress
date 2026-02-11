@@ -868,6 +868,166 @@
     max-width: none !important;
 }
 
+/* Comentarios da Aula */
+.lms-sr .lista-aulas__comentarios-wrapper {
+    margin-top: var(--space-lg) !important;
+    padding-top: var(--space-lg) !important;
+    border-top: 1px solid var(--color-border-light) !important;
+}
+
+.lms-sr .sc-aula-comments {
+    background: var(--color-bg-secondary) !important;
+    border: 1px solid var(--color-border-input) !important;
+    border-radius: var(--radius-lg) !important;
+    padding: var(--space-lg) !important;
+}
+
+.lms-sr .sc-aula-comments__title {
+    margin: 0 0 var(--space-md) !important;
+    font-size: 18px !important;
+    color: var(--color-text-heading) !important;
+}
+
+.lms-sr .sc-aula-comments__list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--space-md) !important;
+    margin-bottom: var(--space-lg) !important;
+}
+
+.lms-sr .sc-aula-comments__empty,
+.lms-sr .sc-aula-comments__login-warning {
+    margin: 0 !important;
+    color: var(--color-text-muted) !important;
+    font-size: 14px !important;
+}
+
+.lms-sr .sc-aula-comments__item {
+    display: grid !important;
+    grid-template-columns: 44px 1fr !important;
+    gap: 12px !important;
+    align-items: start !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid var(--color-border-light) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 12px !important;
+}
+
+.lms-sr .sc-aula-comments__avatar img {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 50% !important;
+    display: block !important;
+}
+
+.lms-sr .sc-aula-comments__meta {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+}
+
+.lms-sr .sc-aula-comments__author {
+    font-size: 14px !important;
+    color: var(--color-text-heading) !important;
+}
+
+.lms-sr .sc-aula-comments__date {
+    font-size: 12px !important;
+    color: var(--color-text-muted) !important;
+}
+
+.lms-sr .sc-aula-comments__text {
+    margin-top: 8px !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    color: var(--color-text-primary) !important;
+    word-break: break-word !important;
+}
+
+.lms-sr .sc-aula-comments__delete {
+    margin-top: 8px !important;
+    border: 1px solid var(--color-error-border) !important;
+    background: var(--color-error-bg) !important;
+    color: var(--color-error) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+.lms-sr .sc-aula-comments__delete:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+}
+
+.lms-sr .sc-aula-comments__form {
+    border-top: 1px solid var(--color-border-light) !important;
+    padding-top: var(--space-md) !important;
+}
+
+.lms-sr .sc-aula-comments__label {
+    display: block !important;
+    margin-bottom: 6px !important;
+    font-size: 13px !important;
+    color: var(--color-text-muted) !important;
+}
+
+.lms-sr .sc-aula-comments__textarea {
+    width: 100% !important;
+    resize: vertical !important;
+    min-height: 90px !important;
+    border: 1px solid var(--color-border-input) !important;
+    border-radius: var(--radius-md) !important;
+    background: var(--color-bg-tertiary) !important;
+    color: var(--color-text-primary) !important;
+    padding: 10px 12px !important;
+    font-size: 14px !important;
+}
+
+.lms-sr .sc-aula-comments__textarea:focus {
+    outline: none !important;
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 0 0 2px var(--color-accent-shadow) !important;
+}
+
+.lms-sr .sc-aula-comments__actions {
+    margin-top: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+}
+
+.lms-sr .sc-aula-comments__form-status {
+    font-size: 12px !important;
+    color: var(--color-text-muted) !important;
+    min-height: 18px !important;
+}
+
+.lms-sr .sc-aula-comments__form-status.is-error {
+    color: var(--color-error) !important;
+}
+
+.lms-sr .sc-aula-comments__form-status.is-success {
+    color: var(--color-success) !important;
+}
+
+.lms-sr .sc-aula-comments__submit {
+    border: 1px solid var(--color-accent) !important;
+    background: var(--color-accent) !important;
+    color: #121212 !important;
+    border-radius: var(--radius-md) !important;
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+}
+
+.lms-sr .sc-aula-comments__submit:hover {
+    background: var(--color-accent-hover) !important;
+    border-color: var(--color-accent-hover) !important;
+}
+
 /* Acesso Negado */
 .lms-sr .lista-aulas__acesso-negado {
     background: var(--color-bg-tertiary) !important;
@@ -1034,6 +1194,15 @@
 
     .lms-sr .lista-aulas__sidebar {
         min-height: 40vh !important;
+    }
+
+    .lms-sr .sc-aula-comments__actions {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .lms-sr .sc-aula-comments__submit {
+        width: 100% !important;
     }
 }
 

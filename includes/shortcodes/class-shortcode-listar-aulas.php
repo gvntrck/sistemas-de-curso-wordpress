@@ -170,6 +170,10 @@ class System_Cursos_Shortcode_Listar_Aulas
                 if (class_exists('System_Cursos_Quiz_Process')) {
                     $quizHtml = System_Cursos_Quiz_Process::render_quiz($aulaId);
                 }
+                $commentsHtml = '';
+                if (class_exists('System_Cursos_Aula_Comments')) {
+                    $commentsHtml = System_Cursos_Aula_Comments::render_comments_section($aulaId);
+                }
                 $esconderBotaoManual = !empty($quizHtml) && !$aulaAtualConcluida;
                 ?>
 
@@ -208,6 +212,12 @@ class System_Cursos_Shortcode_Listar_Aulas
                 <?php if (!empty($quizHtml)): ?>
                     <div class="lista-aulas__quiz-wrapper">
                         <?php echo $quizHtml; ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($commentsHtml)): ?>
+                    <div class="lista-aulas__comentarios-wrapper">
+                        <?php echo $commentsHtml; ?>
                     </div>
                 <?php endif; ?>
             </div>
@@ -294,6 +304,10 @@ class System_Cursos_Shortcode_Listar_Aulas
         if (class_exists('System_Cursos_Quiz_Process')) {
             $quizHtml = System_Cursos_Quiz_Process::render_quiz($aulaId);
         }
+        $commentsHtml = '';
+        if (class_exists('System_Cursos_Aula_Comments')) {
+            $commentsHtml = System_Cursos_Aula_Comments::render_comments_section($aulaId);
+        }
 
         // Check if user already completed this lesson
         $user_id = get_current_user_id();
@@ -311,6 +325,7 @@ class System_Cursos_Shortcode_Listar_Aulas
             'descricao' => $descricao ? wp_kses_post($descricao) : '',
             'anexos' => $this->get_anexos_html($aulaId),
             'quiz' => $quizHtml,
+            'comentarios' => $commentsHtml,
             'esconder_botao_manual' => $esconderBotaoManual
         ]);
     }

@@ -302,6 +302,7 @@ class System_Cursos_CPT_Manager
 
         // Field: trilha (Relationship)
         $trilha_id = get_post_meta($post->ID, 'trilha', true);
+        $comments_course_enabled = get_post_meta($post->ID, '_sistema_cursos_comments_course_enabled', true);
 
         // Buscar todas as trilhas
         $trilhas = get_posts(['post_type' => 'trilha', 'numberposts' => -1, 'post_status' => 'publish']);
@@ -339,6 +340,24 @@ class System_Cursos_CPT_Manager
             <button type="button" class="button" id="btn_upload_capa">Selecionar Imagem</button>
             <button type="button" class="button button-link-delete" id="btn_remove_capa"
                 style="display: <?php echo $capa_preview ? 'inline-block' : 'none'; ?>;">Remover</button>
+            </p>
+
+            <hr>
+
+            <p>
+                <input type="hidden" name="sistema_cursos_comments_course_enabled" value="0">
+                <label for="sistema_cursos_comments_course_enabled" style="display:block; font-weight:600;">
+                    <input
+                        type="checkbox"
+                        id="sistema_cursos_comments_course_enabled"
+                        name="sistema_cursos_comments_course_enabled"
+                        value="1"
+                        <?php checked($comments_course_enabled, '1'); ?>>
+                    Ativar comentarios no curso (habilita comentarios nas aulas por padrao)
+                </label>
+                <span class="description" style="display:block; margin-top:4px;">
+                    Padrao: desativado. Ao ativar, todas as aulas do curso passam a aceitar comentarios.
+                </span>
             </p>
         </div>
         <?php
@@ -425,6 +444,7 @@ class System_Cursos_CPT_Manager
 
         // Field: descricao
         $descricao = get_post_meta($post->ID, 'descricao', true);
+        $comments_lesson_override = get_post_meta($post->ID, '_sistema_cursos_comments_lesson_override', true);
 
         // Field: arquivos (Repeater)
         // O formato salvo pelo ACF é um array serializado contendo array('anexos' => URL/ID)
@@ -467,6 +487,25 @@ class System_Cursos_CPT_Manager
                 'media_buttons' => true
             ]);
             ?>
+        </p>
+
+        <hr>
+
+        <p>
+            <input type="hidden" name="sistema_cursos_comments_lesson_override" value="0">
+            <label for="sistema_cursos_comments_lesson_override" style="display:block; font-weight:600;">
+                <input
+                    type="checkbox"
+                    id="sistema_cursos_comments_lesson_override"
+                    name="sistema_cursos_comments_lesson_override"
+                    value="1"
+                    <?php checked($comments_lesson_override, '1'); ?>>
+                Sobrescrever regra de comentarios do curso nesta aula
+            </label>
+            <span class="description" style="display:block; margin-top:4px;">
+                Quando marcado: se o curso estiver com comentarios ativos, esta aula fica desativada. Se o curso estiver
+                desativado, esta aula fica ativa.
+            </span>
         </p>
 
         <hr>
@@ -568,6 +607,18 @@ class System_Cursos_CPT_Manager
         // 3. Curso (Relacionamento da Aula)
         if (isset($_POST['curso'])) {
             update_post_meta($post_id, 'curso', sanitize_text_field($_POST['curso']));
+        }
+
+        // 3.1 Comentarios no Curso (controle global)
+        if ($post_type === 'curso' && isset($_POST['sistema_cursos_comments_course_enabled'])) {
+            $course_comments_enabled = ($_POST['sistema_cursos_comments_course_enabled'] === '1') ? '1' : '0';
+            update_post_meta($post_id, '_sistema_cursos_comments_course_enabled', $course_comments_enabled);
+        }
+
+        // 3.2 Comentarios na Aula (sobrescrita da regra do curso)
+        if ($post_type === 'aula' && isset($_POST['sistema_cursos_comments_lesson_override'])) {
+            $lesson_comments_override = ($_POST['sistema_cursos_comments_lesson_override'] === '1') ? '1' : '0';
+            update_post_meta($post_id, '_sistema_cursos_comments_lesson_override', $lesson_comments_override);
         }
 
         // --- NOVO: Salvar Aulas do Curso (Bidirecional) ---

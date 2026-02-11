@@ -221,6 +221,7 @@ window.SystemCursos.initListaAulas = function (containerId) {
     var tituloEl = container.querySelector('.lista-aulas__titulo');
     var descricaoEl = container.querySelector('.lista-aulas__descricao');
     var anexosWrapper = container.querySelector('.lista-aulas__anexos-wrapper'); // Wrapper dedicated
+    var comentariosWrapper = container.querySelector('.lista-aulas__comentarios-wrapper');
     var mainEl = container.querySelector('.lista-aulas__main');
     var btnConcluir = container.querySelector('.lista-aulas__btn-concluir');
     var progWrapper = container.querySelector('.lista-aulas__progresso-wrapper');
@@ -330,6 +331,39 @@ window.SystemCursos.initListaAulas = function (containerId) {
         ensureLessonLoadingEl();
     }
 
+    function atualizarComentariosSection(comentariosHtml) {
+        var html = comentariosHtml || '';
+        var quizWrapper = container.querySelector('.lista-aulas__quiz-wrapper');
+
+        if (html) {
+            if (comentariosWrapper) {
+                comentariosWrapper.innerHTML = html;
+                return;
+            }
+
+            var newComentariosWrapper = document.createElement('div');
+            newComentariosWrapper.className = 'lista-aulas__comentarios-wrapper';
+            newComentariosWrapper.innerHTML = html;
+
+            var headerEl = container.querySelector('.lista-aulas__header');
+            var insertAfter = quizWrapper || anexosWrapper || descricaoEl || headerEl || tituloEl;
+
+            if (insertAfter) {
+                insertAfter.insertAdjacentElement('afterend', newComentariosWrapper);
+            } else if (mainEl) {
+                mainEl.appendChild(newComentariosWrapper);
+            }
+
+            comentariosWrapper = newComentariosWrapper;
+            return;
+        }
+
+        if (comentariosWrapper) {
+            comentariosWrapper.remove();
+            comentariosWrapper = null;
+        }
+    }
+
     // Handle Toggle Complete
     if (btnConcluir) {
         btnConcluir.addEventListener('click', function () {
@@ -385,6 +419,131 @@ window.SystemCursos.initListaAulas = function (containerId) {
     }
 
     // Detectar se está dentro do painel SPA
+    container.addEventListener('submit', function (event) {
+        var form = event.target.closest('.sc-aula-comments__form');
+        if (!form || !container.contains(form)) return;
+
+        event.preventDefault();
+
+        if (form.getAttribute('data-loading') === '1') return;
+
+        var aulaInput = form.querySelector('input[name="aula_id"]');
+        var nonceInput = form.querySelector('input[name="nonce"]');
+        var contentInput = form.querySelector('textarea[name="comment_content"]');
+        var statusEl = form.querySelector('.sc-aula-comments__form-status');
+
+        var aulaId = aulaInput ? aulaInput.value : '';
+        var nonce = nonceInput ? nonceInput.value : '';
+        var content = contentInput ? contentInput.value.trim() : '';
+
+        if (!aulaId || !nonce) return;
+
+        if (!content) {
+            if (statusEl) {
+                statusEl.textContent = 'Escreva um comentario antes de enviar.';
+                statusEl.classList.add('is-error');
+                statusEl.classList.remove('is-success');
+            }
+            return;
+        }
+
+        form.setAttribute('data-loading', '1');
+
+        if (statusEl) {
+            statusEl.textContent = 'Enviando comentario...';
+            statusEl.classList.remove('is-error');
+            statusEl.classList.remove('is-success');
+        }
+
+        var formData = new FormData();
+        formData.append('action', 'sistema_cursos_add_comment');
+        formData.append('aula_id', aulaId);
+        formData.append('nonce', nonce);
+        formData.append('content', content);
+
+        fetch(ajaxUrl, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        })
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                if (data.success && data.data) {
+                    atualizarComentariosSection(data.data.section_html || '');
+                    return;
+                }
+
+                var message = (data && data.data && data.data.message)
+                    ? data.data.message
+                    : 'Nao foi possivel enviar o comentario.';
+
+                if (statusEl) {
+                    statusEl.textContent = message;
+                    statusEl.classList.add('is-error');
+                    statusEl.classList.remove('is-success');
+                }
+            })
+            .catch(function (err) {
+                console.error('Erro ao enviar comentario:', err);
+                if (statusEl) {
+                    statusEl.textContent = 'Erro ao enviar comentario. Tente novamente.';
+                    statusEl.classList.add('is-error');
+                    statusEl.classList.remove('is-success');
+                }
+            })
+            .finally(function () {
+                form.removeAttribute('data-loading');
+            });
+    });
+
+    container.addEventListener('click', function (event) {
+        var deleteBtn = event.target.closest('.sc-aula-comments__delete');
+        if (!deleteBtn || !container.contains(deleteBtn)) return;
+
+        event.preventDefault();
+
+        var commentId = deleteBtn.getAttribute('data-comment-id');
+        var aulaId = deleteBtn.getAttribute('data-aula-id');
+        var nonce = deleteBtn.getAttribute('data-nonce');
+
+        if (!commentId || !aulaId || !nonce) return;
+
+        if (!window.confirm('Deseja apagar este comentario?')) {
+            return;
+        }
+
+        deleteBtn.disabled = true;
+
+        var formData = new FormData();
+        formData.append('action', 'sistema_cursos_delete_comment');
+        formData.append('comment_id', commentId);
+        formData.append('aula_id', aulaId);
+        formData.append('nonce', nonce);
+
+        fetch(ajaxUrl, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        })
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                if (data.success && data.data) {
+                    atualizarComentariosSection(data.data.section_html || '');
+                    return;
+                }
+
+                var message = (data && data.data && data.data.message)
+                    ? data.data.message
+                    : 'Nao foi possivel apagar o comentario.';
+                alert(message);
+                deleteBtn.disabled = false;
+            })
+            .catch(function (err) {
+                console.error('Erro ao apagar comentario:', err);
+                deleteBtn.disabled = false;
+            });
+    });
+
     var isInsidePainel = !!document.getElementById('lms-painel');
 
     // Handle Item Click (Navigation)
@@ -488,6 +647,7 @@ window.SystemCursos.initListaAulas = function (containerId) {
                                 var insertAfter = anexosWrapper || descricaoEl || headerEl || tituloEl;
 
                                 if (insertAfter) insertAfter.insertAdjacentElement('afterend', newQuizWrapper);
+                                quizWrapper = newQuizWrapper;
                             }
                         } else {
                             // No quiz: remove wrapper if exists
@@ -495,6 +655,8 @@ window.SystemCursos.initListaAulas = function (containerId) {
                                 quizWrapper.remove();
                             }
                         }
+
+                        atualizarComentariosSection(data.data.comentarios || '');
 
                         // Update button visibility (NEW - Fix for AJAX navigation)
                         if (btnConcluir) {
