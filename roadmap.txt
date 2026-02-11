@@ -11,5 +11,4 @@
 
 
 na tela de configuração informar quais tabelas personalizadas
-
-os istema usa e quais metakeys personalizadas usa
+o istema usa e quais metakeys personalizadas usa
