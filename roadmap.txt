@@ -5,10 +5,11 @@
 
  • liberar aula e trilha com agenda e mensagem de aula bloqueada até a data de liberação
  
- • cerrificado por grupo de alunos
+ • cerrificado por grupo de alunos (testar)
 
 
 
 
 na tela de configuração informar quais tabelas personalizadas
 o istema usa e quais metakeys personalizadas usa
+
