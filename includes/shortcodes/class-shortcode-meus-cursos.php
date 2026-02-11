@@ -17,7 +17,7 @@ class System_Cursos_Shortcode_Meus_Cursos
      *   Define se exibe apenas os cursos do aluno ou o catálogo completo.
      *
      * @package SistemaCursos
-     * @version 1.2.28
+     * @version 1.3.0
      */
     public function __construct()
     {
@@ -27,10 +27,12 @@ class System_Cursos_Shortcode_Meus_Cursos
     public function render_shortcode($atts)
     {
         $atts = shortcode_atts([
-            'mostrar' => 'meus_cursos' // 'meus_cursos' (padrão) ou 'todos'
+            'mostrar' => 'meus_cursos', // 'meus_cursos' (padrao) ou 'todos'
+            'show_banner' => '0', // Exibe banner superior na view inicio do painel
         ], $atts, 'meus-cursos');
 
         $mostrar_todos = ($atts['mostrar'] === 'todos');
+        $show_banner = in_array(strtolower((string) $atts['show_banner']), ['1', 'true', 'yes', 'on'], true);
         $user_id = is_user_logged_in() ? get_current_user_id() : 0;
 
         // 1. Verificar login (apenas se for mostrar cursos do usuário)
@@ -150,6 +152,9 @@ class System_Cursos_Shortcode_Meus_Cursos
         ob_start();
         ?>
         <div class="meus-cursos-wrapper">
+            <?php if ($show_banner): ?>
+                <?php echo $this->render_home_banner_carousel(); ?>
+            <?php endif; ?>
 
             <?php
             // A. Trilhas (na ordem definida por menu_order)
@@ -165,7 +170,7 @@ class System_Cursos_Shortcode_Meus_Cursos
                     $carousel_id = 'carousel-trilha-' . $t_id;
                     ?>
                     <div class="mc-container" style="margin-bottom: 30px; max-width: 100%; margin-left: 0; margin-right: 0;">
-                        <div class="mc-header mc-header-carousel" style="text-align: left; padding: 25px;">
+                        <div class="mc-header mc-header-carousel" style="text-align: left;">
                             <div class="mc-header-content">
                                 <h3 style="margin: 0; font-size: 1.5rem; color: var(--text-heading, #fff);">
                                     <?php echo esc_html($nome_trilha); ?>
@@ -213,7 +218,7 @@ class System_Cursos_Shortcode_Meus_Cursos
                 $carousel_id_outros = 'carousel-outros-cursos';
                 ?>
                 <div class="mc-container" style="max-width: 100%; margin-left: 0; margin-right: 0;">
-                    <div class="mc-header mc-header-carousel" style="text-align: left; padding: 25px;">
+                    <div class="mc-header mc-header-carousel" style="text-align: left;">
                         <div class="mc-header-content">
                             <h3 style="margin: 0; font-size: 1.5rem; color: var(--text-heading, #fff);">
                                 Outros Cursos
@@ -396,6 +401,114 @@ class System_Cursos_Shortcode_Meus_Cursos
         return ob_get_clean();
     }
 
+
+    /**
+     * Renderiza o banner de destaque da pagina inicial (carrossel configuravel no admin).
+     */
+    private function render_home_banner_carousel()
+    {
+        $settings = get_option('lms_sr_banner_settings', []);
+        if (!is_array($settings)) {
+            return '';
+        }
+
+        $slides_raw = isset($settings['slides']) && is_array($settings['slides']) ? $settings['slides'] : [];
+        if (empty($slides_raw)) {
+            return '';
+        }
+
+        $autoplay_seconds = isset($settings['autoplay_seconds']) ? (int) $settings['autoplay_seconds'] : 5;
+        if ($autoplay_seconds < 2) {
+            $autoplay_seconds = 2;
+        } elseif ($autoplay_seconds > 30) {
+            $autoplay_seconds = 30;
+        }
+
+        $slides = [];
+        foreach ($slides_raw as $slide) {
+            if (!is_array($slide)) {
+                continue;
+            }
+
+            $image_id = isset($slide['image_id']) ? absint($slide['image_id']) : 0;
+            if ($image_id <= 0) {
+                continue;
+            }
+
+            $image_url = wp_get_attachment_image_url($image_id, 'full');
+            if (!$image_url) {
+                continue;
+            }
+
+            $alt_text = trim((string) get_post_meta($image_id, '_wp_attachment_image_alt', true));
+            if ($alt_text === '') {
+                $alt_text = get_the_title($image_id);
+            }
+            if ($alt_text === '') {
+                $alt_text = 'Banner da plataforma';
+            }
+
+            $slides[] = [
+                'image_url' => $image_url,
+                'alt' => $alt_text,
+                'link' => isset($slide['link']) ? esc_url((string) $slide['link']) : '',
+            ];
+        }
+
+        if (empty($slides)) {
+            return '';
+        }
+
+        $carousel_id = 'lms-banner-' . wp_rand(1000, 99999);
+
+        ob_start();
+        ?>
+        <div class="mc-container lms-banner-container" style="margin-bottom: 30px; max-width: 100%; margin-left: 0; margin-right: 0;">
+            <div
+                class="lms-banner-carousel"
+                id="<?php echo esc_attr($carousel_id); ?>"
+                data-autoplay="<?php echo esc_attr((string) ($autoplay_seconds * 1000)); ?>">
+                <div class="lms-banner-track">
+                    <?php foreach ($slides as $index => $slide): ?>
+                        <div class="lms-banner-slide<?php echo $index === 0 ? ' is-active' : ''; ?>" data-index="<?php echo esc_attr((string) $index); ?>">
+                            <?php if (!empty($slide['link'])): ?>
+                                <a class="lms-banner-link" href="<?php echo esc_url($slide['link']); ?>">
+                            <?php endif; ?>
+                            <img
+                                src="<?php echo esc_url($slide['image_url']); ?>"
+                                alt="<?php echo esc_attr($slide['alt']); ?>"
+                                loading="<?php echo $index === 0 ? 'eager' : 'lazy'; ?>">
+                            <?php if (!empty($slide['link'])): ?>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <?php if (count($slides) > 1): ?>
+                    <button type="button" class="lms-banner-arrow lms-banner-arrow-prev" aria-label="Banner anterior">
+                        <span aria-hidden="true">&lsaquo;</span>
+                    </button>
+                    <button type="button" class="lms-banner-arrow lms-banner-arrow-next" aria-label="Proximo banner">
+                        <span aria-hidden="true">&rsaquo;</span>
+                    </button>
+
+                    <div class="lms-banner-dots" role="tablist" aria-label="Selecao de banners">
+                        <?php foreach ($slides as $index => $slide): ?>
+                            <button
+                                type="button"
+                                class="lms-banner-dot<?php echo $index === 0 ? ' is-active' : ''; ?>"
+                                data-index="<?php echo esc_attr((string) $index); ?>"
+                                aria-label="<?php echo esc_attr('Ir para banner ' . ($index + 1)); ?>"></button>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php
+
+        return ob_get_clean();
+    }
     /**
      * Helper para renderizar card individual
      */

@@ -125,10 +125,105 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize for standard ID 'cep' (used in new and legacy forms) or 'mc_cep'
     initAddressFetch('cep');
     initAddressFetch('mc_cep');
+
+    if (window.SystemCursos && window.SystemCursos.initBannerCarousel) {
+        window.SystemCursos.initBannerCarousel(document);
+    }
 });
 
 // Global Namespace for specific component logic (initMasks já registrado acima)
 window.SystemCursos = window.SystemCursos || {};
+
+window.SystemCursos.initBannerCarousel = function (scope) {
+    var root = scope || document;
+    var carousels = root.querySelectorAll('.lms-banner-carousel');
+
+    carousels.forEach(function (carousel) {
+        if (carousel._lmsBannerInited) return;
+        carousel._lmsBannerInited = true;
+
+        var slides = carousel.querySelectorAll('.lms-banner-slide');
+        if (!slides.length) return;
+
+        var prevBtn = carousel.querySelector('.lms-banner-arrow-prev');
+        var nextBtn = carousel.querySelector('.lms-banner-arrow-next');
+        var dots = carousel.querySelectorAll('.lms-banner-dot');
+
+        var currentIndex = 0;
+        var timer = null;
+        var autoplayMs = parseInt(carousel.getAttribute('data-autoplay'), 10);
+        if (isNaN(autoplayMs) || autoplayMs < 2000) {
+            autoplayMs = 5000;
+        }
+
+        function showSlide(index) {
+            if (index < 0) index = slides.length - 1;
+            if (index >= slides.length) index = 0;
+
+            slides.forEach(function (slide, slideIndex) {
+                slide.classList.toggle('is-active', slideIndex === index);
+            });
+
+            dots.forEach(function (dot, dotIndex) {
+                dot.classList.toggle('is-active', dotIndex === index);
+            });
+
+            currentIndex = index;
+        }
+
+        function stopAutoplay() {
+            if (!timer) return;
+            clearInterval(timer);
+            timer = null;
+        }
+
+        function startAutoplay() {
+            stopAutoplay();
+            if (slides.length <= 1) return;
+            timer = setInterval(function () {
+                showSlide(currentIndex + 1);
+            }, autoplayMs);
+        }
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function (event) {
+                event.preventDefault();
+                showSlide(currentIndex - 1);
+                startAutoplay();
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function (event) {
+                event.preventDefault();
+                showSlide(currentIndex + 1);
+                startAutoplay();
+            });
+        }
+
+        dots.forEach(function (dot) {
+            dot.addEventListener('click', function (event) {
+                event.preventDefault();
+                var targetIndex = parseInt(dot.getAttribute('data-index'), 10);
+                if (isNaN(targetIndex)) return;
+                showSlide(targetIndex);
+                startAutoplay();
+            });
+        });
+
+        carousel.addEventListener('mouseenter', stopAutoplay);
+        carousel.addEventListener('mouseleave', startAutoplay);
+        carousel.addEventListener('focusin', stopAutoplay);
+        carousel.addEventListener('focusout', function (event) {
+            if (!carousel.contains(event.relatedTarget)) {
+                startAutoplay();
+            }
+        });
+
+        showSlide(0);
+        startAutoplay();
+    });
+};
 
 function sistemaCursosResolveAjaxUrl(preferredUrl) {
     if (preferredUrl) return preferredUrl;

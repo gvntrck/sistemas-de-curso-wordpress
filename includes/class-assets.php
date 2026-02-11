@@ -30,7 +30,7 @@ class System_Cursos_Assets
             'sistema-cursos-style',
             $plugin_url . 'assets/css/style.css',
             [],
-            '1.5.8' // Bump version to force refresh
+            '1.5.9' // Bump version to force refresh
         );
 
         // JS Principal
@@ -38,7 +38,7 @@ class System_Cursos_Assets
             'sistema-cursos-script',
             $plugin_url . 'assets/js/script.js',
             [],
-            '1.3.9', // Updated version to force cache refresh
+            '1.4.0', // Updated version to force cache refresh
             true
         );
 
@@ -61,7 +61,7 @@ class System_Cursos_Assets
             'sistema-cursos-script-admin',
             $plugin_url . 'assets/js/script.js',
             [],
-            '1.0.6',
+            '1.0.7',
             true
         );
     }

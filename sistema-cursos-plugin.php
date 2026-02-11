@@ -157,6 +157,71 @@ function sistema_cursos_add_admin_menu()
     );
 }
 
+/**
+ * Retorna as configuracoes do banner da pagina inicial.
+ *
+ * @return array{autoplay_seconds:int,slides:array<int,array{image_id:int,link:string}>}
+ */
+function sistema_cursos_get_banner_settings()
+{
+    $defaults = [
+        'autoplay_seconds' => 5,
+        'slides' => [],
+    ];
+
+    $stored = get_option('lms_sr_banner_settings', []);
+    if (!is_array($stored)) {
+        return $defaults;
+    }
+
+    return sistema_cursos_sanitize_banner_settings($stored);
+}
+
+/**
+ * Sanitiza configuracoes do banner antes de salvar/usar.
+ *
+ * @param mixed $settings
+ * @return array{autoplay_seconds:int,slides:array<int,array{image_id:int,link:string}>}
+ */
+function sistema_cursos_sanitize_banner_settings($settings)
+{
+    $autoplay_seconds = 5;
+    if (is_array($settings) && isset($settings['autoplay_seconds'])) {
+        $autoplay_seconds = (int) $settings['autoplay_seconds'];
+    }
+    if ($autoplay_seconds < 2) {
+        $autoplay_seconds = 2;
+    } elseif ($autoplay_seconds > 30) {
+        $autoplay_seconds = 30;
+    }
+
+    $slides = [];
+    if (is_array($settings) && isset($settings['slides']) && is_array($settings['slides'])) {
+        foreach ($settings['slides'] as $slide) {
+            if (!is_array($slide)) {
+                continue;
+            }
+
+            $image_id = isset($slide['image_id']) ? absint($slide['image_id']) : 0;
+            $link = isset($slide['link']) ? esc_url_raw(trim((string) $slide['link'])) : '';
+
+            if ($image_id <= 0 || !wp_attachment_is_image($image_id)) {
+                continue;
+            }
+
+            $slides[] = [
+                'image_id' => $image_id,
+                'link' => $link,
+            ];
+        }
+    }
+
+    return [
+        'autoplay_seconds' => $autoplay_seconds,
+        'slides' => $slides,
+    ];
+}
+
 function sistema_cursos_render_admin_page()
 {
     $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'ordenacao';
@@ -178,6 +243,23 @@ function sistema_cursos_render_admin_page()
         update_option('lms_sr_aluno_redirect_page_id', $redirect_page_id);
         $settings_notice = '<div class="notice notice-success is-dismissible"><p>Configuração de redirecionamento salva com sucesso.</p></div>';
     }
+
+    if (isset($_POST['lms_sr_save_banner_settings'])) {
+        if (!current_user_can('manage_options')) {
+            wp_die('Sem permissão para salvar esta configuração.');
+        }
+
+        check_admin_referer('lms_sr_save_banner_settings', 'lms_sr_banner_nonce');
+
+        $raw_banner = isset($_POST['lms_sr_banner']) ? wp_unslash($_POST['lms_sr_banner']) : [];
+        if (!is_array($raw_banner)) {
+            $raw_banner = [];
+        }
+
+        $banner_settings = sistema_cursos_sanitize_banner_settings($raw_banner);
+        update_option('lms_sr_banner_settings', $banner_settings);
+        $settings_notice = '<div class="notice notice-success is-dismissible"><p>Configurações do banner salvas com sucesso.</p></div>';
+    }
     ?>
     <div class="wrap">
         <h1>LMS SuporteRapido - Configuração do Sistema</h1>
@@ -195,6 +277,8 @@ function sistema_cursos_render_admin_page()
                 class="nav-tab <?php echo $active_tab == 'instrucoes' ? 'nav-tab-active' : ''; ?>">Instruções de Uso</a>
             <a href="?page=lms-suporte-rapido&tab=acesso"
                 class="nav-tab <?php echo $active_tab == 'acesso' ? 'nav-tab-active' : ''; ?>">Acesso</a>
+            <a href="?page=lms-suporte-rapido&tab=banner"
+                class="nav-tab <?php echo $active_tab == 'banner' ? 'nav-tab-active' : ''; ?>">Banner Home</a>
             <a href="?page=lms-suporte-rapido&tab=personalizar"
                 class="nav-tab <?php echo $active_tab == 'personalizar' ? 'nav-tab-active' : ''; ?>">🎨 Personalizar</a>
         </nav>
@@ -1131,6 +1215,222 @@ function sistema_cursos_render_admin_page()
                     <button type="submit" name="lms_sr_save_acesso_settings" class="button button-primary">Salvar configuração</button>
                 </p>
             </form>
+
+        <?php elseif ($active_tab == 'banner'): ?>
+
+            <?php
+            $banner_settings = sistema_cursos_get_banner_settings();
+            $banner_slides = isset($banner_settings['slides']) && is_array($banner_settings['slides']) ? $banner_settings['slides'] : [];
+            wp_enqueue_media();
+            ?>
+
+            <?php if (!empty($settings_notice)): ?>
+                <?php echo wp_kses_post($settings_notice); ?>
+            <?php endif; ?>
+
+            <h2>Banner da Página Inicial</h2>
+            <p>Configure o carrossel exibido apenas na view <code>Inicio</code> do painel, acima da lista de trilhas.</p>
+            <p class="description">Tamanho recomendado para melhor resultado visual: <strong>1340 x 365 px</strong>.</p>
+
+            <form method="post" action="">
+                <?php wp_nonce_field('lms_sr_save_banner_settings', 'lms_sr_banner_nonce'); ?>
+
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th scope="row">
+                            <label for="lms_sr_banner_autoplay">Tempo entre banners (segundos)</label>
+                        </th>
+                        <td>
+                            <input
+                                type="number"
+                                id="lms_sr_banner_autoplay"
+                                name="lms_sr_banner[autoplay_seconds]"
+                                value="<?php echo esc_attr((string) $banner_settings['autoplay_seconds']); ?>"
+                                min="2"
+                                max="30"
+                                step="1">
+                            <p class="description">Intervalo automático do carrossel (entre 2 e 30 segundos).</p>
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="lms-banner-admin-wrap">
+                    <h3>Imagens do Carrossel</h3>
+                    <p class="description">Cada imagem pode ter um link opcional (ex.: página de curso, trilha, campanha etc.).</p>
+
+                    <div id="lms-banner-slides" class="lms-banner-slides">
+                        <?php foreach ($banner_slides as $index => $slide): ?>
+                            <?php
+                            $image_id = isset($slide['image_id']) ? absint($slide['image_id']) : 0;
+                            $image_url = $image_id > 0 ? wp_get_attachment_image_url($image_id, 'medium') : '';
+                            $slide_link = isset($slide['link']) ? (string) $slide['link'] : '';
+                            ?>
+                            <div class="lms-banner-row" data-index="<?php echo esc_attr((string) $index); ?>">
+                                <div class="lms-banner-thumb">
+                                    <img src="<?php echo esc_url($image_url ?: ''); ?>" alt="" <?php echo empty($image_url) ? 'style="display:none;"' : ''; ?>>
+                                </div>
+                                <div class="lms-banner-fields">
+                                    <input type="hidden" class="lms-banner-image-id" name="lms_sr_banner[slides][<?php echo esc_attr((string) $index); ?>][image_id]" value="<?php echo esc_attr((string) $image_id); ?>">
+                                    <p>
+                                        <button type="button" class="button lms-banner-select-image"><?php echo $image_id > 0 ? 'Trocar imagem' : 'Selecionar imagem'; ?></button>
+                                        <button type="button" class="button-link-delete lms-banner-remove">Remover</button>
+                                    </p>
+                                    <label>Link (opcional)</label>
+                                    <input type="url" class="regular-text lms-banner-link-input" name="lms_sr_banner[slides][<?php echo esc_attr((string) $index); ?>][link]" value="<?php echo esc_attr($slide_link); ?>" placeholder="https://exemplo.com/pagina">
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <p>
+                        <button type="button" class="button" id="lms-banner-add">+ Adicionar imagem</button>
+                    </p>
+                </div>
+
+                <p class="submit">
+                    <button type="submit" name="lms_sr_save_banner_settings" class="button button-primary">Salvar banner</button>
+                </p>
+            </form>
+
+            <style>
+                .lms-banner-admin-wrap {
+                    margin-top: 20px;
+                    background: #fff;
+                    border: 1px solid #c3c4c7;
+                    border-radius: 6px;
+                    padding: 20px;
+                    max-width: 1000px;
+                }
+
+                .lms-banner-slides {
+                    display: grid;
+                    gap: 14px;
+                    margin-top: 12px;
+                }
+
+                .lms-banner-row {
+                    display: grid;
+                    grid-template-columns: 220px 1fr;
+                    gap: 16px;
+                    padding: 14px;
+                    border: 1px solid #dcdcde;
+                    border-radius: 6px;
+                    background: #f8f9fa;
+                }
+
+                .lms-banner-thumb {
+                    width: 100%;
+                    height: 100px;
+                    border-radius: 4px;
+                    border: 1px dashed #c3c4c7;
+                    background: #fff;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    overflow: hidden;
+                }
+
+                .lms-banner-thumb img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+
+                .lms-banner-fields label {
+                    display: block;
+                    margin-bottom: 4px;
+                    font-weight: 600;
+                }
+
+                .lms-banner-fields p {
+                    margin: 0 0 8px;
+                }
+
+                @media (max-width: 782px) {
+                    .lms-banner-row {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .lms-banner-thumb {
+                        height: 130px;
+                    }
+                }
+            </style>
+
+            <script>
+                jQuery(function ($) {
+                    var $slides = $('#lms-banner-slides');
+
+                    function createRow() {
+                        return $(
+                            '<div class="lms-banner-row" data-index="0">' +
+                            '<div class="lms-banner-thumb"><img src="" alt="" style="display:none;"></div>' +
+                            '<div class="lms-banner-fields">' +
+                            '<input type="hidden" class="lms-banner-image-id" value="">' +
+                            '<p>' +
+                            '<button type="button" class="button lms-banner-select-image">Selecionar imagem</button> ' +
+                            '<button type="button" class="button-link-delete lms-banner-remove">Remover</button>' +
+                            '</p>' +
+                            '<label>Link (opcional)</label>' +
+                            '<input type="url" class="regular-text lms-banner-link-input" value="" placeholder="https://exemplo.com/pagina">' +
+                            '</div>' +
+                            '</div>'
+                        );
+                    }
+
+                    function reindexRows() {
+                        $slides.find('.lms-banner-row').each(function (index) {
+                            $(this).attr('data-index', index);
+                            $(this).find('.lms-banner-image-id').attr('name', 'lms_sr_banner[slides][' + index + '][image_id]');
+                            $(this).find('.lms-banner-link-input').attr('name', 'lms_sr_banner[slides][' + index + '][link]');
+                        });
+                    }
+
+                    function openMediaFrame($row) {
+                        var frame = wp.media({
+                            title: 'Selecionar imagem do banner',
+                            button: { text: 'Usar imagem' },
+                            library: { type: 'image' },
+                            multiple: false
+                        });
+
+                        frame.on('select', function () {
+                            var attachment = frame.state().get('selection').first().toJSON();
+                            if (!attachment || !attachment.id) return;
+
+                            $row.find('.lms-banner-image-id').val(attachment.id);
+                            $row.find('.lms-banner-select-image').text('Trocar imagem');
+
+                            var preview = attachment.sizes && attachment.sizes.medium
+                                ? attachment.sizes.medium.url
+                                : attachment.url;
+                            $row.find('.lms-banner-thumb img').attr('src', preview).show();
+                        });
+
+                        frame.open();
+                    }
+
+                    $('#lms-banner-add').on('click', function (event) {
+                        event.preventDefault();
+                        var $row = createRow();
+                        $slides.append($row);
+                        reindexRows();
+                    });
+
+                    $slides.on('click', '.lms-banner-remove', function (event) {
+                        event.preventDefault();
+                        $(this).closest('.lms-banner-row').remove();
+                        reindexRows();
+                    });
+
+                    $slides.on('click', '.lms-banner-select-image', function (event) {
+                        event.preventDefault();
+                        openMediaFrame($(this).closest('.lms-banner-row'));
+                    });
+
+                    reindexRows();
+                });
+            </script>
 
         <?php elseif ($active_tab == 'personalizar'): ?>
 

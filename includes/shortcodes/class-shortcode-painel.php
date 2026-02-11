@@ -203,12 +203,6 @@ class System_Cursos_Shortcode_Painel
                         initialCacheKey = currentView + '-' + currentCursoId;
                     }
                     viewCache[initialCacheKey] = initialContent.innerHTML;
-
-                    if (currentView === 'inicio') {
-                        viewCache['meus-cursos'] = initialContent.innerHTML;
-                    } else if (currentView === 'meus-cursos') {
-                        viewCache['inicio'] = initialContent.innerHTML;
-                    }
                 }
 
                 // Verificar se há view na URL (?lms_view=xxx&curso_id=yyy)
@@ -353,6 +347,12 @@ class System_Cursos_Shortcode_Painel
                     if (window.SystemCursos && window.SystemCursos.initMasks) {
                         var viewContent = document.getElementById('lms-view-content');
                         window.SystemCursos.initMasks(viewContent || document);
+                    }
+
+                    // Re-inicializar banner da home (carrossel de banners)
+                    if (window.SystemCursos && window.SystemCursos.initBannerCarousel) {
+                        var bannerScope = document.getElementById('lms-view-content');
+                        window.SystemCursos.initBannerCarousel(bannerScope || document);
                     }
 
                     // Re-inicializar auto-preenchimento de CEP (Minha Conta e Cadastro)
@@ -579,6 +579,9 @@ class System_Cursos_Shortcode_Painel
 
         switch ($view) {
             case 'inicio':
+                $html = do_shortcode('[meus-cursos show_banner="1"]');
+                break;
+
             case 'meus-cursos':
                 $html = do_shortcode('[meus-cursos]');
                 break;

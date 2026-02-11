@@ -1412,9 +1412,135 @@
     gap: 20px;
 }
 
+/* Header do carrossel mais compacto */
+.lms-sr .mc-header.mc-header-carousel {
+    padding: 12px 16px !important;
+    text-align: left !important;
+    align-items: center;
+    gap: 12px;
+}
+
 .mc-header-content {
     flex: 1;
     min-width: 0;
+}
+
+/* =========================================
+   Componente: Carrossel de Banners (Home)
+   ========================================= */
+.lms-sr .lms-banner-container {
+    margin-bottom: 30px !important;
+}
+
+.lms-sr .lms-banner-carousel {
+    position: relative !important;
+    width: 100% !important;
+    aspect-ratio: 1340 / 365 !important;
+    border-radius: var(--radius-xl, 12px) !important;
+    overflow: hidden !important;
+    background: #0f0f0f !important;
+}
+
+.lms-sr .lms-banner-track {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.lms-sr .lms-banner-slide {
+    position: absolute !important;
+    inset: 0 !important;
+    opacity: 0 !important;
+    transition: opacity 0.5s ease !important;
+    pointer-events: none !important;
+}
+
+.lms-sr .lms-banner-slide.is-active {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+.lms-sr .lms-banner-link,
+.lms-sr .lms-banner-slide img {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+}
+
+.lms-sr .lms-banner-slide img {
+    object-fit: cover !important;
+}
+
+.lms-sr .lms-banner-arrow {
+    position: absolute !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    transform: none !important;
+    width: 54px !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    border: none !important;
+    background: rgba(4, 15, 28, 0.58) !important;
+    color: #fff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 38px !important;
+    line-height: 1 !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 12px rgba(0, 0, 0, 0.5) !important;
+    cursor: pointer !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: opacity 0.25s ease, background 0.25s ease !important;
+    z-index: 3 !important;
+}
+
+.lms-sr .lms-banner-carousel:hover .lms-banner-arrow,
+.lms-sr .lms-banner-carousel:focus-within .lms-banner-arrow {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.lms-sr .lms-banner-arrow:hover {
+    background: rgba(4, 15, 28, 0.8) !important;
+}
+
+.lms-sr .lms-banner-arrow-prev {
+    left: 0 !important;
+    background: linear-gradient(90deg, rgba(4, 15, 28, 0.78) 0%, rgba(4, 15, 28, 0.52) 100%) !important;
+}
+
+.lms-sr .lms-banner-arrow-next {
+    right: 0 !important;
+    background: linear-gradient(270deg, rgba(4, 15, 28, 0.78) 0%, rgba(4, 15, 28, 0.52) 100%) !important;
+}
+
+.lms-sr .lms-banner-dots {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    z-index: 3 !important;
+}
+
+.lms-sr .lms-banner-dot {
+    width: 10px !important;
+    height: 10px !important;
+    border-radius: 50% !important;
+    border: 1px solid rgba(255, 255, 255, 0.7) !important;
+    background: rgba(255, 255, 255, 0.4) !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+}
+
+.lms-sr .lms-banner-dot.is-active {
+    background: var(--color-accent, #FDC110) !important;
+    border-color: var(--color-accent, #FDC110) !important;
 }
 
 /* Responsivo para carrossel */
@@ -1436,5 +1562,15 @@
 
     .mc-header-carousel {
         flex-wrap: wrap;
+    }
+
+    .lms-sr .lms-banner-arrow {
+        width: 42px !important;
+        height: 100% !important;
+        font-size: 28px !important;
+    }
+
+    .lms-sr .lms-banner-dots {
+        bottom: 8px !important;
     }
 }
