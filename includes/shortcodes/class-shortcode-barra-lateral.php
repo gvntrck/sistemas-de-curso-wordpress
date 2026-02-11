@@ -48,7 +48,7 @@ class System_Cursos_Shortcode_Barra_Lateral
     {
         $current_user = wp_get_current_user();
         $user_id = $current_user->ID;
-        $user_name = $current_user->display_name;
+        $user_name = trim((string) get_user_meta($user_id, 'first_name', true));
         $avatar_id = get_user_meta($user_id, 'local_user_avatar_attachment_id', true);
         $avatar_url = '';
         if ($avatar_id) {
