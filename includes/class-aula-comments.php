@@ -84,6 +84,45 @@ class System_Cursos_Aula_Comments
         return nl2br(esc_html($safe_content));
     }
 
+    private static function get_comment_author_name($comment)
+    {
+        $user_id = isset($comment->user_id) ? (int) $comment->user_id : 0;
+        if ($user_id > 0) {
+            $first_name = trim((string) get_user_meta($user_id, 'first_name', true));
+            if ($first_name !== '') {
+                return $first_name;
+            }
+        }
+
+        return get_comment_author($comment);
+    }
+
+    private static function get_comment_avatar_html($comment, $size = 44)
+    {
+        $user_id = isset($comment->user_id) ? (int) $comment->user_id : 0;
+        if ($user_id > 0) {
+            $attachment_id = (int) get_user_meta($user_id, 'local_user_avatar_attachment_id', true);
+            if ($attachment_id > 0) {
+                $avatar_html = wp_get_attachment_image(
+                    $attachment_id,
+                    [$size, $size],
+                    false,
+                    [
+                        'class' => 'avatar avatar-' . (int) $size . ' photo',
+                        'loading' => 'lazy',
+                        'decoding' => 'async',
+                    ]
+                );
+
+                if (!empty($avatar_html)) {
+                    return $avatar_html;
+                }
+            }
+        }
+
+        return get_avatar($comment, $size);
+    }
+
     public static function render_comments_section($aula_id)
     {
         $aula_id = (int) $aula_id;
@@ -113,14 +152,14 @@ class System_Cursos_Aula_Comments
                 <?php else: ?>
                     <?php foreach ($comments as $comment):
                         $comment_id = (int) $comment->comment_ID;
-                        $author_name = get_comment_author($comment);
+                        $author_name = self::get_comment_author_name($comment);
                         $comment_date = get_comment_date('d/m/Y H:i', $comment);
                         $can_delete = $current_user_id > 0
                             && ((int) $comment->user_id === $current_user_id || current_user_can('manage_options'));
                         ?>
                         <article class="sc-aula-comments__item" data-comment-id="<?php echo $comment_id; ?>">
                             <div class="sc-aula-comments__avatar">
-                                <?php echo wp_kses_post(get_avatar($comment, 44)); ?>
+                                <?php echo wp_kses_post(self::get_comment_avatar_html($comment, 44)); ?>
                             </div>
                             <div class="sc-aula-comments__content">
                                 <header class="sc-aula-comments__meta">
@@ -214,12 +253,14 @@ class System_Cursos_Aula_Comments
         }
 
         $user = wp_get_current_user();
+        $first_name = trim((string) get_user_meta($user_id, 'first_name', true));
+        $author_name = $first_name !== '' ? $first_name : ($user ? $user->display_name : '');
 
         $comment_id = wp_insert_comment([
             'comment_post_ID' => $aula_id,
             'comment_content' => $content,
             'user_id' => $user_id,
-            'comment_author' => $user ? $user->display_name : '',
+            'comment_author' => $author_name,
             'comment_author_email' => $user ? $user->user_email : '',
             'comment_type' => 'comment',
             'comment_approved' => 1,
