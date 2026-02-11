@@ -819,6 +819,12 @@
     width: 100% !important;
 }
 
+.lms-sr .lista-aulas__quiz-wrapper {
+    margin-top: var(--space-lg) !important;
+    padding-top: var(--space-lg) !important;
+    border-top: 1px solid var(--color-border-light) !important;
+}
+
 .lms-sr .lista-aulas__anexos h3 {
     font-size: 16px !important;
     margin: 0 0 var(--space-xl) !important;

@@ -331,13 +331,52 @@ window.SystemCursos.initListaAulas = function (containerId) {
         ensureLessonLoadingEl();
     }
 
+    function normalizeMainSectionsOrder() {
+        if (!mainEl) return;
+
+        var headerEl = container.querySelector('.lista-aulas__header');
+        if (!headerEl) return;
+
+        var anchor = headerEl;
+        var quizWrapper = container.querySelector('.lista-aulas__quiz-wrapper');
+
+        if (descricaoEl) {
+            if (descricaoEl.parentNode !== mainEl || anchor.nextElementSibling !== descricaoEl) {
+                anchor.insertAdjacentElement('afterend', descricaoEl);
+            }
+            anchor = descricaoEl;
+        }
+
+        if (anexosWrapper) {
+            if (anexosWrapper.parentNode !== mainEl || anchor.nextElementSibling !== anexosWrapper) {
+                anchor.insertAdjacentElement('afterend', anexosWrapper);
+            }
+            anchor = anexosWrapper;
+        }
+
+        if (quizWrapper) {
+            if (quizWrapper.parentNode !== mainEl || anchor.nextElementSibling !== quizWrapper) {
+                anchor.insertAdjacentElement('afterend', quizWrapper);
+            }
+            anchor = quizWrapper;
+        }
+
+        if (comentariosWrapper) {
+            if (comentariosWrapper.parentNode !== mainEl || anchor.nextElementSibling !== comentariosWrapper) {
+                anchor.insertAdjacentElement('afterend', comentariosWrapper);
+            }
+        }
+    }
+
+    normalizeMainSectionsOrder();
+
     function atualizarComentariosSection(comentariosHtml) {
         var html = comentariosHtml || '';
-        var quizWrapper = container.querySelector('.lista-aulas__quiz-wrapper');
 
         if (html) {
             if (comentariosWrapper) {
                 comentariosWrapper.innerHTML = html;
+                normalizeMainSectionsOrder();
                 return;
             }
 
@@ -345,22 +384,19 @@ window.SystemCursos.initListaAulas = function (containerId) {
             newComentariosWrapper.className = 'lista-aulas__comentarios-wrapper';
             newComentariosWrapper.innerHTML = html;
 
-            var headerEl = container.querySelector('.lista-aulas__header');
-            var insertAfter = quizWrapper || anexosWrapper || descricaoEl || headerEl || tituloEl;
-
-            if (insertAfter) {
-                insertAfter.insertAdjacentElement('afterend', newComentariosWrapper);
-            } else if (mainEl) {
+            if (mainEl) {
                 mainEl.appendChild(newComentariosWrapper);
             }
 
             comentariosWrapper = newComentariosWrapper;
+            normalizeMainSectionsOrder();
             return;
         }
 
         if (comentariosWrapper) {
             comentariosWrapper.remove();
             comentariosWrapper = null;
+            normalizeMainSectionsOrder();
         }
     }
 
@@ -606,7 +642,9 @@ window.SystemCursos.initListaAulas = function (containerId) {
                                 var newDesc = document.createElement('div');
                                 newDesc.className = 'lista-aulas__descricao';
                                 newDesc.innerHTML = data.data.descricao;
-                                tituloEl.insertAdjacentElement('afterend', newDesc);
+                                if (mainEl) {
+                                    mainEl.appendChild(newDesc);
+                                }
                                 descricaoEl = newDesc; // update ref
                             }
                         } else {
@@ -622,8 +660,9 @@ window.SystemCursos.initListaAulas = function (containerId) {
                                 var newWrapper = document.createElement('div');
                                 newWrapper.className = 'lista-aulas__anexos-wrapper';
                                 newWrapper.innerHTML = data.data.anexos;
-                                var target = descricaoEl || tituloEl;
-                                if (target) target.insertAdjacentElement('afterend', newWrapper);
+                                if (mainEl) {
+                                    mainEl.appendChild(newWrapper);
+                                }
                                 anexosWrapper = newWrapper;
                             }
                         } else {
@@ -641,12 +680,9 @@ window.SystemCursos.initListaAulas = function (containerId) {
                                 newQuizWrapper.className = 'lista-aulas__quiz-wrapper';
                                 newQuizWrapper.innerHTML = data.data.quiz;
 
-                                // Insert logic: Must remain inside .lista-aulas__main but AFTER description/attachments
-                                // If description/attachments are missing, it should go AFTER the header, not inside it.
-                                var headerEl = container.querySelector('.lista-aulas__header');
-                                var insertAfter = anexosWrapper || descricaoEl || headerEl || tituloEl;
-
-                                if (insertAfter) insertAfter.insertAdjacentElement('afterend', newQuizWrapper);
+                                if (mainEl) {
+                                    mainEl.appendChild(newQuizWrapper);
+                                }
                                 quizWrapper = newQuizWrapper;
                             }
                         } else {
@@ -656,6 +692,7 @@ window.SystemCursos.initListaAulas = function (containerId) {
                             }
                         }
 
+                        normalizeMainSectionsOrder();
                         atualizarComentariosSection(data.data.comentarios || '');
 
                         // Update button visibility (NEW - Fix for AJAX navigation)
