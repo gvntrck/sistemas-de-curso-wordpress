@@ -561,6 +561,41 @@
     color: #fff !important;
     border-radius: var(--radius-xl) !important;
     padding: var(--space-md) !important;
+    position: relative !important;
+}
+
+.lms-sr .lista-aulas__main.is-loading {
+    cursor: progress !important;
+}
+
+.lms-sr .lista-aulas__loading {
+    display: none !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: rgba(17, 17, 17, 0.8) !important;
+    z-index: 10 !important;
+    border-radius: var(--radius-xl) !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.lms-sr .lista-aulas__loading.active {
+    display: flex !important;
+}
+
+.lms-sr .lista-aulas__spinner {
+    width: 40px !important;
+    height: 40px !important;
+    border: 3px solid var(--color-accent-shadow, rgba(252, 196, 25, 0.2)) !important;
+    border-top-color: var(--color-accent, #fcc419) !important;
+    border-radius: 50% !important;
+    animation: lista-aulas-spin 0.8s linear infinite !important;
+}
+
+@keyframes lista-aulas-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .lms-sr .lista-aulas__video {

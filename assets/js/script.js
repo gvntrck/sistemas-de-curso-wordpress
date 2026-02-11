@@ -224,6 +224,9 @@ window.SystemCursos.initListaAulas = function (containerId) {
     var mainEl = container.querySelector('.lista-aulas__main');
     var btnConcluir = container.querySelector('.lista-aulas__btn-concluir');
     var progWrapper = container.querySelector('.lista-aulas__progresso-wrapper');
+    var lessonLoadingEl = null;
+    var isLessonLoading = false;
+    var lessonRequestToken = 0;
 
     var ajaxUrl = container.getAttribute('data-ajax-url');
 
@@ -284,6 +287,47 @@ window.SystemCursos.initListaAulas = function (containerId) {
             var idx = Array.prototype.indexOf.call(allItems, item) + 1;
             indexEl.textContent = idx;
         }
+    }
+
+    function ensureLessonLoadingEl() {
+        if (!mainEl) return null;
+        if (lessonLoadingEl && lessonLoadingEl.parentNode === mainEl) return lessonLoadingEl;
+
+        lessonLoadingEl = mainEl.querySelector('.lista-aulas__loading');
+        if (!lessonLoadingEl) {
+            lessonLoadingEl = document.createElement('div');
+            lessonLoadingEl.className = 'lista-aulas__loading';
+            lessonLoadingEl.setAttribute('aria-hidden', 'true');
+            lessonLoadingEl.innerHTML = '<div class="lista-aulas__spinner"></div>';
+            mainEl.appendChild(lessonLoadingEl);
+        }
+        return lessonLoadingEl;
+    }
+
+    function setLessonLoading(active) {
+        if (!mainEl) return;
+
+        isLessonLoading = !!active;
+        mainEl.classList.toggle('is-loading', isLessonLoading);
+        mainEl.setAttribute('aria-busy', isLessonLoading ? 'true' : 'false');
+
+        var loader = ensureLessonLoadingEl();
+        if (loader) {
+            loader.classList.toggle('active', isLessonLoading);
+        }
+
+        items.forEach(function (itemEl) {
+            if (isLessonLoading) {
+                itemEl.setAttribute('aria-disabled', 'true');
+            } else {
+                itemEl.removeAttribute('aria-disabled');
+            }
+        });
+    }
+
+    if (mainEl) {
+        mainEl.setAttribute('aria-busy', 'false');
+        ensureLessonLoadingEl();
     }
 
     // Handle Toggle Complete
@@ -347,6 +391,7 @@ window.SystemCursos.initListaAulas = function (containerId) {
     items.forEach(function (item) {
         item.addEventListener('click', function (e) {
             e.preventDefault();
+            if (isLessonLoading) return;
 
             var aulaId = this.getAttribute('data-aula-id');
             if (!aulaId) return;
@@ -378,6 +423,8 @@ window.SystemCursos.initListaAulas = function (containerId) {
             var formData = new FormData();
             formData.append('action', 'lista_aulas_get_aula');
             formData.append('aula_id', aulaId);
+            var requestToken = ++lessonRequestToken;
+            setLessonLoading(true);
 
             fetch(ajaxUrl, {
                 method: 'POST',
@@ -385,6 +432,7 @@ window.SystemCursos.initListaAulas = function (containerId) {
             })
                 .then(function (response) { return response.json(); })
                 .then(function (data) {
+                    if (requestToken !== lessonRequestToken) return;
                     if (data.success && data.data) {
                         if (videoContainer) videoContainer.innerHTML = data.data.embed;
                         if (tituloEl) tituloEl.textContent = data.data.titulo;
@@ -461,7 +509,12 @@ window.SystemCursos.initListaAulas = function (containerId) {
                     }
                 })
                 .catch(function (err) {
+                    if (requestToken !== lessonRequestToken) return;
                     console.error('Erro ao carregar aula:', err);
+                })
+                .finally(function () {
+                    if (requestToken !== lessonRequestToken) return;
+                    setLessonLoading(false);
                 });
         });
     });
