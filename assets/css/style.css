@@ -1027,12 +1027,28 @@
 .lms-sr .cert-element,
 .cert-element {
     position: absolute !important;
-    transform: translateX(-50%) !important;
     font-weight: bold !important;
-    text-align: center !important;
     white-space: nowrap !important;
     line-height: 1.2 !important;
     pointer-events: none !important;
+}
+
+.lms-sr .cert-element.cert-align-center,
+.cert-element.cert-align-center {
+    transform: translateX(-50%) !important;
+    text-align: center !important;
+}
+
+.lms-sr .cert-element.cert-align-left,
+.cert-element.cert-align-left {
+    transform: none !important;
+    text-align: left !important;
+}
+
+.lms-sr .cert-element.cert-align-right,
+.cert-element.cert-align-right {
+    transform: translateX(-100%) !important;
+    text-align: right !important;
 }
 
 .lms-sr .cert-actions,

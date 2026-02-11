@@ -38,10 +38,20 @@ function imprimirCertificado() {
         }
         .cert-element {
             position: absolute;
-            transform: translateX(-50%);
             font-weight: bold;
-            text-align: center;
             white-space: nowrap;
+        }
+        .cert-element.cert-align-center {
+            transform: translateX(-50%);
+            text-align: center;
+        }
+        .cert-element.cert-align-left {
+            transform: none;
+            text-align: left;
+        }
+        .cert-element.cert-align-right {
+            transform: translateX(-100%);
+            text-align: right;
         }
         @media print {
             body {

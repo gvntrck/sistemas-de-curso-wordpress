@@ -14,7 +14,7 @@ class System_Cursos_Shortcode_Certificado
      * Se houver ID, renderiza o certificado visualmente usando o modelo configurado.
      *
      * @package SistemaCursos
-     * @version 1.2.0
+     * @version 1.2.1
      */
     public function __construct()
     {
@@ -153,6 +153,8 @@ class System_Cursos_Shortcode_Certificado
         $font_family = get_post_meta($cert_id, '_cert_font_family', true) ?: 'Roboto';
         $show_curso = get_post_meta($cert_id, '_cert_show_curso', true);
         $show_data = get_post_meta($cert_id, '_cert_show_data', true);
+        $align = get_post_meta($cert_id, '_cert_align', true) ?: 'center';
+        $align_class = 'cert-align-' . $align;
 
         // URL da fonte Google Fonts
         $font_url = 'https://fonts.googleapis.com/css2?family=' . str_replace(' ', '+', $font_family) . ':wght@400;700&display=swap';
@@ -194,7 +196,8 @@ class System_Cursos_Shortcode_Certificado
 
             <div class="cert-container" id="printable-cert" data-font="<?php echo esc_attr($font_family); ?>"
                 data-font-url="<?php echo esc_attr($font_url); ?>"
-                data-filename="<?php echo esc_attr($curso_titulo . ' - ' . $nome_aluno); ?>">
+                data-filename="<?php echo esc_attr($curso_titulo . ' - ' . $nome_aluno); ?>"
+                data-align="<?php echo esc_attr($align); ?>">
                 <?php if ($bg_url): ?>
                     <img src="<?php echo esc_url($bg_url); ?>" class="cert-bg" alt="Fundo Certificado">
                 <?php else: ?>
@@ -204,20 +207,20 @@ class System_Cursos_Shortcode_Certificado
                     </div>
                 <?php endif; ?>
 
-                <div class="cert-element"
+                <div class="cert-element <?php echo esc_attr($align_class); ?>"
                     style="top: <?php echo esc_attr($nome_top); ?>; left: <?php echo esc_attr($nome_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>; font-family: '<?php echo esc_attr($font_family); ?>', sans-serif;">
                     <?php echo esc_html($nome_aluno); ?>
                 </div>
 
                 <?php if ($show_curso === '1'): ?>
-                    <div class="cert-element"
+                    <div class="cert-element <?php echo esc_attr($align_class); ?>"
                         style="top: <?php echo esc_attr($curso_top); ?>; left: <?php echo esc_attr($curso_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>; font-family: '<?php echo esc_attr($font_family); ?>', sans-serif;">
                         <?php echo esc_html($curso_titulo); ?>
                     </div>
                 <?php endif; ?>
 
                 <?php if ($show_data === '1'): ?>
-                    <div class="cert-element"
+                    <div class="cert-element <?php echo esc_attr($align_class); ?>"
                         style="top: <?php echo esc_attr($data_top); ?>; left: <?php echo esc_attr($data_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>; font-family: '<?php echo esc_attr($font_family); ?>', sans-serif;">
                         <?php echo esc_html($data_conclusao); ?>
                     </div>

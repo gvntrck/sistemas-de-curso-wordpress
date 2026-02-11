@@ -12,7 +12,7 @@ class System_Cursos_Certificates
      * Adiciona metaboxes para configuração visual dos certificados (imagem de fundo, posições, cores) e permite vincular um modelo de certificado a um curso específico.
      *
      * @package SistemaCursos
-     * @version 1.1.8
+     * @version 1.2.0
      */
     public function __construct()
     {
@@ -143,6 +143,7 @@ class System_Cursos_Certificates
         $font_family = get_post_meta($post->ID, '_cert_font_family', true) ?: 'Roboto';
         $show_curso = get_post_meta($post->ID, '_cert_show_curso', true);
         $show_data = get_post_meta($post->ID, '_cert_show_data', true);
+        $align = get_post_meta($post->ID, '_cert_align', true) ?: 'center';
 
         // Lista de fontes do Google Fonts populares para certificados
         $google_fonts = [
@@ -241,6 +242,16 @@ class System_Cursos_Certificates
         </script>
 
         <div class="cert-row">
+            <span class="cert-label">Alinhamento Horizontal dos Textos</span>
+            <div class="cert-inputs">
+                <label><input type="radio" name="cert_align" value="left" <?php checked($align, 'left'); ?>> Esquerda</label>
+                <label><input type="radio" name="cert_align" value="center" <?php checked($align, 'center'); ?>> Centro</label>
+                <label><input type="radio" name="cert_align" value="right" <?php checked($align, 'right'); ?>> Direita</label>
+            </div>
+            <p class="description" style="margin-top:5px;">Esquerda: Left (%) define onde o texto inicia. Centro: Left (%) define o ponto central do texto. Direita: Left (%) define onde o texto termina.</p>
+        </div>
+
+        <div class="cert-row">
             <span class="cert-label">Posição: Nome do Aluno</span>
             <div class="cert-inputs">
                 <label>Top (%): <input type="number" step="0.1" min="0" max="100" name="cert_nome_top"
@@ -335,7 +346,8 @@ class System_Cursos_Certificates
                 '_cert_data_left',
                 '_cert_color',
                 '_cert_font_size',
-                '_cert_font_family'
+                '_cert_font_family',
+                '_cert_align'
             ];
 
             foreach ($fields as $field) {
