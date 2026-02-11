@@ -96,7 +96,8 @@ class System_Cursos_Lesson_Schedule
             return false;
         }
 
-        $now = (int) current_time('timestamp');
+        // Usar timestamp GMT/Unix para comparar com DateTimeImmutable::getTimestamp().
+        $now = (int) current_time('timestamp', true);
         return $now < $release_timestamp;
     }
 
