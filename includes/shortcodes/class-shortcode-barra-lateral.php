@@ -13,7 +13,7 @@ class System_Cursos_Shortcode_Barra_Lateral
      * Possui método estático render_sidebar_html() reutilizável pelo [lms-painel].
      *
      * @package SistemaCursos
-     * @version 1.1.0
+     * @version 1.1.1
      */
     public function __construct()
     {
@@ -49,7 +49,14 @@ class System_Cursos_Shortcode_Barra_Lateral
         $current_user = wp_get_current_user();
         $user_id = $current_user->ID;
         $user_name = $current_user->display_name;
-        $avatar_url = get_avatar_url($user_id, ['size' => 96]);
+        $avatar_id = get_user_meta($user_id, 'local_user_avatar_attachment_id', true);
+        $avatar_url = '';
+        if ($avatar_id) {
+            $avatar_url = wp_get_attachment_image_url($avatar_id, 'medium');
+        }
+        if (empty($avatar_url)) {
+            $avatar_url = get_avatar_url($user_id, ['size' => 96]);
+        }
 
         // Definir itens de navegação
         $nav_items = [
