@@ -5,7 +5,7 @@
 
  • liberar aula e trilha com agenda e mensagem de aula bloqueada até a data de liberação
  
-
+ • certificado por grupo de alunos (testar)
 
 
 
