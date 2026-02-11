@@ -92,25 +92,30 @@ class System_Cursos_Shortcode_Certificado
 
         ob_start();
         ?>
-        <div class="cert-grid">
-            <?php foreach ($certificados_disponiveis as $id):
-                $titulo = get_the_title($id);
-                $link = add_query_arg('curso_id', $id, get_permalink());
-                ?>
-                <a href="#" class="cert-card" data-curso-id="<?php echo esc_attr($id); ?>" data-view="certificado-view">
-                    <svg class="cert-icon" style="width: 48px; height: 48px; display: block; margin: 0 auto 15px;"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="12" cy="8" r="6" />
-                        <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
-                    </svg>
-                    <h4>
-                        <?php echo esc_html($titulo); ?>
-                    </h4>
-                    <span class="mc-btn mc-btn-primary" style="font-size: 0.8rem; padding: 6px 12px; margin-top: auto;">Ver
-                        Certificado</span>
-                </a>
-            <?php endforeach; ?>
+        <div class="mc-container" style="max-width: 100%; margin-left: 0; margin-right: 0;">
+        <div class="mc-body">
+            <h2 style="margin-bottom: 20px; color: var(--color-text-heading, #fff);">Meus Certificados</h2>
+            <div class="cert-grid">
+                <?php foreach ($certificados_disponiveis as $id):
+                    $titulo = get_the_title($id);
+                    $link = add_query_arg('curso_id', $id, get_permalink());
+                    ?>
+                    <a href="#" class="cert-card" data-curso-id="<?php echo esc_attr($id); ?>" data-view="certificado-view">
+                        <svg class="cert-icon" style="width: 48px; height: 48px; display: block; margin: 0 auto 15px;"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="6" />
+                            <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+                        </svg>
+                        <h4>
+                            <?php echo esc_html($titulo); ?>
+                        </h4>
+                        <span class="mc-btn mc-btn-primary" style="font-size: 0.8rem; padding: 6px 12px; margin-top: auto;">Ver
+                            Certificado</span>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
         </div>
         <?php
         return ob_get_clean();
