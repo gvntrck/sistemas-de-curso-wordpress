@@ -1,5 +1,5 @@
 ---
-status: unfilled
+status: filled
 generated: 2026-02-10
 agents:
   - type: "code-reviewer"
@@ -56,35 +56,25 @@ phases:
 > Ajuste de Shortcode Barra Lateral
 
 ## Task Snapshot
-- **Primary goal:** TODO: Describe the outcome to achieve.
-- **Success signal:** TODO: Define how the team will know the plan worked.
+- **Primary goal:** Corrigir e aprimorar o shortcode `[barra-lateral-aluno]` — incluindo bug da foto que não mostra corretamente (roadmap.txt) e melhorias de UX.
+- **Success signal:** Barra lateral exibe avatar correto do aluno, links funcionais, progresso geral atualizado, e layout responsivo em mobile.
 - **Key references:**
   - [Documentation Index](../docs/README.md)
   - [Agent Handbook](../agents/README.md)
   - [Plans Index](./README.md)
 
 ## Codebase Context
-- **Total files analyzed:** 5
-- **Total symbols discovered:** 10
-- **Architecture layers:** Generators
+- **Arquivo principal:** `includes/shortcodes/class-shortcode-barra-lateral.php`
+- **Template de referência:** `modelo-barra-lateral.html`
+- **CSS:** `assets/css/style.css`
+- **Dependências:** `System_Cursos_Access_Control`, `System_Cursos_Progress`
 
 ## Agent Lineup
 | Agent | Role in this plan | Playbook | First responsibility focus |
 | --- | --- | --- | --- |
-| Code Reviewer | TODO: Describe why this agent is involved. | [Code Reviewer](../agents/code-reviewer.md) | Review code changes for quality, style, and best practices |
-| Bug Fixer | TODO: Describe why this agent is involved. | [Bug Fixer](../agents/bug-fixer.md) | Analyze bug reports and error messages |
-| Feature Developer | TODO: Describe why this agent is involved. | [Feature Developer](../agents/feature-developer.md) | Implement new features according to specifications |
-| Refactoring Specialist | TODO: Describe why this agent is involved. | [Refactoring Specialist](../agents/refactoring-specialist.md) | Identify code smells and improvement opportunities |
-| Test Writer | TODO: Describe why this agent is involved. | [Test Writer](../agents/test-writer.md) | Write comprehensive unit and integration tests |
-| Documentation Writer | TODO: Describe why this agent is involved. | [Documentation Writer](../agents/documentation-writer.md) | Create clear, comprehensive documentation |
-| Performance Optimizer | TODO: Describe why this agent is involved. | [Performance Optimizer](../agents/performance-optimizer.md) | Identify performance bottlenecks |
-| Security Auditor | TODO: Describe why this agent is involved. | [Security Auditor](../agents/security-auditor.md) | Identify security vulnerabilities |
-| Backend Specialist | TODO: Describe why this agent is involved. | [Backend Specialist](../agents/backend-specialist.md) | Design and implement server-side architecture |
-| Frontend Specialist | TODO: Describe why this agent is involved. | [Frontend Specialist](../agents/frontend-specialist.md) | Design and implement user interfaces |
-| Architect Specialist | TODO: Describe why this agent is involved. | [Architect Specialist](../agents/architect-specialist.md) | Design overall system architecture and patterns |
-| Devops Specialist | TODO: Describe why this agent is involved. | [Devops Specialist](../agents/devops-specialist.md) | Design and maintain CI/CD pipelines |
-| Database Specialist | TODO: Describe why this agent is involved. | [Database Specialist](../agents/database-specialist.md) | Design and optimize database schemas |
-| Mobile Specialist | TODO: Describe why this agent is involved. | [Mobile Specialist](../agents/mobile-specialist.md) | Develop native and cross-platform mobile applications |
+| Bug Fixer | Investigar e corrigir bug da foto incorreta na barra lateral | [Bug Fixer](../agents/bug-fixer.md) | Diagnosticar causa raiz do avatar incorreto |
+| Frontend Specialist | Ajustar HTML/CSS da barra lateral para responsividade | [Frontend Specialist](../agents/frontend-specialist.md) | Corrigir layout e estilos |
+| Code Reviewer | Revisar alterações antes do merge | [Code Reviewer](../agents/code-reviewer.md) | Validar segurança e padrões |
 
 ## Documentation Touchpoints
 | Guide | File | Primary Inputs |
@@ -104,58 +94,57 @@ Identify potential blockers, dependencies, and mitigation strategies before begi
 ### Identified Risks
 | Risk | Probability | Impact | Mitigation Strategy | Owner |
 | --- | --- | --- | --- | --- |
-| TODO: Dependency on external team | Medium | High | Early coordination meeting, clear requirements | TODO: Name |
-| TODO: Insufficient test coverage | Low | Medium | Allocate time for test writing in Phase 2 | TODO: Name |
+| Avatar depende de get_avatar() do WP | Medium | Medium | Verificar se Gravatar ou user_meta photo está configurado | Bug Fixer |
+| CSS pode conflitar com tema ativo | Low | Medium | Usar prefixos CSS específicos do plugin | Frontend Specialist |
 
 ### Dependencies
-- **Internal:** TODO: List dependencies on other teams, services, or infrastructure
-- **External:** TODO: List dependencies on third-party services, vendors, or partners
-- **Technical:** TODO: List technical prerequisites or required upgrades
+- **Internal:** `System_Cursos_Progress` para cálculo de progresso geral
+- **External:** WordPress `get_avatar()` / Gravatar
+- **Technical:** Nenhuma atualização de dependência necessária
 
 ### Assumptions
-- TODO: Document key assumptions being made (e.g., "Assume current API schema remains stable")
-- TODO: Note what happens if assumptions prove false
+- O avatar do aluno é gerenciado via Gravatar ou plugin de avatar local
+- Os links da barra lateral são configuráveis via atributos do shortcode
 
 ## Resource Estimation
 
 ### Time Allocation
 | Phase | Estimated Effort | Calendar Time | Team Size |
 | --- | --- | --- | --- |
-| Phase 1 - Discovery | TODO: e.g., 2 person-days | 3-5 days | 1-2 people |
-| Phase 2 - Implementation | TODO: e.g., 5 person-days | 1-2 weeks | 2-3 people |
-| Phase 3 - Validation | TODO: e.g., 2 person-days | 3-5 days | 1-2 people |
-| **Total** | **TODO: total** | **TODO: total** | **-** |
+| Phase 1 - Discovery | 1 hora | 1 dia | 1 pessoa |
+| Phase 2 - Implementation | 2-3 horas | 1 dia | 1 pessoa |
+| Phase 3 - Validation | 1 hora | 1 dia | 1 pessoa |
+| **Total** | **4-5 horas** | **1-2 dias** | **1 pessoa** |
 
 ### Required Skills
-- TODO: List required expertise (e.g., "React experience", "Database optimization", "Infrastructure knowledge")
-- TODO: Identify skill gaps and training needs
-
-### Resource Availability
-- **Available:** TODO: List team members and their availability
-- **Blocked:** TODO: Note any team members with conflicting priorities
-- **Escalation:** TODO: Name of person to contact if resources are insufficient
+- PHP WordPress (shortcodes, get_avatar, user_meta)
+- CSS responsivo
+- Debug de AJAX/frontend
 
 ## Working Phases
 ### Phase 1 — Discovery & Alignment
 **Steps**
-1. TODO: Outline discovery tasks and assign the accountable owner.
-2. TODO: Capture open questions that require clarification.
+1. Analisar `class-shortcode-barra-lateral.php` para entender como o avatar é carregado.
+2. Identificar se o bug é no `get_avatar()`, no user_meta, ou no CSS.
+3. Verificar `modelo-barra-lateral.html` para comparar com o output atual.
 
 **Commit Checkpoint**
 - After completing this phase, capture the agreed context and create a commit (for example, `git commit -m "chore(plan): complete phase 1 discovery"`).
 
 ### Phase 2 — Implementation & Iteration
 **Steps**
-1. TODO: Note build tasks, pairing expectations, and review cadence.
-2. TODO: Reference docs or playbooks to keep changes aligned.
+1. Corrigir a lógica de carregamento do avatar no shortcode.
+2. Ajustar CSS para responsividade mobile da barra lateral.
+3. Atualizar versão no header do plugin.
 
 **Commit Checkpoint**
 - Summarize progress, update cross-links, and create a commit documenting the outcomes of this phase (for example, `git commit -m "chore(plan): complete phase 2 implementation"`).
 
 ### Phase 3 — Validation & Handoff
 **Steps**
-1. TODO: Detail testing, verification, and documentation updates.
-2. TODO: Document evidence the team must capture for maintainers.
+1. Testar barra lateral com diferentes alunos (com/sem foto, com/sem cursos).
+2. Testar em viewport mobile e desktop.
+3. Verificar que progresso geral é calculado corretamente.
 
 **Commit Checkpoint**
 - Record the validation evidence and create a commit signalling the handoff completion (for example, `git commit -m "chore(plan): complete phase 3 validation"`).
@@ -178,14 +167,14 @@ When to initiate rollback:
 - Estimated Time: < 1 hour
 
 #### Phase 2 Rollback
-- Action: TODO: Revert commits, restore database to pre-migration snapshot
-- Data Impact: TODO: Describe any data loss or consistency concerns
-- Estimated Time: TODO: e.g., 2-4 hours
+- Action: Reverter commits no Git, restaurar versão anterior do shortcode
+- Data Impact: Nenhum (alterações apenas em código PHP/CSS)
+- Estimated Time: < 30 minutos
 
 #### Phase 3 Rollback
-- Action: TODO: Full deployment rollback, restore previous version
-- Data Impact: TODO: Document data synchronization requirements
-- Estimated Time: TODO: e.g., 1-2 hours
+- Action: Reverter para versão anterior do plugin
+- Data Impact: Nenhum
+- Estimated Time: < 15 minutos
 
 ### Post-Rollback Actions
 1. Document reason for rollback in incident report
