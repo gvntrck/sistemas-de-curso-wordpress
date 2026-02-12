@@ -225,8 +225,8 @@ class System_Cursos_CPT_Manager
             wp_enqueue_script(
                 'sistema-cursos-admin',
                 plugins_url('assets/js/admin-metaboxes.js', dirname(__DIR__) . '/sistema-cursos-plugin.php'),
-                ['jquery'],
-                '1.0.3',
+                ['jquery', 'jquery-ui-sortable'],
+                '1.0.4',
                 true
             );
 
@@ -413,7 +413,7 @@ class System_Cursos_CPT_Manager
         $aulas = get_posts([
             'post_type' => 'aula',
             'numberposts' => -1,
-            'orderby' => 'title',
+            'orderby' => 'menu_order',
             'order' => 'ASC',
             'post_status' => ['publish', 'draft', 'pending', 'future', 'private']
         ]);
@@ -457,17 +457,20 @@ class System_Cursos_CPT_Manager
                 }
 
                 echo '<div class="sc-aula-item" data-in-course="' . ($belongs_to_this_course ? '1' : '0') . '" style="margin-bottom: 5px;">';
-                echo '<label>';
-                echo '<input type="checkbox" name="curso_aulas[]" value="' . esc_attr($aula->ID) . '" ' . $checked . '> ';
+                echo '<span class="sc-aula-item-handle" style="display:inline-block; cursor:move; color:#646970; margin-right:8px;" title="Arraste para reordenar">&#9776;</span>';
+                echo '<label style="display:inline-block; margin-right:6px;">';
+                echo '<input type="checkbox" name="curso_aulas[]" value="' . esc_attr($aula->ID) . '" ' . $checked . '>';
+                echo '</label>';
                 echo '<strong>' . esc_html($aula->post_title) . '</strong>';
                 echo $status_label;
                 echo $extra_info;
-                echo '</label>';
                 echo '</div>';
             }
         }
 
         echo '</div>';
+        echo '<input type="hidden" id="curso_aulas_order" name="curso_aulas_order" value="">';
+        echo '<p class="description">Arraste as aulas para definir a ordem exibida para o aluno. A listagem do aluno continua usando a ordenacao padrao por <code>menu_order</code>.</p>';
         echo '<p class="description">Selecione as aulas que pertencem a este curso. Atenção: Se uma aula já estiver em outro curso, ela será movida para este.</p>';
     }
 
@@ -790,6 +793,56 @@ class System_Cursos_CPT_Manager
                     delete_post_meta($aid, 'curso');
                 }
             }
+
+            // 2.1 Persistir ordem das aulas selecionadas para refletir no player do aluno.
+            $aulas_ordenadas_raw = isset($_POST['curso_aulas_order']) ? (string) wp_unslash($_POST['curso_aulas_order']) : '';
+            $aulas_ordenadas = [];
+
+            if ($aulas_ordenadas_raw !== '') {
+                $aulas_ordenadas = array_filter(array_map('intval', explode(',', $aulas_ordenadas_raw)), static function ($id) {
+                    return $id > 0;
+                });
+                $aulas_ordenadas = array_values(array_unique($aulas_ordenadas));
+            }
+
+            // Fallback sem JS: respeita a ordem de submissao dos checkboxes.
+            if (empty($aulas_ordenadas)) {
+                $aulas_ordenadas = $aulas_selecionadas;
+            }
+
+            // Mantem apenas aulas selecionadas neste curso.
+            $aulas_ordenadas = array_values(array_filter($aulas_ordenadas, static function ($id) use ($aulas_selecionadas) {
+                return in_array($id, $aulas_selecionadas, true);
+            }));
+
+            // Garante inclusao de aulas selecionadas ausentes no payload ordenado.
+            foreach ($aulas_selecionadas as $aula_id) {
+                if (!in_array($aula_id, $aulas_ordenadas, true)) {
+                    $aulas_ordenadas[] = $aula_id;
+                }
+            }
+
+            // Evita recursao do save_post da propria classe ao ajustar menu_order das aulas.
+            remove_action('save_post', [$this, 'save_metaboxes']);
+
+            $menu_order = 0;
+            foreach ($aulas_ordenadas as $aula_id) {
+                $aula_post = get_post($aula_id);
+                if (!$aula_post || $aula_post->post_type !== 'aula') {
+                    continue;
+                }
+
+                if ((int) $aula_post->menu_order !== $menu_order) {
+                    wp_update_post([
+                        'ID' => $aula_id,
+                        'menu_order' => $menu_order,
+                    ]);
+                }
+
+                $menu_order++;
+            }
+
+            add_action('save_post', [$this, 'save_metaboxes']);
 
             // 3. Criacao rapida de novas aulas dentro da tela do curso
             $novas_aulas = isset($_POST['curso_novas_aulas']) ? (array) $_POST['curso_novas_aulas'] : [];

@@ -89,8 +89,26 @@ jQuery(document).ready(function ($) {
     });
 
     // --------------------------------------------------------------------------
-    // 3. Filtro do metabox "Gerenciar Aulas do Curso"
+    // 3. Filtro + ordenacao por arrastar no metabox "Gerenciar Aulas do Curso"
     // --------------------------------------------------------------------------
+    function syncCourseLessonsOrder() {
+        var $list = $('#curso_aulas_manager_list');
+        var $orderInput = $('#curso_aulas_order');
+        if (!$list.length || !$orderInput.length) {
+            return;
+        }
+
+        var orderedIds = [];
+        $list.find('.sc-aula-item').each(function () {
+            var $checkbox = $(this).find('input[name="curso_aulas[]"]');
+            if ($checkbox.length && $checkbox.is(':checked')) {
+                orderedIds.push(String($checkbox.val() || ''));
+            }
+        });
+
+        $orderInput.val(orderedIds.join(','));
+    }
+
     function updateCourseLessonsFilter() {
         var $list = $('#curso_aulas_manager_list');
         if (!$list.length) {
@@ -102,9 +120,11 @@ jQuery(document).ready(function ($) {
 
         $list.find('.sc-aula-item').each(function () {
             var $item = $(this);
-            var isInCourse = String($item.attr('data-in-course')) === '1';
+            var $checkbox = $item.find('input[name="curso_aulas[]"]');
+            var isInCourse = $checkbox.is(':checked');
             var shouldShow = selectedFilter === 'all' || isInCourse;
 
+            $item.attr('data-in-course', isInCourse ? '1' : '0');
             $item.toggle(shouldShow);
             if (shouldShow) {
                 visibleCount += 1;
@@ -112,10 +132,33 @@ jQuery(document).ready(function ($) {
         });
 
         $('#curso_aulas_manager_empty_filter').toggle(visibleCount === 0);
+        syncCourseLessonsOrder();
+    }
+
+    function initCourseLessonsSortable() {
+        var $list = $('#curso_aulas_manager_list');
+        if (!$list.length || typeof $list.sortable !== 'function') {
+            return;
+        }
+
+        $list.sortable({
+            items: '.sc-aula-item:visible',
+            handle: '.sc-aula-item-handle',
+            cursor: 'move',
+            tolerance: 'pointer',
+            cancel: 'input, a, button, textarea, select',
+            update: function () {
+                syncCourseLessonsOrder();
+            }
+        });
     }
 
     $(document).on('change', 'input[name="curso_aulas_filter_view"]', updateCourseLessonsFilter);
+    $(document).on('change', '#curso_aulas_manager_list input[name="curso_aulas[]"]', updateCourseLessonsFilter);
+
+    initCourseLessonsSortable();
     updateCourseLessonsFilter();
+    syncCourseLessonsOrder();
 
     // --------------------------------------------------------------------------
     // 4. Criacao rapida de aulas na tela do curso
