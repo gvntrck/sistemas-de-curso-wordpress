@@ -176,6 +176,30 @@
     cursor: pointer !important;
 }
 
+/* Sidebar toggle buttons — override global transparent reset */
+.lms-sr .sc-sidebar-toggle {
+    background-color: var(--color-accent, #FDC110) !important;
+    border: none !important;
+    color: #111 !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+}
+.lms-sr .sc-sidebar-toggle:hover {
+    background-color: var(--color-accent-hover, #e6b00f) !important;
+}
+.lms-sr .sc-sidebar-mobile-toggle {
+    background-color: var(--color-accent, #FDC110) !important;
+    color: #111 !important;
+    border: none !important;
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+}
+
 .lms-sr svg {
     display: inline-block !important;
     vertical-align: middle !important;

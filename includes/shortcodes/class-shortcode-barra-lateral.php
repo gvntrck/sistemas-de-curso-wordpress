@@ -113,35 +113,33 @@ class System_Cursos_Shortcode_Barra_Lateral
                 align-items: center;
                 padding: 2rem 1.5rem;
                 color: var(--color-text-primary, #e0e0e0);
-                overflow: hidden;
+                overflow: visible;
                 margin: 0 auto;
                 transition: width 0.3s ease, min-height 0.3s ease, padding 0.3s ease, border-radius 0.3s ease;
             }
 
             /* Toggle Button */
             .sc-sidebar-toggle {
-                position: absolute;
-                top: 12px;
-                right: -16px;
+                align-self: flex-end;
                 width: 32px;
                 height: 32px;
                 border-radius: 50%;
                 background: var(--color-accent, #fcc419);
-                border: 2px solid var(--color-accent, #fcc419);
+                border: none;
                 color: #111;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 z-index: 20;
-                transition: background 0.2s ease, transform 0.3s ease;
+                transition: background 0.2s ease;
                 padding: 0;
                 line-height: 1;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                margin-bottom: 0.5rem;
+                flex-shrink: 0;
             }
             .sc-sidebar-toggle:hover {
                 background: #e0ac00;
-                border-color: #e0ac00;
             }
             .sc-sidebar-toggle svg {
                 width: 16px;
@@ -407,10 +405,11 @@ class System_Cursos_Shortcode_Barra_Lateral
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
         <div class="sc-sidebar-container" id="sc-sidebar-container">
-            <button class="sc-sidebar-toggle" id="sc-sidebar-toggle" aria-label="Recolher menu">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
             <aside class="sc-sidebar-card" id="sidebar-card">
+                <!-- Toggle -->
+                <button class="sc-sidebar-toggle" id="sc-sidebar-toggle" aria-label="Recolher menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
                 <!-- Header -->
                 <header class="sc-sidebar-header">
                     <div class="sc-sidebar-avatar-container">
