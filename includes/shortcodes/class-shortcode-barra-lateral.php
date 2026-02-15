@@ -511,8 +511,14 @@ class System_Cursos_Shortcode_Barra_Lateral
                 // Mobile open/close
                 if (mobileBtn && overlay) {
                     mobileBtn.addEventListener('click', function() {
-                        container.classList.add('mobile-open');
-                        overlay.classList.add('active');
+                        var isOpen = container.classList.contains('mobile-open');
+                        if (isOpen) {
+                            container.classList.remove('mobile-open');
+                            overlay.classList.remove('active');
+                        } else {
+                            container.classList.add('mobile-open');
+                            overlay.classList.add('active');
+                        }
                     });
                     overlay.addEventListener('click', function() {
                         container.classList.remove('mobile-open');
