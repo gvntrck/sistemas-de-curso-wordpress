@@ -122,29 +122,32 @@ class System_Cursos_Shortcode_Barra_Lateral
             .sc-sidebar-toggle {
                 position: absolute;
                 top: 12px;
-                right: -14px;
-                width: 28px;
-                height: 28px;
+                right: -16px;
+                width: 32px;
+                height: 32px;
                 border-radius: 50%;
-                background: var(--color-bg-tertiary, #111111);
-                border: 2px solid var(--color-border, #2a2a2a);
-                color: var(--color-accent, #fcc419);
+                background: var(--color-accent, #fcc419);
+                border: 2px solid var(--color-accent, #fcc419);
+                color: #111;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 z-index: 20;
-                transition: transform 0.3s ease;
+                transition: background 0.2s ease, transform 0.3s ease;
                 padding: 0;
                 line-height: 1;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             }
             .sc-sidebar-toggle:hover {
-                background: var(--color-border, #2a2a2a);
+                background: #e0ac00;
+                border-color: #e0ac00;
             }
             .sc-sidebar-toggle svg {
-                width: 14px;
-                height: 14px;
+                width: 16px;
+                height: 16px;
                 transition: transform 0.3s ease;
+                stroke: #111;
             }
 
             /* Collapsed State */
