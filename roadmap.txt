@@ -8,3 +8,4 @@ nome do curso no resultado de busca de aula
 checkout independente de woocommerce 
 
 barra lateral retratil
+

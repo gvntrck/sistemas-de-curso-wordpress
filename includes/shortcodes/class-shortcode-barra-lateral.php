@@ -182,6 +182,9 @@ class System_Cursos_Shortcode_Barra_Lateral
             .sc-sidebar-container.collapsed .sc-sidebar-toggle svg {
                 transform: rotate(180deg);
             }
+            .sc-sidebar-container.collapsed .sc-sidebar-toggle {
+                align-self: center;
+            }
             .sc-sidebar-container.collapsed .sc-sidebar-divider {
                 padding-top: 0.5rem;
                 margin-top: 0.5rem;
