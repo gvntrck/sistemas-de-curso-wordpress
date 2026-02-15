@@ -100,6 +100,7 @@ class System_Cursos_Shortcode_Barra_Lateral
                 font-family: var(--font-family, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
                 box-sizing: border-box;
                 position: relative;
+                z-index: 20;
             }
 
             .sc-sidebar-card {
@@ -184,6 +185,7 @@ class System_Cursos_Shortcode_Barra_Lateral
             }
             .sc-sidebar-container.collapsed .sc-sidebar-toggle {
                 align-self: center;
+                margin-bottom: 1rem;
             }
             .sc-sidebar-container.collapsed .sc-sidebar-divider {
                 padding-top: 0.5rem;
@@ -193,6 +195,7 @@ class System_Cursos_Shortcode_Barra_Lateral
             /* Tooltip on collapsed icons */
             .sc-sidebar-container.collapsed .sc-sidebar-link {
                 position: relative;
+                z-index: 1;
             }
             .sc-sidebar-container.collapsed .sc-sidebar-link::after {
                 content: attr(data-tooltip);
@@ -209,10 +212,13 @@ class System_Cursos_Shortcode_Barra_Lateral
                 opacity: 0;
                 pointer-events: none;
                 transition: opacity 0.2s;
-                z-index: 100;
+                z-index: 9999;
             }
             .sc-sidebar-container.collapsed .sc-sidebar-link:hover::after {
                 opacity: 1;
+            }
+            .sc-sidebar-container.collapsed .sc-sidebar-link:hover {
+                z-index: 30;
             }
 
             .sc-sidebar-header {

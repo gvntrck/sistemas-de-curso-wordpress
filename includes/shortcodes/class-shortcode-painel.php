@@ -87,6 +87,7 @@ class System_Cursos_Shortcode_Painel
                 flex-shrink: 0;
                 position: sticky;
                 top: 2rem;
+                z-index: 20;
             }
 
             .lms-painel-content {
