@@ -152,14 +152,7 @@ class System_Cursos_Shortcode_Painel
 
                 .lms-painel-sidebar {
                     position: static;
-                    width: 100%;
-                }
-
-                .lms-painel-sidebar .sc-sidebar-card {
-                    width: 100% !important;
-                    min-height: auto !important;
-                    border-radius: 16px;
-                    padding: 1.5rem 1rem;
+                    width: auto;
                 }
 
                 .lms-painel-content {
