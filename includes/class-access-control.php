@@ -1205,6 +1205,21 @@ class System_Cursos_Access_Control
             }
         }
 
+        // Atualizar data de expiração (Edição)
+        if (isset($_POST['update_access_date']) && wp_verify_nonce($_POST['_wpnonce'], 'aluno_update_access_date')) {
+            $user_id = (int) $_POST['user_id'];
+            $curso_id = (int) $_POST['curso_id'];
+            $data_fim = !empty($_POST['data_fim']) ? sanitize_text_field($_POST['data_fim']) . ' 23:59:59' : null;
+
+            if ($user_id > 0 && $curso_id > 0) {
+                // Reutilizamos grant_access para atualizar a data
+                self::grant_access($user_id, $curso_id, $data_fim, get_current_user_id());
+
+                wp_redirect(admin_url('admin.php?page=acesso-cursos-alunos&action=view&user_id=' . $user_id . '&msg=data_atualizada'));
+                exit;
+            }
+        }
+
         // Conceder acesso com data de expiração
         if (isset($_POST['conceder_acesso']) && wp_verify_nonce($_POST['_wpnonce'], 'aluno_conceder_acesso')) {
             $user_id = (int) $_POST['user_id'];
@@ -1451,6 +1466,9 @@ class System_Cursos_Access_Control
                         switch ($_GET['msg']) {
                             case 'updated':
                                 echo 'Aluno atualizado com sucesso!';
+                                break;
+                            case 'data_atualizada':
+                                echo 'Data de expiração atualizada com sucesso!';
                                 break;
                             case 'cleanup_success':
                                 $stats = isset($_GET['stats']) ? json_decode(base64_decode($_GET['stats']), true) : [];
@@ -2406,623 +2424,675 @@ class System_Cursos_Access_Control
                                     <?php else: ?>
                                         —
                                     <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php echo $acesso ? date('d/m/Y', strtotime($acesso->created_at)) : '—'; ?>
-                                </td>
-                                <td>
-                                    <?php if ($is_group_access): ?>
-                                        <small style="color:#666;">Acesso via grupo. Edite o grupo ou remova o aluno dele.</small>
-                                    <?php elseif (!$acesso || $acesso->status !== 'ativo' || $expirado): ?>
-                                        <button type="submit" name="acao_rapida" value="ativar_<?php echo $curso->ID; ?>"
-                                            class="button button-primary button-small">
-                                            Conceder Acesso
-                                        </button>
-                                    <?php else: ?>
-                                        <button type="submit" name="acao_rapida" value="suspender_<?php echo $curso->ID; ?>"
-                                            class="button button-small">
-                                            Suspender
-                                        </button>
-                                        <button type="submit" name="acao_rapida" value="revogar_<?php echo $curso->ID; ?>"
-                                            class="button button-small" style="color: #dc3232;">
-                                            Revogar
-                                        </button>
-                                    <?php endif; ?>
+                                <?php if ($tem_acesso && !$is_group_access && $acesso): ?>
+                                                        <button type="button" class="button button-small" 
+                                                            onclick="openEditDateModal(<?php echo (int) $curso->ID; ?>, '<?php echo $acesso->data_fim ? date('Y-m-d', strtotime($acesso->data_fim)) : ''; ?>')"
+                                                            title="Editar data de expiração"
+                                                            style="margin-left: 5px; padding: 0 4px; min-height: 24px; line-height: 1;">
+                                                            <span class="dashicons dashicons-edit" style="font-size: 14px; width: 14px; height: 14px; padding-top: 3px;"></span>
+                                                        </button>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php echo $acesso ? date('d/m/Y', strtotime($acesso->created_at)) : '—'; ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($is_group_access): ?>
+                                                        <small style="color:#666;">Acesso via grupo. Edite o grupo ou remova o aluno dele.</small>
+                                                <?php elseif (!$acesso || $acesso->status !== 'ativo' || $expirado): ?>
+                                                        <button type="submit" name="acao_rapida" value="ativar_<?php echo $curso->ID; ?>"
+                                                            class="button button-primary button-small">
+                                                            Conceder Acesso
+                                                        </button>
+                                                <?php else: ?>
+                                                        <button type="submit" name="acao_rapida" value="suspender_<?php echo $curso->ID; ?>"
+                                                            class="button button-small">
+                                                            Suspender
+                                                        </button>
+                                                        <button type="submit" name="acao_rapida" value="revogar_<?php echo $curso->ID; ?>"
+                                                            class="button button-small" style="color: #dc3232;">
+                                                            Revogar
+                                                        </button>
+                                                <?php endif; ?>
 
-                                    <?php if ($acesso && $acesso->status === 'suspenso' && !$is_group_access): ?>
-                                        <button type="submit" name="acao_rapida" value="reativar_<?php echo $curso->ID; ?>"
-                                            class="button button-primary button-small">
-                                            Reativar
-                                        </button>
-                                    <?php endif; ?>
+                                                <?php if ($acesso && $acesso->status === 'suspenso' && !$is_group_access): ?>
+                                                        <button type="submit" name="acao_rapida" value="reativar_<?php echo $curso->ID; ?>"
+                                                            class="button button-primary button-small">
+                                                            Reativar
+                                                        </button>
+                                                <?php endif; ?>
 
-                                    <?php if ($tem_acesso): ?>
-                                        <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
-                                            <button type="button" class="button button-small sc-open-lesson-progress-modal"
-                                                data-user-id="<?php echo (int) $user->ID; ?>"
-                                                data-curso-id="<?php echo (int) $curso->ID; ?>"
-                                                data-curso-titulo="<?php echo esc_attr($curso->post_title); ?>">
-                                                Gerenciar Aulas
-                                            </button>
-                                            <a href="<?php echo esc_url($cert_link); ?>" target="_blank"
-                                                class="button button-small" title="Emitir certificado para este aluno">
-                                                Gerar Certificado
-                                            </a>
-                                        </div>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </form>
+                                                <?php if ($tem_acesso): ?>
+                                                        <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
+                                                            <button type="button" class="button button-small sc-open-lesson-progress-modal"
+                                                                data-user-id="<?php echo (int) $user->ID; ?>"
+                                                                data-curso-id="<?php echo (int) $curso->ID; ?>"
+                                                                data-curso-titulo="<?php echo esc_attr($curso->post_title); ?>">
+                                                                Gerenciar Aulas
+                                                            </button>
+                                                            <a href="<?php echo esc_url($cert_link); ?>" target="_blank" class="button button-small"
+                                                                title="Emitir certificado para este aluno">
+                                                                Gerar Certificado
+                                                            </a>
+                                                        </div>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </form>
 
-            <div
-                style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin-top: 20px; max-width: 500px;">
-                <h3 style="margin-top: 0;">Conceder Acesso com Data de Expiração</h3>
-                <form method="post" style="display: flex; flex-direction: column; gap: 10px;">
-                    <?php wp_nonce_field('aluno_conceder_acesso'); ?>
-                    <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+                    <div
+                        style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin-top: 20px; max-width: 500px;">
+                        <h3 style="margin-top: 0;">Conceder Acesso com Data de Expiração</h3>
+                        <form method="post" style="display: flex; flex-direction: column; gap: 10px;">
+                            <?php wp_nonce_field('aluno_conceder_acesso'); ?>
+                            <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
 
-                    <label>
-                        <strong>Curso:</strong><br>
-                        <select name="curso_id" required style="width: 100%;">
-                            <option value="">Selecione...</option>
-                            <?php foreach ($cursos as $curso): ?>
-                                <option value="<?php echo $curso->ID; ?>">
-                                    <?php echo esc_html($curso->post_title); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </label>
+                            <label>
+                                <strong>Curso:</strong><br>
+                                <select name="curso_id" required style="width: 100%;">
+                                    <option value="">Selecione...</option>
+                                    <?php foreach ($cursos as $curso): ?>
+                                            <option value="<?php echo $curso->ID; ?>">
+                                                <?php echo esc_html($curso->post_title); ?>
+                                            </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </label>
 
-                    <label>
-                        <strong>Data de Expiração:</strong><br>
-                        <input type="date" name="data_fim" style="width: 100%;">
-                        <small style="color: #666;">Deixe vazio para acesso vitalício.</small>
-                    </label>
+                            <label>
+                                <strong>Data de Expiração:</strong><br>
+                                <input type="date" name="data_fim" style="width: 100%;">
+                                <small style="color: #666;">Deixe vazio para acesso vitalício.</small>
+                            </label>
 
-                    <button type="submit" name="conceder_acesso" value="1" class="button button-primary">
-                        Conceder Acesso
-                    </button>
-                </form>
-            </div>
-
-            <div
-                style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin-top: 20px; max-width: 500px;">
-                <h3 style="margin-top: 0;">Matrícula em Massa por Trilha</h3>
-                <p class="description">Matricula o aluno em todos os cursos desta trilha.</p>
-                <form method="post" style="display: flex; flex-direction: column; gap: 10px;">
-                    <?php wp_nonce_field('aluno_matricular_trilha'); ?>
-                    <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
-
-                    <label>
-                        <strong>Trilha:</strong><br>
-                        <select name="trilha_id" required style="width: 100%;">
-                            <option value="">Selecione a Trilha...</option>
-                            <?php foreach ($trilhas as $trilha): ?>
-                                <option value="<?php echo $trilha->ID; ?>">
-                                    <?php echo esc_html($trilha->post_title); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </label>
-
-                    <label>
-                        <strong>Data de Expiração (Opcional):</strong><br>
-                        <input type="date" name="data_fim" style="width: 100%;">
-                        <small style="color: #666;">Aplica a mesma data para todos os cursos da trilha.</small>
-                    </label>
-
-                    <button type="submit" name="matricular_trilha" value="1" class="button button-primary">
-                        Matricular na Trilha
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Modal Alterar Dados Cadastrais -->
-        <div id="modal-dados-cadastrais" class="sc-modal-overlay">
-            <div class="sc-modal-content">
-                <div class="sc-modal-header">
-                    <h2>Alterar Dados Cadastrais</h2>
-                    <span class="sc-modal-close"
-                        onclick="document.getElementById('modal-dados-cadastrais').style.display='none'">&times;</span>
-                </div>
-                <form method="post">
-                    <?php wp_nonce_field('aluno_update_data', '_wpnonce'); ?>
-                    <input type="hidden" name="update_student_data" value="1">
-                    <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
-
-                    <div style="max-height: 70vh; overflow-y: auto; padding-right: 10px;">
-                        <div style="margin-bottom: 20px;">
-                            <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0;">Contato e Documentos
-                            </h3>
-                            <table class="form-table">
-                                <tr>
-                                    <th>CPF</th>
-                                    <td><input type="text" name="cpf" value="<?php echo esc_attr($cpf); ?>" class="regular-text"
-                                            style="width: 100%;"></td>
-                                </tr>
-                                <tr>
-                                    <th>Aniversário</th>
-                                    <td><input type="date" name="aniversario" value="<?php echo esc_attr($aniversario); ?>"
-                                            style="width: 100%;"></td>
-                                </tr>
-                                <tr>
-                                    <th>Telefone</th>
-                                    <td><input type="text" name="billing_phone" value="<?php echo esc_attr($phone); ?>"
-                                            class="regular-text" style="width: 100%;"></td>
-                                </tr>
-                                <tr>
-                                    <th>Instagram</th>
-                                    <td><input type="text" name="instagram" value="<?php echo esc_attr($instagram); ?>"
-                                            class="regular-text" style="width: 100%;"></td>
-                                </tr>
-                            </table>
-                        </div>
-
-                        <div>
-                            <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">Endereço</h3>
-                            <table class="form-table">
-                                <tr>
-                                    <th>CEP</th>
-                                    <td><input type="text" name="cep" value="<?php echo esc_attr($cep); ?>" class="regular-text"
-                                            style="width: 150px;"></td>
-                                </tr>
-                                <tr>
-                                    <th>Rua</th>
-                                    <td><input type="text" name="rua" value="<?php echo esc_attr($rua); ?>" class="regular-text"
-                                            style="width: 100%;"></td>
-                                </tr>
-                                <tr>
-                                    <th>Número</th>
-                                    <td><input type="text" name="numero" value="<?php echo esc_attr($numero); ?>"
-                                            class="regular-text" style="width: 100%;"></td>
-                                </tr>
-                                <tr>
-                                    <th>Complemento</th>
-                                    <td><input type="text" name="complemento" value="<?php echo esc_attr($complemento); ?>"
-                                            class="regular-text" style="width: 100%;"></td>
-                                </tr>
-                                <tr>
-                                    <th>Bairro</th>
-                                    <td><input type="text" name="bairro" value="<?php echo esc_attr($bairro); ?>"
-                                            class="regular-text" style="width: 100%;"></td>
-                                </tr>
-                                <tr>
-                                    <th>Cidade</th>
-                                    <td><input type="text" name="cidade" value="<?php echo esc_attr($cidade); ?>"
-                                            class="regular-text" style="width: 100%;"></td>
-                                </tr>
-                                <tr>
-                                    <th>Estado</th>
-                                    <td><input type="text" name="estado" value="<?php echo esc_attr($estado); ?>"
-                                            class="regular-text" style="width: 60px;" maxlength="2" placeholder="UF"></td>
-                                </tr>
-                            </table>
-                        </div>
+                            <button type="submit" name="conceder_acesso" value="1" class="button button-primary">
+                                Conceder Acesso
+                            </button>
+                        </form>
                     </div>
 
-                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; text-align: right;">
-                        <button type="button" class="button"
-                            onclick="document.getElementById('modal-dados-cadastrais').style.display='none'">Cancelar</button>
-                        <button type="submit" class="button button-primary">Salvar Alterações</button>
+                    <div
+                        style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin-top: 20px; max-width: 500px;">
+                        <h3 style="margin-top: 0;">Matrícula em Massa por Trilha</h3>
+                        <p class="description">Matricula o aluno em todos os cursos desta trilha.</p>
+                        <form method="post" style="display: flex; flex-direction: column; gap: 10px;">
+                            <?php wp_nonce_field('aluno_matricular_trilha'); ?>
+                            <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+
+                            <label>
+                                <strong>Trilha:</strong><br>
+                                <select name="trilha_id" required style="width: 100%;">
+                                    <option value="">Selecione a Trilha...</option>
+                                    <?php foreach ($trilhas as $trilha): ?>
+                                            <option value="<?php echo $trilha->ID; ?>">
+                                                <?php echo esc_html($trilha->post_title); ?>
+                                            </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </label>
+
+                            <label>
+                                <strong>Data de Expiração (Opcional):</strong><br>
+                                <input type="date" name="data_fim" style="width: 100%;">
+                                <small style="color: #666;">Aplica a mesma data para todos os cursos da trilha.</small>
+                            </label>
+
+                            <button type="submit" name="matricular_trilha" value="1" class="button button-primary">
+                                Matricular na Trilha
+                            </button>
+                        </form>
                     </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Modal Alterar Senha -->
-        <div id="modal-alterar-senha" class="sc-modal-overlay">
-            <div class="sc-modal-content" style="max-width: 500px;">
-                <div class="sc-modal-header">
-                    <h2>Alterar Senha de Acesso</h2>
-                    <span class="sc-modal-close"
-                        onclick="document.getElementById('modal-alterar-senha').style.display='none'">&times;</span>
                 </div>
-                <form method="post">
-                    <?php wp_nonce_field('aluno_update_data', '_wpnonce'); ?>
-                    <input type="hidden" name="update_student_data" value="1">
-                    <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
 
-                    <p>Digite a nova senha para este usuário. A senha anterior será substituída imediatamente.</p>
-
-                    <label style="display: block; margin: 20px 0;">
-                        <strong>Nova Senha</strong>
-                        <div style="position: relative;">
-                            <input type="password" name="new_password" id="new_password_field" class="regular-text"
-                                style="width: 100%; display: block; margin-top: 5px; padding-right: 40px;" required
-                                placeholder="••••••••">
-                            <span onclick="togglePasswordVisibility()"
-                                style="position: absolute; right: 10px; top: 55%; transform: translateY(-50%); cursor: pointer; color: #666;"
-                                title="Ver senha">
-                                <span class="dashicons dashicons-visibility" id="password-toggle-icon"></span>
-                            </span>
+                <!-- Modal Alterar Dados Cadastrais -->
+                <div id="modal-dados-cadastrais" class="sc-modal-overlay">
+                    <div class="sc-modal-content">
+                        <div class="sc-modal-header">
+                            <h2>Alterar Dados Cadastrais</h2>
+                            <span class="sc-modal-close"
+                                onclick="document.getElementById('modal-dados-cadastrais').style.display='none'">&times;</span>
                         </div>
-                    </label>
+                        <form method="post">
+                            <?php wp_nonce_field('aluno_update_data', '_wpnonce'); ?>
+                            <input type="hidden" name="update_student_data" value="1">
+                            <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
 
-                    <script>
-                        function togglePasswordVisibility() {
-                            var passwordInput = document.getElementById('new_password_field');
-                            var toggleIcon = document.getElementById('password-toggle-icon');
-                            if (passwordInput.type === 'password') {
-                                passwordInput.type = 'text';
-                                toggleIcon.classList.remove('dashicons-visibility');
-                                toggleIcon.classList.add('dashicons-hidden');
-                            } else {
-                                passwordInput.type = 'password';
-                                toggleIcon.classList.remove('dashicons-hidden');
-                                toggleIcon.classList.add('dashicons-visibility');
-                            }
+                            <div style="max-height: 70vh; overflow-y: auto; padding-right: 10px;">
+                                <div style="margin-bottom: 20px;">
+                                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0;">Contato e Documentos
+                                    </h3>
+                                    <table class="form-table">
+                                        <tr>
+                                            <th>CPF</th>
+                                            <td><input type="text" name="cpf" value="<?php echo esc_attr($cpf); ?>" class="regular-text"
+                                                    style="width: 100%;"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Aniversário</th>
+                                            <td><input type="date" name="aniversario" value="<?php echo esc_attr($aniversario); ?>"
+                                                    style="width: 100%;"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Telefone</th>
+                                            <td><input type="text" name="billing_phone" value="<?php echo esc_attr($phone); ?>"
+                                                    class="regular-text" style="width: 100%;"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Instagram</th>
+                                            <td><input type="text" name="instagram" value="<?php echo esc_attr($instagram); ?>"
+                                                    class="regular-text" style="width: 100%;"></td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div>
+                                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">Endereço</h3>
+                                    <table class="form-table">
+                                        <tr>
+                                            <th>CEP</th>
+                                            <td><input type="text" name="cep" value="<?php echo esc_attr($cep); ?>" class="regular-text"
+                                                    style="width: 150px;"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Rua</th>
+                                            <td><input type="text" name="rua" value="<?php echo esc_attr($rua); ?>" class="regular-text"
+                                                    style="width: 100%;"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Número</th>
+                                            <td><input type="text" name="numero" value="<?php echo esc_attr($numero); ?>"
+                                                    class="regular-text" style="width: 100%;"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Complemento</th>
+                                            <td><input type="text" name="complemento" value="<?php echo esc_attr($complemento); ?>"
+                                                    class="regular-text" style="width: 100%;"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Bairro</th>
+                                            <td><input type="text" name="bairro" value="<?php echo esc_attr($bairro); ?>"
+                                                    class="regular-text" style="width: 100%;"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Cidade</th>
+                                            <td><input type="text" name="cidade" value="<?php echo esc_attr($cidade); ?>"
+                                                    class="regular-text" style="width: 100%;"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Estado</th>
+                                            <td><input type="text" name="estado" value="<?php echo esc_attr($estado); ?>"
+                                                    class="regular-text" style="width: 60px;" maxlength="2" placeholder="UF"></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; text-align: right;">
+                                <button type="button" class="button"
+                                    onclick="document.getElementById('modal-dados-cadastrais').style.display='none'">Cancelar</button>
+                                <button type="submit" class="button button-primary">Salvar Alterações</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Modal Alterar Senha -->
+                <div id="modal-alterar-senha" class="sc-modal-overlay">
+                    <div class="sc-modal-content" style="max-width: 500px;">
+                        <div class="sc-modal-header">
+                            <h2>Alterar Senha de Acesso</h2>
+                            <span class="sc-modal-close"
+                                onclick="document.getElementById('modal-alterar-senha').style.display='none'">&times;</span>
+                        </div>
+                        <form method="post">
+                            <?php wp_nonce_field('aluno_update_data', '_wpnonce'); ?>
+                            <input type="hidden" name="update_student_data" value="1">
+                            <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
+
+                            <p>Digite a nova senha para este usuário. A senha anterior será substituída imediatamente.</p>
+
+                            <label style="display: block; margin: 20px 0;">
+                                <strong>Nova Senha</strong>
+                                <div style="position: relative;">
+                                    <input type="password" name="new_password" id="new_password_field" class="regular-text"
+                                        style="width: 100%; display: block; margin-top: 5px; padding-right: 40px;" required
+                                        placeholder="••••••••">
+                                    <span onclick="togglePasswordVisibility()"
+                                        style="position: absolute; right: 10px; top: 55%; transform: translateY(-50%); cursor: pointer; color: #666;"
+                                        title="Ver senha">
+                                        <span class="dashicons dashicons-visibility" id="password-toggle-icon"></span>
+                                    </span>
+                                </div>
+                            </label>
+
+                            <script>
+                                function togglePasswordVisibility() {
+                                    var passwordInput = document.getElementById('new_password_field');
+                                    var toggleIcon = document.getElementById('password-toggle-icon');
+                                    if (passwordInput.type === 'password') {
+                                        passwordInput.type = 'text';
+                                        toggleIcon.classList.remove('dashicons-visibility');
+                                        toggleIcon.classList.add('dashicons-hidden');
+                                    } else {
+                                        passwordInput.type = 'password';
+                                        toggleIcon.classList.remove('dashicons-hidden');
+                                        toggleIcon.classList.add('dashicons-visibility');
+                                    }
+                                }
+                            </script>
+
+                            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; text-align: right;">
+                                <button type="button" class="button"
+                                    onclick="document.getElementById('modal-alterar-senha').style.display='none'">Cancelar</button>
+                                <button type="submit" class="button button-primary">Alterar Senha</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Modal Gerenciar Progresso das Aulas -->
+                <div id="modal-gerenciar-aulas" class="sc-modal-overlay">
+                    <div class="sc-modal-content sc-modal-content-lessons" role="dialog" aria-modal="true"
+                        aria-labelledby="sc-lessons-modal-title">
+                        <div class="sc-modal-header">
+                            <h2 id="sc-lessons-modal-title">Gerenciar Conclusao de Aulas</h2>
+                            <span class="sc-modal-close" data-close-lessons-modal="1">&times;</span>
+                        </div>
+
+                        <p id="sc-lessons-modal-course" style="margin: 0 0 8px; color: #334155; font-weight: 600;"></p>
+                        <div id="sc-lessons-modal-progress" class="sc-lessons-modal-progress"></div>
+                        <div id="sc-lessons-modal-status" class="sc-lessons-modal-status" aria-live="polite"></div>
+
+                        <div id="sc-lessons-modal-body" class="sc-lessons-modal-body">
+                            <p style="margin: 0; color: #64748b;">Selecione um curso para carregar as aulas.</p>
+                        </div>
+
+                        <div style="margin-top: 16px; text-align: right;">
+                            <button type="button" class="button" data-close-lessons-modal="1">Fechar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    (function () {
+                        var modal = document.getElementById('modal-gerenciar-aulas');
+                        if (!modal) {
+                            return;
                         }
-                    </script>
 
-                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; text-align: right;">
-                        <button type="button" class="button"
-                            onclick="document.getElementById('modal-alterar-senha').style.display='none'">Cancelar</button>
-                        <button type="submit" class="button button-primary">Alterar Senha</button>
+                        var modalBody = document.getElementById('sc-lessons-modal-body');
+                        var modalStatus = document.getElementById('sc-lessons-modal-status');
+                        var modalProgress = document.getElementById('sc-lessons-modal-progress');
+                        var modalCourse = document.getElementById('sc-lessons-modal-course');
+                        var ajaxUrl = <?php echo wp_json_encode(admin_url('admin-ajax.php')); ?>;
+                        var nonce = <?php echo wp_json_encode(wp_create_nonce('sc_admin_lesson_progress')); ?>;
+                        var state = {
+                            userId: <?php echo (int) $user_id; ?>,
+                            cursoId: 0
+                        };
+
+                        function escapeHtml(value) {
+                            var div = document.createElement('div');
+                            div.textContent = value == null ? '' : String(value);
+                            return div.innerHTML;
+                        }
+
+                        function setStatus(message, type) {
+                            modalStatus.className = 'sc-lessons-modal-status';
+                            if (!message) {
+                                modalStatus.textContent = '';
+                                return;
+                            }
+                            if (type) {
+                                modalStatus.classList.add('is-' + type);
+                            }
+                            modalStatus.textContent = message;
+                        }
+
+                        function renderProgress(progress) {
+                            if (!progress || typeof progress !== 'object') {
+                                modalProgress.innerHTML = '';
+                                return;
+                            }
+
+                            var concluidas = parseInt(progress.concluidas, 10) || 0;
+                            var total = parseInt(progress.total, 10) || 0;
+                            var percent = parseInt(progress.percent, 10) || 0;
+
+                            modalProgress.innerHTML =
+                                '<strong>' + concluidas + '</strong> de <strong>' + total + '</strong> aulas concluidas (' + percent + '%)';
+                        }
+
+                        function closeModal() {
+                            modal.style.display = 'none';
+                            state.cursoId = 0;
+                        }
+
+                        function openModal(button) {
+                            state.cursoId = parseInt(button.getAttribute('data-curso-id'), 10) || 0;
+                            state.userId = parseInt(button.getAttribute('data-user-id'), 10) || state.userId;
+
+                            if (state.cursoId <= 0 || state.userId <= 0) {
+                                return;
+                            }
+
+                            var courseTitle = button.getAttribute('data-curso-titulo') || '';
+                            modalCourse.textContent = courseTitle ? ('Curso: ' + courseTitle) : '';
+                            modalBody.innerHTML = '<p style=\"margin: 0; color: #64748b;\">Carregando aulas...</p>';
+                            renderProgress(null);
+                            setStatus('Carregando dados do curso...', 'info');
+                            modal.style.display = 'flex';
+                            loadLessons();
+                        }
+
+                        function ajaxPost(payload) {
+                            var formData = new FormData();
+                            Object.keys(payload).forEach(function (key) {
+                                formData.append(key, payload[key]);
+                            });
+
+                            return fetch(ajaxUrl, {
+                                method: 'POST',
+                                credentials: 'same-origin',
+                                body: formData
+                            }).then(function (response) {
+                                return response.json();
+                            });
+                        }
+
+                        function renderLessons(lessons) {
+                            if (!Array.isArray(lessons) || lessons.length === 0) {
+                                modalBody.innerHTML = '<p style=\"margin: 0; color: #64748b;\">Este curso nao possui aulas publicadas.</p>';
+                                return;
+                            }
+
+                            var html = [
+                                '<table class=\"widefat striped sc-lessons-table\">',
+                                '<thead><tr><th style=\"width: 70px;\">OK</th><th>Aula</th><th style=\"width: 120px;\">Quiz</th></tr></thead>',
+                                '<tbody>'
+                            ];
+
+                            lessons.forEach(function (lesson) {
+                                var aulaId = parseInt(lesson.id, 10) || 0;
+                                var checked = lesson.completed ? ' checked' : '';
+                                var rowClass = lesson.completed ? ' class=\"is-completed\"' : '';
+                                var title = escapeHtml((lesson.order || '-') + '. ' + (lesson.title || 'Aula sem titulo'));
+                                var quizInfo = (parseInt(lesson.passing_score, 10) || 0) > 0
+                                    ? ('Min. ' + parseInt(lesson.passing_score, 10) + '%')
+                                    : 'Nao';
+
+                                html.push(
+                                    '<tr' + rowClass + '>' +
+                                    '<td><input type=\"checkbox\" class=\"sc-lesson-completed-toggle\" data-aula-id=\"' + aulaId + '\"' + checked + '></td>' +
+                                    '<td><span>' + title + '</span></td>' +
+                                    '<td><small>' + escapeHtml(quizInfo) + '</small></td>' +
+                                    '</tr>'
+                                );
+                            });
+
+                            html.push('</tbody></table>');
+                            modalBody.innerHTML = html.join('');
+                        }
+
+                        function loadLessons() {
+                            ajaxPost({
+                                action: 'sc_admin_get_course_lessons_progress',
+                                nonce: nonce,
+                                user_id: state.userId,
+                                curso_id: state.cursoId
+                            })
+                                .then(function (response) {
+                                    if (!response || !response.success) {
+                                        throw new Error(response && response.data && response.data.message ? response.data.message : 'Nao foi possivel carregar as aulas.');
+                                    }
+
+                                    renderLessons(response.data.lessons || []);
+                                    renderProgress(response.data.progress || null);
+                                    setStatus('Marque ou desmarque as aulas para atualizar o progresso do aluno.', 'info');
+                                })
+                                .catch(function (error) {
+                                    modalBody.innerHTML = '<p style=\"margin: 0; color: #b91c1c;\">Falha ao carregar as aulas.</p>';
+                                    setStatus(error.message || 'Falha ao carregar as aulas.', 'error');
+                                });
+                        }
+
+                        function updateLessonProgress(toggle) {
+                            var aulaId = parseInt(toggle.getAttribute('data-aula-id'), 10) || 0;
+                            if (aulaId <= 0 || state.cursoId <= 0 || state.userId <= 0) {
+                                return;
+                            }
+
+                            var desiredValue = toggle.checked ? 1 : 0;
+                            toggle.disabled = true;
+                            setStatus('Salvando alteracao...', 'info');
+
+                            ajaxPost({
+                                action: 'sc_admin_update_course_lesson_progress',
+                                nonce: nonce,
+                                user_id: state.userId,
+                                curso_id: state.cursoId,
+                                aula_id: aulaId,
+                                completed: desiredValue
+                            })
+                                .then(function (response) {
+                                    if (!response || !response.success) {
+                                        throw new Error(response && response.data && response.data.message ? response.data.message : 'Nao foi possivel salvar a alteracao.');
+                                    }
+
+                                    var finalState = !!(response.data && response.data.completed);
+                                    toggle.checked = finalState;
+
+                                    var row = toggle.closest('tr');
+                                    if (row) {
+                                        row.classList.toggle('is-completed', finalState);
+                                    }
+
+                                    renderProgress(response.data.progress || null);
+                                    setStatus(response.data.message || 'Alteracao salva com sucesso.', 'success');
+                                })
+                                .catch(function (error) {
+                                    toggle.checked = !toggle.checked;
+                                    setStatus(error.message || 'Falha ao salvar alteracao.', 'error');
+                                })
+                                .then(function () {
+                                    toggle.disabled = false;
+                                });
+                        }
+
+                        document.addEventListener('click', function (event) {
+                            var openButton = event.target.closest('.sc-open-lesson-progress-modal');
+                            if (openButton) {
+                                event.preventDefault();
+                                openModal(openButton);
+                                return;
+                            }
+
+                            var closeButton = event.target.closest('[data-close-lessons-modal=\"1\"]');
+                            if (closeButton) {
+                                closeModal();
+                            }
+                        });
+
+                        modal.addEventListener('click', function (event) {
+                            if (event.target === modal) {
+                                closeModal();
+                            }
+                        });
+
+                        modal.addEventListener('change', function (event) {
+                            var toggle = event.target.closest('.sc-lesson-completed-toggle');
+                            if (!toggle) {
+                                return;
+                            }
+
+                            updateLessonProgress(toggle);
+                        });
+
+                        document.addEventListener('keydown', function (event) {
+                            if (event.key === 'Escape' && modal.style.display === 'flex') {
+                                closeModal();
+                            }
+                        });
+                    })();
+                </script>
+
+                <style>
+                    .sc-modal-overlay {
+                        display: none;
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0, 0, 0, 0.5);
+                        z-index: 9999;
+                        justify-content: center;
+                        align-items: center;
+                    }
+
+                    .sc-modal-content {
+                        background: #fff;
+                        width: 90%;
+                        max-width: 800px;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                        padding: 25px;
+                        position: relative;
+                        animation: slideDown 0.3s ease-out;
+                    }
+
+                    .sc-modal-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border-bottom: 1px solid #eee;
+                        padding-bottom: 15px;
+                        margin-bottom: 20px;
+                    }
+
+                    .sc-modal-header h2 {
+                        margin: 0;
+                        font-size: 1.3em;
+                    }
+
+                    .sc-modal-close {
+                        font-size: 28px;
+                        font-weight: bold;
+                        color: #aaa;
+                        cursor: pointer;
+                        line-height: 1;
+                    }
+
+                    .sc-modal-close:hover {
+                        color: #000;
+                    }
+
+                    .sc-modal-content-lessons {
+                        max-width: 900px;
+                    }
+
+                    .sc-lessons-modal-progress {
+                        margin: 0 0 10px;
+                        font-size: 13px;
+                        color: #0f172a;
+                    }
+
+                    .sc-lessons-modal-status {
+                        margin: 0 0 12px;
+                        font-size: 13px;
+                        color: #64748b;
+                    }
+
+                    .sc-lessons-modal-status.is-success {
+                        color: #15803d;
+                    }
+
+                    .sc-lessons-modal-status.is-error {
+                        color: #b91c1c;
+                    }
+
+                    .sc-lessons-modal-body {
+                        max-height: 55vh;
+                        overflow-y: auto;
+                        border: 1px solid #e5e7eb;
+                        border-radius: 6px;
+                        padding: 10px;
+                        background: #f8fafc;
+                    }
+
+                    .sc-lessons-table {
+                        margin: 0;
+                        border: none;
+                    }
+
+                    .sc-lessons-table tr.is-completed td {
+                        background: #ecfdf5;
+                    }
+
+                    .sc-lessons-table td {
+                        vertical-align: middle;
+                    }
+
+                    @keyframes slideDown {
+                        from {
+                            transform: translateY(-50px);
+                            opacity: 0;
+                        }
+
+                        to {
+                            transform: translateY(0);
+                            opacity: 1;
+                        }
+                    }
+                </style>
+
+                <!-- Modal Editar Data -->
+                <div id="modal-editar-data" class="sc-modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+                    <div class="sc-modal-content" style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">
+                        <span class="sc-modal-close" onclick="closeEditDateModal()" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+                        <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1.25rem; font-weight: 600;">Editar Data de Expiração</h3>
+                        <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+                            <?php wp_nonce_field('update_access_date_action', 'update_access_date_nonce'); ?>
+                            <input type="hidden" name="action" value="update_access_date">
+                            <input type="hidden" name="user_id" value="<?php echo esc_attr($user_id); ?>">
+                            <input type="hidden" name="curso_id" id="edit_date_curso_id" value="">
+                            
+                            <div style="margin-bottom: 20px;">
+                                <label for="edit_data_fim" style="display: block; margin-bottom: 8px; font-weight: 500;">Nova Data de Expiração:</label>
+                                <input type="date" name="data_fim" id="edit_data_fim" class="regular-text" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <p style="margin-top: 5px; font-size: 0.875rem; color: #666;">Deixe o campo vazio para conceder acesso <strong>Vitalício</strong>.</p>
+                            </div>
+                            
+                            <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                                <button type="button" class="button button-secondary" onclick="closeEditDateModal()" style="margin-right: 10px;">Cancelar</button>
+                                <button type="submit" class="button button-primary">Salvar Alteração</button>
+                            </div>
+                        </form>
                     </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Modal Gerenciar Progresso das Aulas -->
-        <div id="modal-gerenciar-aulas" class="sc-modal-overlay">
-            <div class="sc-modal-content sc-modal-content-lessons" role="dialog" aria-modal="true"
-                aria-labelledby="sc-lessons-modal-title">
-                <div class="sc-modal-header">
-                    <h2 id="sc-lessons-modal-title">Gerenciar Conclusao de Aulas</h2>
-                    <span class="sc-modal-close" data-close-lessons-modal="1">&times;</span>
                 </div>
 
-                <p id="sc-lessons-modal-course" style="margin: 0 0 8px; color: #334155; font-weight: 600;"></p>
-                <div id="sc-lessons-modal-progress" class="sc-lessons-modal-progress"></div>
-                <div id="sc-lessons-modal-status" class="sc-lessons-modal-status" aria-live="polite"></div>
-
-                <div id="sc-lessons-modal-body" class="sc-lessons-modal-body">
-                    <p style="margin: 0; color: #64748b;">Selecione um curso para carregar as aulas.</p>
-                </div>
-
-                <div style="margin-top: 16px; text-align: right;">
-                    <button type="button" class="button" data-close-lessons-modal="1">Fechar</button>
-                </div>
-            </div>
-        </div>
-
-        <script>
-            (function () {
-                var modal = document.getElementById('modal-gerenciar-aulas');
-                if (!modal) {
-                    return;
-                }
-
-                var modalBody = document.getElementById('sc-lessons-modal-body');
-                var modalStatus = document.getElementById('sc-lessons-modal-status');
-                var modalProgress = document.getElementById('sc-lessons-modal-progress');
-                var modalCourse = document.getElementById('sc-lessons-modal-course');
-                var ajaxUrl = <?php echo wp_json_encode(admin_url('admin-ajax.php')); ?>;
-                var nonce = <?php echo wp_json_encode(wp_create_nonce('sc_admin_lesson_progress')); ?>;
-                var state = {
-                    userId: <?php echo (int) $user_id; ?>,
-                    cursoId: 0
-                };
-
-                function escapeHtml(value) {
-                    var div = document.createElement('div');
-                    div.textContent = value == null ? '' : String(value);
-                    return div.innerHTML;
-                }
-
-                function setStatus(message, type) {
-                    modalStatus.className = 'sc-lessons-modal-status';
-                    if (!message) {
-                        modalStatus.textContent = '';
-                        return;
-                    }
-                    if (type) {
-                        modalStatus.classList.add('is-' + type);
-                    }
-                    modalStatus.textContent = message;
-                }
-
-                function renderProgress(progress) {
-                    if (!progress || typeof progress !== 'object') {
-                        modalProgress.innerHTML = '';
-                        return;
+                <script>
+                    function openEditDateModal(cursoId, currentDataFim) {
+                        document.getElementById('edit_date_curso_id').value = cursoId;
+                        document.getElementById('edit_data_fim').value = currentDataFim;
+                        document.getElementById('modal-editar-data').style.display = 'block';
                     }
 
-                    var concluidas = parseInt(progress.concluidas, 10) || 0;
-                    var total = parseInt(progress.total, 10) || 0;
-                    var percent = parseInt(progress.percent, 10) || 0;
-
-                    modalProgress.innerHTML =
-                        '<strong>' + concluidas + '</strong> de <strong>' + total + '</strong> aulas concluidas (' + percent + '%)';
-                }
-
-                function closeModal() {
-                    modal.style.display = 'none';
-                    state.cursoId = 0;
-                }
-
-                function openModal(button) {
-                    state.cursoId = parseInt(button.getAttribute('data-curso-id'), 10) || 0;
-                    state.userId = parseInt(button.getAttribute('data-user-id'), 10) || state.userId;
-
-                    if (state.cursoId <= 0 || state.userId <= 0) {
-                        return;
+                    function closeEditDateModal() {
+                        document.getElementById('modal-editar-data').style.display = 'none';
                     }
-
-                    var courseTitle = button.getAttribute('data-curso-titulo') || '';
-                    modalCourse.textContent = courseTitle ? ('Curso: ' + courseTitle) : '';
-                    modalBody.innerHTML = '<p style=\"margin: 0; color: #64748b;\">Carregando aulas...</p>';
-                    renderProgress(null);
-                    setStatus('Carregando dados do curso...', 'info');
-                    modal.style.display = 'flex';
-                    loadLessons();
-                }
-
-                function ajaxPost(payload) {
-                    var formData = new FormData();
-                    Object.keys(payload).forEach(function (key) {
-                        formData.append(key, payload[key]);
+                    
+                    window.addEventListener('click', function(event) {
+                        var modal = document.getElementById('modal-editar-data');
+                        if (event.target == modal) {
+                            modal.style.display = "none";
+                        }
                     });
-
-                    return fetch(ajaxUrl, {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        body: formData
-                    }).then(function (response) {
-                        return response.json();
-                    });
-                }
-
-                function renderLessons(lessons) {
-                    if (!Array.isArray(lessons) || lessons.length === 0) {
-                        modalBody.innerHTML = '<p style=\"margin: 0; color: #64748b;\">Este curso nao possui aulas publicadas.</p>';
-                        return;
-                    }
-
-                    var html = [
-                        '<table class=\"widefat striped sc-lessons-table\">',
-                        '<thead><tr><th style=\"width: 70px;\">OK</th><th>Aula</th><th style=\"width: 120px;\">Quiz</th></tr></thead>',
-                        '<tbody>'
-                    ];
-
-                    lessons.forEach(function (lesson) {
-                        var aulaId = parseInt(lesson.id, 10) || 0;
-                        var checked = lesson.completed ? ' checked' : '';
-                        var rowClass = lesson.completed ? ' class=\"is-completed\"' : '';
-                        var title = escapeHtml((lesson.order || '-') + '. ' + (lesson.title || 'Aula sem titulo'));
-                        var quizInfo = (parseInt(lesson.passing_score, 10) || 0) > 0
-                            ? ('Min. ' + parseInt(lesson.passing_score, 10) + '%')
-                            : 'Nao';
-
-                        html.push(
-                            '<tr' + rowClass + '>' +
-                            '<td><input type=\"checkbox\" class=\"sc-lesson-completed-toggle\" data-aula-id=\"' + aulaId + '\"' + checked + '></td>' +
-                            '<td><span>' + title + '</span></td>' +
-                            '<td><small>' + escapeHtml(quizInfo) + '</small></td>' +
-                            '</tr>'
-                        );
-                    });
-
-                    html.push('</tbody></table>');
-                    modalBody.innerHTML = html.join('');
-                }
-
-                function loadLessons() {
-                    ajaxPost({
-                        action: 'sc_admin_get_course_lessons_progress',
-                        nonce: nonce,
-                        user_id: state.userId,
-                        curso_id: state.cursoId
-                    })
-                        .then(function (response) {
-                            if (!response || !response.success) {
-                                throw new Error(response && response.data && response.data.message ? response.data.message : 'Nao foi possivel carregar as aulas.');
-                            }
-
-                            renderLessons(response.data.lessons || []);
-                            renderProgress(response.data.progress || null);
-                            setStatus('Marque ou desmarque as aulas para atualizar o progresso do aluno.', 'info');
-                        })
-                        .catch(function (error) {
-                            modalBody.innerHTML = '<p style=\"margin: 0; color: #b91c1c;\">Falha ao carregar as aulas.</p>';
-                            setStatus(error.message || 'Falha ao carregar as aulas.', 'error');
-                        });
-                }
-
-                function updateLessonProgress(toggle) {
-                    var aulaId = parseInt(toggle.getAttribute('data-aula-id'), 10) || 0;
-                    if (aulaId <= 0 || state.cursoId <= 0 || state.userId <= 0) {
-                        return;
-                    }
-
-                    var desiredValue = toggle.checked ? 1 : 0;
-                    toggle.disabled = true;
-                    setStatus('Salvando alteracao...', 'info');
-
-                    ajaxPost({
-                        action: 'sc_admin_update_course_lesson_progress',
-                        nonce: nonce,
-                        user_id: state.userId,
-                        curso_id: state.cursoId,
-                        aula_id: aulaId,
-                        completed: desiredValue
-                    })
-                        .then(function (response) {
-                            if (!response || !response.success) {
-                                throw new Error(response && response.data && response.data.message ? response.data.message : 'Nao foi possivel salvar a alteracao.');
-                            }
-
-                            var finalState = !!(response.data && response.data.completed);
-                            toggle.checked = finalState;
-
-                            var row = toggle.closest('tr');
-                            if (row) {
-                                row.classList.toggle('is-completed', finalState);
-                            }
-
-                            renderProgress(response.data.progress || null);
-                            setStatus(response.data.message || 'Alteracao salva com sucesso.', 'success');
-                        })
-                        .catch(function (error) {
-                            toggle.checked = !toggle.checked;
-                            setStatus(error.message || 'Falha ao salvar alteracao.', 'error');
-                        })
-                        .then(function () {
-                            toggle.disabled = false;
-                        });
-                }
-
-                document.addEventListener('click', function (event) {
-                    var openButton = event.target.closest('.sc-open-lesson-progress-modal');
-                    if (openButton) {
-                        event.preventDefault();
-                        openModal(openButton);
-                        return;
-                    }
-
-                    var closeButton = event.target.closest('[data-close-lessons-modal=\"1\"]');
-                    if (closeButton) {
-                        closeModal();
-                    }
-                });
-
-                modal.addEventListener('click', function (event) {
-                    if (event.target === modal) {
-                        closeModal();
-                    }
-                });
-
-                modal.addEventListener('change', function (event) {
-                    var toggle = event.target.closest('.sc-lesson-completed-toggle');
-                    if (!toggle) {
-                        return;
-                    }
-
-                    updateLessonProgress(toggle);
-                });
-
-                document.addEventListener('keydown', function (event) {
-                    if (event.key === 'Escape' && modal.style.display === 'flex') {
-                        closeModal();
-                    }
-                });
-            })();
-        </script>
-
-        <style>
-            .sc-modal-overlay {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 9999;
-                justify-content: center;
-                align-items: center;
-            }
-
-            .sc-modal-content {
-                background: #fff;
-                width: 90%;
-                max-width: 800px;
-                border-radius: 8px;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-                padding: 25px;
-                position: relative;
-                animation: slideDown 0.3s ease-out;
-            }
-
-            .sc-modal-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-bottom: 1px solid #eee;
-                padding-bottom: 15px;
-                margin-bottom: 20px;
-            }
-
-            .sc-modal-header h2 {
-                margin: 0;
-                font-size: 1.3em;
-            }
-
-            .sc-modal-close {
-                font-size: 28px;
-                font-weight: bold;
-                color: #aaa;
-                cursor: pointer;
-                line-height: 1;
-            }
-
-            .sc-modal-close:hover {
-                color: #000;
-            }
-
-            .sc-modal-content-lessons {
-                max-width: 900px;
-            }
-
-            .sc-lessons-modal-progress {
-                margin: 0 0 10px;
-                font-size: 13px;
-                color: #0f172a;
-            }
-
-            .sc-lessons-modal-status {
-                margin: 0 0 12px;
-                font-size: 13px;
-                color: #64748b;
-            }
-
-            .sc-lessons-modal-status.is-success {
-                color: #15803d;
-            }
-
-            .sc-lessons-modal-status.is-error {
-                color: #b91c1c;
-            }
-
-            .sc-lessons-modal-body {
-                max-height: 55vh;
-                overflow-y: auto;
-                border: 1px solid #e5e7eb;
-                border-radius: 6px;
-                padding: 10px;
-                background: #f8fafc;
-            }
-
-            .sc-lessons-table {
-                margin: 0;
-                border: none;
-            }
-
-            .sc-lessons-table tr.is-completed td {
-                background: #ecfdf5;
-            }
-
-            .sc-lessons-table td {
-                vertical-align: middle;
-            }
-
-            @keyframes slideDown {
-                from {
-                    transform: translateY(-50px);
-                    opacity: 0;
-                }
-
-                to {
-                    transform: translateY(0);
-                    opacity: 1;
-                }
-            }
-        </style>
-        <?php
+                </script>
+                <?php
     }
 }
 
