@@ -1877,8 +1877,8 @@ class System_Cursos_Access_Control
                     <div
                         style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
                         <button type="button" class="button"
-                            onclick="document.getElementById('modal-dados-cadastrais').style.display='flex'">Alterar Dados
-                            Cadastrais</button>
+                            onclick="document.getElementById('modal-dados-cadastrais').style.display='flex'">Ver Dados
+                            Completos</button>
                         <button type="button" class="button"
                             onclick="document.getElementById('modal-alterar-senha').style.display='flex'">Alterar Senha</button>
                         <form method="post" style="margin: 0;">
@@ -2072,80 +2072,7 @@ class System_Cursos_Access_Control
                 </div>
             </div>
 
-            <div style="display: flex; gap: 20px; margin: 20px 0; flex-wrap: wrap;">
-                <div
-                    style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; flex: 1; min-width: 260px;">
-                    <h3 style="margin-top: 0;">Documentos e Contato</h3>
-                    <table class="form-table" style="margin: 0;">
-                        <tr>
-                            <th style="padding: 6px 0; width: 120px;">CPF</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($cpf); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Aniversário</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($aniversario); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Instagram</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($instagram); ?>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                <div
-                    style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; flex: 2; min-width: 320px;">
-                    <h3 style="margin-top: 0;">Endereço</h3>
-                    <table class="form-table" style="margin: 0;">
-                        <tr>
-                            <th style="padding: 6px 0; width: 120px;">CEP</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($cep); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Rua</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($rua); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Número</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($numero); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Complemento</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($complemento); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Bairro</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($bairro); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Cidade</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($cidade); ?>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th style="padding: 6px 0;">Estado</th>
-                            <td style="padding: 6px 0;">
-                                <?php echo $format_meta($estado); ?>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
+
 
             <!-- Gráfico de Engajamento e Certificados -->
             <div style="display: flex; gap: 20px; margin: 20px 0; flex-wrap: wrap;">
