@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.6.6
+ * Version: 1.6.7
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.6.6');
+define('SISTEMA_CURSOS_VERSION', '1.6.7');
 
 /**
  * sistema-cursos-plugin.php
@@ -799,13 +799,13 @@ function sistema_cursos_render_admin_page()
                                 <p>Copie o exemplo abaixo, cole na sua página e ajuste as URLs conforme necessário:</p>
                                 <pre
                                     style="background: #f0f0f1; padding: 15px; border-radius: 4px; border-left: 4px solid #2271b1; overflow-x: auto;"><code>[barra-lateral-aluno 
-                                                                            link_inicio="/inicio" 
-                                                                            link_minha_conta="/perfil"
-                                                                            link_meus_cursos="/meus-cursos" 
-                                                                            link_todos_cursos="/loja"
-                                                                            link_certificados="/certificados"
-                                                                            link_admin="/wp-admin"
-                                                                        ]</code></pre>
+                                                                                            link_inicio="/inicio" 
+                                                                                            link_minha_conta="/perfil"
+                                                                                            link_meus_cursos="/meus-cursos" 
+                                                                                            link_todos_cursos="/loja"
+                                                                                            link_certificados="/certificados"
+                                                                                            link_admin="/wp-admin"
+                                                                                        ]</code></pre>
                             </div>
                         </td>
                     </tr>
@@ -1949,85 +1949,85 @@ function sistema_cursos_render_admin_page()
                         return $p['colors'];
                     }, $presets)); ?>;
 
-                            $('.lms-preset-card').on('click', function () {
-                                var presetKey = $(this).data('preset');
-                                var colors = lmsPresets[presetKey];
-                                if (!colors) return;
+                    $('.lms-preset-card').on('click', function () {
+                        var presetKey = $(this).data('preset');
+                        var colors = lmsPresets[presetKey];
+                        if (!colors) return;
 
-                                // Aplicar cada cor nos campos
-                                $.each(colors, function (field, value) {
-                                    $('#' + field).val(value);
-                                    $('#' + field + '_picker').val(value);
-                                });
-
-                                // Marcar card ativo
-                                $('.lms-preset-card').removeClass('is-active');
-                                $(this).addClass('is-active');
-
-                                // Atualizar preview
-                                updatePreview();
-                            });
-
-                            // Inicializar preview
-                            updatePreview();
-
-                            // Salvar
-                            $('#lms-cust-save').on('click', function () {
-                                var $btn = $(this);
-                                var $notice = $('#lms-cust-notice');
-                                $btn.prop('disabled', true).text('Salvando...');
-                                $notice.removeClass('success error').hide();
-
-                                var data = {
-                                    action: 'lms_sr_save_customizer',
-                                    nonce: '<?php echo wp_create_nonce('lms_sr_customizer_nonce'); ?>'
-                                };
-
-                                // Coletar todos os campos
-                                <?php foreach (array_keys($cust_defaults) as $key): ?>
-                                        data['<?php echo $key; ?>'] = $('#<?php echo $key; ?>').val();
-                                <?php endforeach; ?>
-
-                                $.post(ajaxurl, data, function (response) {
-                                    $btn.prop('disabled', false).text('💾 Salvar Personalização');
-                                    if (response.success) {
-                                        $notice.text('✅ ' + response.data).addClass('success').show();
-                                        setTimeout(function () { $notice.fadeOut(); }, 4000);
-                                    } else {
-                                        $notice.text('❌ Erro: ' + response.data).addClass('error').show();
-                                    }
-                                }).fail(function () {
-                                    $btn.prop('disabled', false).text('💾 Salvar Personalização');
-                                    $notice.text('❌ Erro de conexão').addClass('error').show();
-                                });
-                            });
-
-                            // Restaurar Padrão
-                            $('#lms-cust-reset').on('click', function () {
-                                if (!confirm('Tem certeza que deseja restaurar todas as configurações para o padrão?')) return;
-
-                                var $notice = $('#lms-cust-notice');
-                                $notice.removeClass('success error').hide();
-
-                                $.post(ajaxurl, {
-                                    action: 'lms_sr_reset_customizer',
-                                    nonce: '<?php echo wp_create_nonce('lms_sr_customizer_nonce'); ?>'
-                                }, function (response) {
-                                    if (response.success) {
-                                        $notice.text('✅ ' + response.data).addClass('success').show();
-                                        setTimeout(function () { location.reload(); }, 1000);
-                                    } else {
-                                        $notice.text('❌ Erro: ' + response.data).addClass('error').show();
-                                    }
-                                });
-                            });
+                        // Aplicar cada cor nos campos
+                        $.each(colors, function (field, value) {
+                            $('#' + field).val(value);
+                            $('#' + field + '_picker').val(value);
                         });
-                    </script>
 
-            <?php endif; ?>
+                        // Marcar card ativo
+                        $('.lms-preset-card').removeClass('is-active');
+                        $(this).addClass('is-active');
 
-        </div>
-        <?php
+                        // Atualizar preview
+                        updatePreview();
+                    });
+
+                    // Inicializar preview
+                    updatePreview();
+
+                    // Salvar
+                    $('#lms-cust-save').on('click', function () {
+                        var $btn = $(this);
+                        var $notice = $('#lms-cust-notice');
+                        $btn.prop('disabled', true).text('Salvando...');
+                        $notice.removeClass('success error').hide();
+
+                        var data = {
+                            action: 'lms_sr_save_customizer',
+                            nonce: '<?php echo wp_create_nonce('lms_sr_customizer_nonce'); ?>'
+                        };
+
+                        // Coletar todos os campos
+                        <?php foreach (array_keys($cust_defaults) as $key): ?>
+                            data['<?php echo $key; ?>'] = $('#<?php echo $key; ?>').val();
+                        <?php endforeach; ?>
+
+                        $.post(ajaxurl, data, function (response) {
+                            $btn.prop('disabled', false).text('💾 Salvar Personalização');
+                            if (response.success) {
+                                $notice.text('✅ ' + response.data).addClass('success').show();
+                                setTimeout(function () { $notice.fadeOut(); }, 4000);
+                            } else {
+                                $notice.text('❌ Erro: ' + response.data).addClass('error').show();
+                            }
+                        }).fail(function () {
+                            $btn.prop('disabled', false).text('💾 Salvar Personalização');
+                            $notice.text('❌ Erro de conexão').addClass('error').show();
+                        });
+                    });
+
+                    // Restaurar Padrão
+                    $('#lms-cust-reset').on('click', function () {
+                        if (!confirm('Tem certeza que deseja restaurar todas as configurações para o padrão?')) return;
+
+                        var $notice = $('#lms-cust-notice');
+                        $notice.removeClass('success error').hide();
+
+                        $.post(ajaxurl, {
+                            action: 'lms_sr_reset_customizer',
+                            nonce: '<?php echo wp_create_nonce('lms_sr_customizer_nonce'); ?>'
+                        }, function (response) {
+                            if (response.success) {
+                                $notice.text('✅ ' + response.data).addClass('success').show();
+                                setTimeout(function () { location.reload(); }, 1000);
+                            } else {
+                                $notice.text('❌ Erro: ' + response.data).addClass('error').show();
+                            }
+                        });
+                    });
+                });
+            </script>
+
+        <?php endif; ?>
+
+    </div>
+    <?php
 }
 
 /**
