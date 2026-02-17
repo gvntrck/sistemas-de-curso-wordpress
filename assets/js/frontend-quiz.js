@@ -79,6 +79,7 @@ jQuery(document).ready(function ($) {
 
                         // Esconder o mc-body (questões) e botão submit
                         $form.find('.mc-body').slideUp();
+                        $form.addClass('quiz-passed');
                         $btn.hide();
 
                         // Emitir evento global para atualizar barra de progresso ou sidebar

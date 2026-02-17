@@ -2361,123 +2361,161 @@ class System_Cursos_Access_Control
 
             <div style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px; margin: 20px 0;">
                 <h3 style="margin-top: 0;">Gestão de Tentativas de Quiz</h3>
-                <p class="description">Abaixo estão listadas as aulas onde o aluno já realizou tentativas de quiz. Você pode
-                    resetar para permitir novos envios.</p>
+                <p class="description">Abaixo estão listadas todas as avaliações disponíveis nos cursos que o aluno tem acesso.
+                </p>
 
                 <?php
-                // Buscar todas as aulas que tenham quiz
-                // A maneira mais performática é buscar direto nos user_meta quais quizzes o user tentou.
-                // Padrão do meta key: _quiz_attempts_{aula_id}
-                global $wpdb;
-                $quiz_attempts_metas = $wpdb->get_results($wpdb->prepare(
-                    "SELECT meta_key, meta_value FROM $wpdb->usermeta WHERE user_id = %d AND meta_key LIKE '_quiz_attempts_%'",
-                    $user_id
-                ));
+                // 1. Identificar cursos que o aluno tem acesso
+                $cursos_acessiveis_ids = [];
+                foreach ($cursos as $curso) {
+                    if (self::has_access($user_id, $curso->ID)) {
+                        $cursos_acessiveis_ids[] = $curso->ID;
+                    }
+                }
 
-                if (empty($quiz_attempts_metas)) {
-                    echo '<p style="color: #666;">Nenhuma tentativa de quiz registrada para este aluno.</p>';
+                if (empty($cursos_acessiveis_ids)) {
+                    echo '<p style="color: #666;">O aluno não tem acesso a nenhum curso com avaliações.</p>';
                 } else {
-                    ?>
-                    <table class="wp-list-table widefat fixed striped">
-                        <thead>
-                            <tr>
-                                <th>Aula / Curso</th>
-                                <th style="width: 150px;">Tentativas</th>
-                                <th style="width: 120px;">Nota</th>
-                                <th style="width: 150px;">Status</th>
-                                <th style="width: 200px;">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            foreach ($quiz_attempts_metas as $meta) {
-                                $aula_id = (int) str_replace('_quiz_attempts_', '', $meta->meta_key);
-                                $tentativas_usadas = (int) $meta->meta_value;
+                    // 2. Buscar todas as aulas com quiz desses cursos
+                    // Otimização: Buscar aulas que tenham o meta _aula_quiz_data e curso_id IN (...)
+                    $args_quizzes = [
+                        'post_type' => 'aula',
+                        'posts_per_page' => -1,
+                        'orderby' => 'title',
+                        'order' => 'ASC',
+                        'meta_query' => [
+                            'relation' => 'AND',
+                            [
+                                'key' => '_aula_quiz_data',
+                                'compare' => 'EXISTS' // Garante que tem quiz configurado
+                            ],
+                            [
+                                'key' => '_aula_quiz_data',
+                                'value' => '',
+                                'compare' => '!=' // Garante que não está vazio
+                            ],
+                            [
+                                'key' => 'curso_id',
+                                'value' => $cursos_acessiveis_ids,
+                                'compare' => 'IN'
+                            ]
+                        ]
+                    ];
 
-                                $aula = get_post($aula_id);
-                                if (!$aula)
-                                    continue;
+                    $aulas_com_quiz = get_posts($args_quizzes);
 
-                                $curso_id = get_post_meta($aula_id, 'curso_id', true);
-                                $curso_titulo = $curso_id ? get_the_title($curso_id) : 'Curso Desconhecido';
+                    if (empty($aulas_com_quiz)) {
+                        echo '<p style="color: #666;">Nenhuma avaliação encontrada nos cursos deste aluno.</p>';
+                    } else {
+                        ?>
+                        <table class="wp-list-table widefat fixed striped">
+                            <thead>
+                                <tr>
+                                    <th>Aula / Curso</th>
+                                    <th style="width: 150px;">Tentativas</th>
+                                    <th style="width: 120px;">Nota</th>
+                                    <th style="width: 180px;">Status</th>
+                                    <th style="width: 200px;">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                foreach ($aulas_com_quiz as $aula) {
+                                    $aula_id = $aula->ID;
+                                    $curso_id = get_post_meta($aula_id, 'curso_id', true);
+                                    $curso_titulo = $curso_id ? get_the_title($curso_id) : 'Curso Desconhecido';
 
-                                $quiz_data = get_post_meta($aula_id, '_aula_quiz_data', true);
+                                    // Configurações do Quiz
+                                    $quiz_data = get_post_meta($aula_id, '_aula_quiz_data', true);
 
-                                // Fallback para meta antigo se não existir o novo
-                                $max_tentativas_old = get_post_meta($aula_id, 'quiz_tentativas', true);
-                                $nota_minima_old = get_post_meta($aula_id, 'quiz_nota_minima', true);
+                                    // Fallback para meta antigo
+                                    $max_tentativas = 1;
+                                    $nota_minima = 70;
 
-                                $max_tentativas = 1; // Default
-                                $nota_minima = 70; // Default
-                
-                                if (!empty($quiz_data) && is_array($quiz_data)) {
-                                    $max_tentativas = isset($quiz_data['max_attempts']) ? (int) $quiz_data['max_attempts'] : 1;
-                                    $nota_minima = isset($quiz_data['passing_score']) ? (int) $quiz_data['passing_score'] : 70;
-                                } elseif ($max_tentativas_old) {
-                                    $max_tentativas = (int) $max_tentativas_old;
-                                    $nota_minima = (int) $nota_minima_old;
-                                }
+                                    if (!empty($quiz_data) && is_array($quiz_data)) {
+                                        $max_tentativas = isset($quiz_data['max_attempts']) ? (int) $quiz_data['max_attempts'] : 1;
+                                        $nota_minima = isset($quiz_data['passing_score']) ? (int) $quiz_data['passing_score'] : 70;
+                                    } else {
+                                        $max_tentativas = (int) get_post_meta($aula_id, 'quiz_tentativas', true) ?: 1;
+                                        $nota_minima = (int) get_post_meta($aula_id, 'quiz_nota_minima', true) ?: 70;
+                                    }
 
-                                // Se for 0, é ilimitado. Vamos considerar um número alto para não bloquear, 
-                                // ou tratar na visualização.
-                                // Por compatibilidade com a lógica abaixo:
-                                if ($max_tentativas === 0)
-                                    $max_tentativas = 9999;
-                                if ($max_tentativas <= 0)
-                                    $max_tentativas = 1; // Fallback final de segurança
-                
-                                $nota = get_user_meta($user_id, '_quiz_score_' . $aula_id, true);
+                                    // Ajuste para ilimitado
+                                    if ($max_tentativas === 0)
+                                        $max_tentativas = 9999;
 
-                                // Status Logic
-                                $status_html = '';
-                                if ($tentativas_usadas >= $max_tentativas && ($nota === '' || $nota < $nota_minima)) {
-                                    $status_html = '<span style="color:red; font-weight:bold;">🚫 Bloqueado</span>';
-                                } elseif ($nota !== '' && $nota >= $nota_minima) {
-                                    $status_html = '<span style="color:green; font-weight:bold;">✅ Aprovado</span>';
-                                } else {
-                                    $remaining = $max_tentativas - $tentativas_usadas;
-                                    $status_html = '<span style="color:orange;">Em andamento (' . $remaining . ' rest.)</span>';
+                                    // Buscar Tentativas e Nota Real (Progresso)
+                                    global $wpdb;
+                                    $table_progresso = $wpdb->prefix . 'progresso_aluno';
+                                    $progresso = $wpdb->get_row($wpdb->prepare(
+                                        "SELECT pontuacao, tentativas FROM $table_progresso WHERE user_id = %d AND aula_id = %d",
+                                        $user_id,
+                                        $aula_id
+                                    ));
+
+                                    // Tentativas no user_meta (usado para controle de bloqueio)
+                                    $tentativas_meta = (int) get_user_meta($user_id, '_quiz_attempts_' . $aula_id, true);
+
+                                    // Consolidar dados
+                                    $nota_real = ($progresso) ? (int) $progresso->pontuacao : null;
+
+                                    // Se tem registro no progresso, usa tentativas de lá, senão usa do meta
+                                    $tentativas_usadas = ($progresso && $progresso->tentativas) ? (int) $progresso->tentativas : $tentativas_meta;
+
+                                    // Calcular Status
+                                    $status_html = '';
+                                    $is_passed = ($nota_real !== null && $nota_real >= $nota_minima);
+
+                                    if ($is_passed) {
+                                        $status_html = '<span style="color:green; font-weight:bold;">✅ Aprovado</span>';
+                                    } elseif ($tentativas_usadas >= $max_tentativas) {
+                                        $status_html = '<span style="color:red; font-weight:bold;">🚫 Bloqueado</span>';
+                                    } elseif ($tentativas_usadas > 0) {
+                                        $remaining = $max_tentativas - $tentativas_usadas;
+                                        $status_html = '<span style="color:orange; font-weight:600;">Em andamento</span><br><small>(' . $remaining . ' rest.)</small>';
+                                    } else {
+                                        $status_html = '<span style="color:#666;">Não iniciado</span>';
+                                    }
+
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <strong><?php echo esc_html($aula->post_title); ?></strong>
+                                            <br><small><?php echo esc_html($curso_titulo); ?></small>
+                                        </td>
+                                        <td>
+                                            <strong><?php echo $tentativas_usadas; ?></strong> /
+                                            <?php echo ($max_tentativas === 9999) ? 'Ilimitado' : $max_tentativas; ?>
+                                        </td>
+                                        <td>
+                                            <?php echo ($nota_real !== null) ? $nota_real . '%' : '-'; ?>
+                                        </td>
+                                        <td><?php echo $status_html; ?></td>
+                                        <td>
+                                            <?php if ($tentativas_usadas > 0): ?>
+                                                <form method="post"
+                                                    onsubmit="return confirm('Tem certeza que deseja ZERAR as tentativas desta aula para este aluno?');">
+                                                    <?php wp_nonce_field('aluno_reset_quiz_attempts', '_wpnonce'); ?>
+                                                    <input type="hidden" name="reset_quiz_attempts" value="1">
+                                                    <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
+                                                    <input type="hidden" name="aula_id" value="<?php echo $aula_id; ?>">
+                                                    <button type="submit" class="button button-secondary">
+                                                        <span class="dashicons dashicons-image-rotate" style="vertical-align: text-top;"></span>
+                                                        Resetar
+                                                    </button>
+                                                </form>
+                                            <?php else: ?>
+                                                <span style="color:#aaa;">-</span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                    <?php
                                 }
                                 ?>
-                                <tr>
-                                    <td>
-                                        <strong><?php echo esc_html($aula->post_title); ?></strong>
-                                        <br><small><?php echo esc_html($curso_titulo); ?></small>
-                                    </td>
-                                    <td>
-                                        <strong><?php echo $tentativas_usadas; ?></strong> /
-                                        <?php echo ($max_tentativas === 9999) ? 'Ilimitado' : $max_tentativas; ?>
-                                    </td>
-                                    <td>
-                                        <?php echo ($nota !== '') ? $nota . '%' : '-'; ?>
-                                        <?php if ($nota !== '' && $nota >= $nota_minima)
-                                            echo ' <span class="dashicons dashicons-yes" style="color:green;"></span>'; ?>
-                                    </td>
-                                    <td><?php echo $status_html; ?></td>
-                                    <td>
-                                        <?php if ($tentativas_usadas > 0): ?>
-                                            <form method="post"
-                                                onsubmit="return confirm('Tem certeza que deseja ZERAR as tentativas desta aula para este aluno?');">
-                                                <?php wp_nonce_field('aluno_reset_quiz_attempts', '_wpnonce'); ?>
-                                                <input type="hidden" name="reset_quiz_attempts" value="1">
-                                                <input type="hidden" name="user_id" value="<?php echo $user_id; ?>">
-                                                <input type="hidden" name="aula_id" value="<?php echo $aula_id; ?>">
-                                                <button type="submit" class="button button-secondary">
-                                                    <span class="dashicons dashicons-image-rotate" style="vertical-align: text-top;"></span>
-                                                    Resetar Tentativas
-                                                </button>
-                                            </form>
-                                        <?php else: ?>
-                                            <span style="color:#aaa;">Sem tentativas</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                                <?php
-                            }
-                            ?>
-                        </tbody>
-                    </table>
-                    <?php
+                            </tbody>
+                        </table>
+                        <?php
+                    }
                 }
                 ?>
             </div>

@@ -402,3 +402,8 @@
 .sc-quiz-form.quiz-failed .sc-btn-submit {
     display: none !important;
 }
+
+/* Estado de Aprovação (ocultar botão submit) */
+.sc-quiz-form.quiz-passed .sc-btn-submit {
+    display: none !important;
+}
