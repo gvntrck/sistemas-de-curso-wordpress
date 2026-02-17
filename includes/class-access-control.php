@@ -2377,32 +2377,18 @@ class System_Cursos_Access_Control
                     echo '<p style="color: #666;">O aluno não tem acesso a nenhum curso com avaliações.</p>';
                 } else {
                     // 2. Buscar todas as aulas com quiz desses cursos
-                    // Otimização: Buscar aulas que tenham o meta _aula_quiz_data e curso_id IN (...)
-                    $args_quizzes = [
-                        'post_type' => 'aula',
-                        'posts_per_page' => -1,
-                        'orderby' => 'title',
-                        'order' => 'ASC',
-                        'meta_query' => [
-                            'relation' => 'AND',
-                            [
-                                'key' => '_aula_quiz_data',
-                                'compare' => 'EXISTS' // Garante que tem quiz configurado
-                            ],
-                            [
-                                'key' => '_aula_quiz_data',
-                                'value' => '',
-                                'compare' => '!=' // Garante que não está vazio
-                            ],
-                            [
-                                'key' => 'curso_id',
-                                'value' => $cursos_acessiveis_ids,
-                                'compare' => 'IN'
-                            ]
-                        ]
-                    ];
-
-                    $aulas_com_quiz = get_posts($args_quizzes);
+                    // Usa get_course_lessons() para buscar aulas de cada curso (meta key = 'curso')
+                    // e depois filtra via PHP com get_quiz_data() (pois _aula_quiz_data é array serializado)
+                    $aulas_com_quiz = [];
+                    foreach ($cursos_acessiveis_ids as $cid) {
+                        $aulas_do_curso = self::get_course_lessons($cid);
+                        foreach ($aulas_do_curso as $aula) {
+                            if (class_exists('System_Cursos_Quiz_Process') && System_Cursos_Quiz_Process::get_quiz_data($aula->ID)) {
+                                $aula->_curso_id_ref = $cid; // Salvar referência do curso
+                                $aulas_com_quiz[] = $aula;
+                            }
+                        }
+                    }
 
                     if (empty($aulas_com_quiz)) {
                         echo '<p style="color: #666;">Nenhuma avaliação encontrada nos cursos deste aluno.</p>';
@@ -2422,7 +2408,7 @@ class System_Cursos_Access_Control
                                 <?php
                                 foreach ($aulas_com_quiz as $aula) {
                                     $aula_id = $aula->ID;
-                                    $curso_id = get_post_meta($aula_id, 'curso_id', true);
+                                    $curso_id = isset($aula->_curso_id_ref) ? $aula->_curso_id_ref : 0;
                                     $curso_titulo = $curso_id ? get_the_title($curso_id) : 'Curso Desconhecido';
 
                                     // Configurações do Quiz
