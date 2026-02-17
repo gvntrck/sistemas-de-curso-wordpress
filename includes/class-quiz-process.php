@@ -137,94 +137,97 @@ class System_Cursos_Quiz_Process
 
         ob_start();
         ?>
-        <div class="mc-container sc-quiz-container" id="sc_quiz_container_<?php echo $aula_id; ?>"
-            data-max-attempts="<?php echo $max_attempts; ?>" data-used-attempts="<?php echo $used_attempts; ?>">
-            <!-- Intro/Header do Quiz -->
-            <div class="mc-header sc-quiz-intro">
-                <h3>📝 Avaliação de Conhecimento</h3>
-                <p>Para concluir esta aula, você precisa responder corretamente a este questionário.</p>
-                <ul>
-                    <li><strong>Questões:</strong>
-                        <?php echo count($questions); ?>
-                    </li>
-                    <li><strong>Nota Mínima:</strong>
-                        <?php echo $quiz['passing_score']; ?>%
-                    </li>
-                    <?php if ($max_attempts > 0): ?>
-                        <li><strong>Tentativas:</strong>
-                            <span class="attempts-count">
-                                <?php echo $used_attempts; ?> de <?php echo $max_attempts; ?> usadas
-                            </span>
+        <div class="lms-sr">
+            <div class="mc-container sc-quiz-container" id="sc_quiz_container_<?php echo $aula_id; ?>"
+                data-max-attempts="<?php echo $max_attempts; ?>" data-used-attempts="<?php echo $used_attempts; ?>">
+                <!-- Intro/Header do Quiz -->
+                <div class="mc-header sc-quiz-intro">
+                    <h3>📝 Avaliação de Conhecimento</h3>
+                    <p>Para concluir esta aula, você precisa responder corretamente a este questionário.</p>
+                    <ul>
+                        <li><strong>Questões:</strong>
+                            <?php echo count($questions); ?>
                         </li>
-                    <?php else: ?>
-                        <li><strong>Tentativas:</strong> Ilimitadas</li>
-                    <?php endif; ?>
-                </ul>
+                        <li><strong>Nota Mínima:</strong>
+                            <?php echo $quiz['passing_score']; ?>%
+                        </li>
+                        <?php if ($max_attempts > 0): ?>
+                            <li><strong>Tentativas:</strong>
+                                <span class="attempts-count">
+                                    <?php echo $used_attempts; ?> de <?php echo $max_attempts; ?> usadas
+                                </span>
+                            </li>
+                        <?php else: ?>
+                            <li><strong>Tentativas:</strong> Ilimitadas</li>
+                        <?php endif; ?>
+                    </ul>
 
-                <?php if ($attempts_exhausted): ?>
-                    <div class="sc-quiz-message error" style="display:block;">
-                        <h3>🚫 Tentativas Esgotadas</h3>
-                        <p>Você usou todas as <strong><?php echo $max_attempts; ?></strong> tentativas permitidas para este quiz.
-                        </p>
+                    <?php if ($attempts_exhausted): ?>
+                        <div class="sc-quiz-message error" style="display:block;">
+                            <h3>🚫 Tentativas Esgotadas</h3>
+                            <p>Você usou todas as <strong><?php echo $max_attempts; ?></strong> tentativas permitidas para este
+                                quiz.
+                            </p>
+                        </div>
+                    <?php else: ?>
+                        <button type="button" class="mc-btn-save sc-btn sc-btn-start"
+                            onclick="document.getElementById('sc_quiz_form_<?php echo $aula_id; ?>').style.display='block'; this.parentElement.style.display='none';">Iniciar
+                            Avaliação</button>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Formulário do Quiz -->
+                <form id="sc_quiz_form_<?php echo $aula_id; ?>" class="sc-quiz-form" style="display:none;"
+                    data-aula-id="<?php echo $aula_id; ?>">
+                    <div class="mc-body">
+                        <?php foreach ($questions as $index => $q): ?>
+                            <div class="sc-quiz-question" data-type="<?php echo esc_attr($q['type']); ?>">
+                                <div class="sc-quiz-q-header">
+                                    <span class="sc-quiz-q-number">
+                                        <?php echo $index + 1; ?>.
+                                    </span>
+                                    <span class="sc-quiz-q-text">
+                                        <?php echo esc_html($q['title']); ?>
+                                    </span>
+                                    <span class="sc-quiz-q-points">(
+                                        <?php echo $q['points']; ?> pontos)
+                                    </span>
+                                </div>
+                                <div class="sc-quiz-q-options">
+                                    <?php
+                                    $options = $q['options'] ?? [];
+                                    foreach ($options as $opt):
+                                        $inputId = 'q' . $index . '_' . $opt['id'];
+                                        $inputName = 'q[' . $q['id'] . ']';
+                                        if ($q['type'] === 'multiple') {
+                                            $inputName .= '[]';
+                                        }
+                                        ?>
+                                        <label class="sc-quiz-option" for="<?php echo $inputId; ?>">
+                                            <input type="<?php echo $q['type'] === 'multiple' ? 'checkbox' : 'radio'; ?>"
+                                                name="<?php echo $inputName; ?>" value="<?php echo esc_attr($opt['id']); ?>"
+                                                id="<?php echo $inputId; ?>">
+                                            <span class="sc-quiz-opt-text">
+                                                <?php echo esc_html($opt['text']); ?>
+                                            </span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-                <?php else: ?>
-                    <button type="button" class="mc-btn-save sc-btn sc-btn-start"
-                        onclick="document.getElementById('sc_quiz_form_<?php echo $aula_id; ?>').style.display='block'; this.parentElement.style.display='none';">Iniciar
-                        Avaliação</button>
-                <?php endif; ?>
+
+                    <!-- Footer do Quiz -->
+                    <div class="mc-footer sc-quiz-footer">
+                        <div class="sc-quiz-message"></div>
+                        <button type="submit" class="mc-btn-save sc-btn sc-btn-submit">Enviar Respostas</button>
+                    </div>
+                </form>
             </div>
 
-            <!-- Formulário do Quiz -->
-            <form id="sc_quiz_form_<?php echo $aula_id; ?>" class="sc-quiz-form" style="display:none;"
-                data-aula-id="<?php echo $aula_id; ?>">
-                <div class="mc-body">
-                    <?php foreach ($questions as $index => $q): ?>
-                        <div class="sc-quiz-question" data-type="<?php echo esc_attr($q['type']); ?>">
-                            <div class="sc-quiz-q-header">
-                                <span class="sc-quiz-q-number">
-                                    <?php echo $index + 1; ?>.
-                                </span>
-                                <span class="sc-quiz-q-text">
-                                    <?php echo esc_html($q['title']); ?>
-                                </span>
-                                <span class="sc-quiz-q-points">(
-                                    <?php echo $q['points']; ?> pontos)
-                                </span>
-                            </div>
-                            <div class="sc-quiz-q-options">
-                                <?php
-                                $options = $q['options'] ?? [];
-                                foreach ($options as $opt):
-                                    $inputId = 'q' . $index . '_' . $opt['id'];
-                                    $inputName = 'q[' . $q['id'] . ']';
-                                    if ($q['type'] === 'multiple') {
-                                        $inputName .= '[]';
-                                    }
-                                    ?>
-                                    <label class="sc-quiz-option" for="<?php echo $inputId; ?>">
-                                        <input type="<?php echo $q['type'] === 'multiple' ? 'checkbox' : 'radio'; ?>"
-                                            name="<?php echo $inputName; ?>" value="<?php echo esc_attr($opt['id']); ?>"
-                                            id="<?php echo $inputId; ?>">
-                                        <span class="sc-quiz-opt-text">
-                                            <?php echo esc_html($opt['text']); ?>
-                                        </span>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-
-                <!-- Footer do Quiz -->
-                <div class="mc-footer sc-quiz-footer">
-                    <div class="sc-quiz-message"></div>
-                    <button type="submit" class="mc-btn-save sc-btn sc-btn-submit">Enviar Respostas</button>
-                </div>
-            </form>
-        </div>
-
-        <?php
-        return ob_get_clean();
+            </div>
+            <?php
+            return ob_get_clean();
     }
 
     /**
