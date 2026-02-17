@@ -45,6 +45,7 @@ jQuery(document).ready(function ($) {
 
         $btn.prop('disabled', true).text('Processando...');
         $msg.hide().removeClass('success error');
+        $form.removeClass('quiz-failed'); // Ensure clean state
 
         $.ajax({
             url: quizFrontend.ajaxUrl,
@@ -114,6 +115,7 @@ jQuery(document).ready(function ($) {
                             // Ocultar questões e botão de envio
                             $form.find('.mc-body').slideUp();
                             $btn.hide();
+                            $form.addClass('quiz-failed'); // Enforce via CSS
 
                             $msg.html(`
                                 <h3>❌ Não foi dessa vez.</h3>
@@ -126,6 +128,7 @@ jQuery(document).ready(function ($) {
                             $msg.find('.sc-btn-restart').one('click', function () {
                                 $form.find('.mc-body').slideDown();
                                 $btn.show();
+                                $form.removeClass('quiz-failed'); // Reset CSS state
                                 $msg.hide().removeClass('error').empty();
                             });
 

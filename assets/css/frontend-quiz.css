@@ -373,3 +373,8 @@
 .sc-quiz-container input:focus {
     outline: none;
 }
+
+/* Estado de Falha (ocultar botão submit) */
+.sc-quiz-form.quiz-failed .sc-btn-submit {
+    display: none !important;
+}
