@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.6.4
+ * Version: 1.6.5
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.6.4');
+define('SISTEMA_CURSOS_VERSION', '1.6.5');
 
 /**
  * sistema-cursos-plugin.php
@@ -37,6 +37,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-access-control.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-user-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-admin-filters.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-course-progress.php';
+require_once plugin_dir_path(__FILE__) . 'includes/admin/class-admin-quiz-manager.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-listar-aulas.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-meus-cursos.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-certificates.php';
@@ -63,6 +64,7 @@ new System_Cursos_Access_Control();
 new System_Cursos_User_Fields();
 new System_Cursos_Admin_Filters();
 new System_Cursos_Progress();
+new System_Cursos_Admin_Quiz_Manager();
 new System_Cursos_Shortcode_Listar_Aulas();
 new System_Cursos_Shortcode_Meus_Cursos();
 new System_Cursos_Certificates();
@@ -797,13 +799,13 @@ function sistema_cursos_render_admin_page()
                                 <p>Copie o exemplo abaixo, cole na sua página e ajuste as URLs conforme necessário:</p>
                                 <pre
                                     style="background: #f0f0f1; padding: 15px; border-radius: 4px; border-left: 4px solid #2271b1; overflow-x: auto;"><code>[barra-lateral-aluno 
-                                                    link_inicio="/inicio" 
-                                                    link_minha_conta="/perfil"
-                                                    link_meus_cursos="/meus-cursos" 
-                                                    link_todos_cursos="/loja"
-                                                    link_certificados="/certificados"
-                                                    link_admin="/wp-admin"
-                                                ]</code></pre>
+                                                            link_inicio="/inicio" 
+                                                            link_minha_conta="/perfil"
+                                                            link_meus_cursos="/meus-cursos" 
+                                                            link_todos_cursos="/loja"
+                                                            link_certificados="/certificados"
+                                                            link_admin="/wp-admin"
+                                                        ]</code></pre>
                             </div>
                         </td>
                     </tr>
@@ -1213,7 +1215,8 @@ function sistema_cursos_render_admin_page()
                 </table>
 
                 <p class="submit">
-                    <button type="submit" name="lms_sr_save_acesso_settings" class="button button-primary">Salvar configuração</button>
+                    <button type="submit" name="lms_sr_save_acesso_settings" class="button button-primary">Salvar
+                        configuração</button>
                 </p>
             </form>
 
@@ -1242,13 +1245,8 @@ function sistema_cursos_render_admin_page()
                             <label for="lms_sr_banner_autoplay">Tempo entre banners (segundos)</label>
                         </th>
                         <td>
-                            <input
-                                type="number"
-                                id="lms_sr_banner_autoplay"
-                                name="lms_sr_banner[autoplay_seconds]"
-                                value="<?php echo esc_attr((string) $banner_settings['autoplay_seconds']); ?>"
-                                min="2"
-                                max="30"
+                            <input type="number" id="lms_sr_banner_autoplay" name="lms_sr_banner[autoplay_seconds]"
+                                value="<?php echo esc_attr((string) $banner_settings['autoplay_seconds']); ?>" min="2" max="30"
                                 step="1">
                             <p class="description">Intervalo automático do carrossel (entre 2 e 30 segundos).</p>
                         </td>
@@ -1257,7 +1255,8 @@ function sistema_cursos_render_admin_page()
 
                 <div class="lms-banner-admin-wrap">
                     <h3>Imagens do Carrossel</h3>
-                    <p class="description">Cada imagem pode ter um link opcional (ex.: página de curso, trilha, campanha etc.).</p>
+                    <p class="description">Cada imagem pode ter um link opcional (ex.: página de curso, trilha, campanha etc.).
+                    </p>
 
                     <div id="lms-banner-slides" class="lms-banner-slides">
                         <?php foreach ($banner_slides as $index => $slide): ?>
@@ -1271,13 +1270,18 @@ function sistema_cursos_render_admin_page()
                                     <img src="<?php echo esc_url($image_url ?: ''); ?>" alt="" <?php echo empty($image_url) ? 'style="display:none;"' : ''; ?>>
                                 </div>
                                 <div class="lms-banner-fields">
-                                    <input type="hidden" class="lms-banner-image-id" name="lms_sr_banner[slides][<?php echo esc_attr((string) $index); ?>][image_id]" value="<?php echo esc_attr((string) $image_id); ?>">
+                                    <input type="hidden" class="lms-banner-image-id"
+                                        name="lms_sr_banner[slides][<?php echo esc_attr((string) $index); ?>][image_id]"
+                                        value="<?php echo esc_attr((string) $image_id); ?>">
                                     <p>
-                                        <button type="button" class="button lms-banner-select-image"><?php echo $image_id > 0 ? 'Trocar imagem' : 'Selecionar imagem'; ?></button>
+                                        <button type="button"
+                                            class="button lms-banner-select-image"><?php echo $image_id > 0 ? 'Trocar imagem' : 'Selecionar imagem'; ?></button>
                                         <button type="button" class="button-link-delete lms-banner-remove">Remover</button>
                                     </p>
                                     <label>Link (opcional)</label>
-                                    <input type="url" class="regular-text lms-banner-link-input" name="lms_sr_banner[slides][<?php echo esc_attr((string) $index); ?>][link]" value="<?php echo esc_attr($slide_link); ?>" placeholder="https://exemplo.com/pagina">
+                                    <input type="url" class="regular-text lms-banner-link-input"
+                                        name="lms_sr_banner[slides][<?php echo esc_attr((string) $index); ?>][link]"
+                                        value="<?php echo esc_attr($slide_link); ?>" placeholder="https://exemplo.com/pagina">
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -1289,7 +1293,8 @@ function sistema_cursos_render_admin_page()
                 </div>
 
                 <p class="submit">
-                    <button type="submit" name="lms_sr_save_banner_settings" class="button button-primary">Salvar banner</button>
+                    <button type="submit" name="lms_sr_save_banner_settings" class="button button-primary">Salvar
+                        banner</button>
                 </p>
             </form>
 
@@ -1443,47 +1448,258 @@ function sistema_cursos_render_admin_page()
             ?>
 
             <style>
-                .lms-cust-wrap { max-width: 900px; }
-                .lms-cust-section { background: #fff; border: 1px solid #c3c4c7; border-radius: 6px; padding: 24px; margin-bottom: 20px; }
-                .lms-cust-section h3 { margin: 0 0 16px; padding-bottom: 10px; border-bottom: 2px solid #2271b1; color: #1d2327; font-size: 15px; }
-                .lms-cust-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
-                .lms-cust-field { display: flex; flex-direction: column; gap: 6px; }
-                .lms-cust-field label { font-size: 12px; font-weight: 600; color: #1d2327; text-transform: uppercase; letter-spacing: 0.5px; }
-                .lms-cust-field .description { font-size: 11px; color: #666; margin: 0; }
-                .lms-cust-color-wrap { display: flex; align-items: center; gap: 8px; }
-                .lms-cust-color-wrap input[type="color"] { width: 40px; height: 34px; border: 1px solid #c3c4c7; border-radius: 4px; padding: 2px; cursor: pointer; }
-                .lms-cust-color-wrap input[type="text"] { width: 90px; font-family: monospace; font-size: 13px; padding: 4px 8px; border: 1px solid #c3c4c7; border-radius: 4px; }
-                .lms-cust-field select, .lms-cust-field input[type="number"] { padding: 6px 10px; border: 1px solid #c3c4c7; border-radius: 4px; font-size: 13px; }
-                .lms-cust-field select { max-width: 300px; }
-                .lms-cust-field input[type="number"] { width: 80px; }
-                .lms-cust-actions { display: flex; gap: 10px; align-items: center; margin-top: 20px; }
-                .lms-cust-notice { padding: 8px 14px; border-radius: 4px; display: none; font-size: 13px; }
-                .lms-cust-notice.success { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; display: block; }
-                .lms-cust-notice.error { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; display: block; }
-                .lms-cust-preview { border: 1px solid #c3c4c7; border-radius: 8px; overflow: hidden; margin-top: 16px; }
-                .lms-cust-preview-inner { padding: 24px; transition: all 0.3s; }
-                .lms-cust-preview-card { padding: 16px; border-radius: 8px; border: 1px solid; margin-bottom: 12px; }
-                .lms-cust-preview-btn { display: inline-block; padding: 8px 20px; border-radius: 6px; font-weight: 600; font-size: 14px; border: none; cursor: default; color: #fff; }
-                .lms-cust-preview-progress { height: 6px; border-radius: 3px; overflow: hidden; margin-top: 8px; }
-                .lms-cust-preview-progress-fill { height: 100%; width: 65%; border-radius: 3px; }
+                .lms-cust-wrap {
+                    max-width: 900px;
+                }
 
-                .lms-presets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
-                .lms-preset-card { border: 2px solid #dcdcde; border-radius: 10px; padding: 0; cursor: pointer; transition: all 0.2s ease; overflow: hidden; background: #fff; }
-                .lms-preset-card:hover { border-color: #2271b1; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-                .lms-preset-card.is-active { border-color: #2271b1; box-shadow: 0 0 0 1px #2271b1, 0 4px 12px rgba(34,113,177,0.15); }
-                .lms-preset-swatch { height: 80px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px; }
-                .lms-preset-swatch-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.25); flex-shrink: 0; }
-                .lms-preset-swatch-accent { width: 30px; height: 30px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3); flex-shrink: 0; }
-                .lms-preset-info { padding: 10px 12px; border-top: 1px solid #eee; }
-                .lms-preset-name { font-weight: 600; font-size: 13px; color: #1d2327; margin: 0 0 2px; display: flex; align-items: center; gap: 5px; }
-                .lms-preset-desc { font-size: 11px; color: #666; margin: 0; line-height: 1.3; }
-                .lms-preset-badge { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 3px; background: #f0f0f1; color: #50575e; font-weight: 500; margin-left: auto; }
-                .lms-preset-card.is-active .lms-preset-badge { background: #2271b1; color: #fff; }
+                .lms-cust-section {
+                    background: #fff;
+                    border: 1px solid #c3c4c7;
+                    border-radius: 6px;
+                    padding: 24px;
+                    margin-bottom: 20px;
+                }
+
+                .lms-cust-section h3 {
+                    margin: 0 0 16px;
+                    padding-bottom: 10px;
+                    border-bottom: 2px solid #2271b1;
+                    color: #1d2327;
+                    font-size: 15px;
+                }
+
+                .lms-cust-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                    gap: 16px;
+                }
+
+                .lms-cust-field {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                }
+
+                .lms-cust-field label {
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #1d2327;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                .lms-cust-field .description {
+                    font-size: 11px;
+                    color: #666;
+                    margin: 0;
+                }
+
+                .lms-cust-color-wrap {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                .lms-cust-color-wrap input[type="color"] {
+                    width: 40px;
+                    height: 34px;
+                    border: 1px solid #c3c4c7;
+                    border-radius: 4px;
+                    padding: 2px;
+                    cursor: pointer;
+                }
+
+                .lms-cust-color-wrap input[type="text"] {
+                    width: 90px;
+                    font-family: monospace;
+                    font-size: 13px;
+                    padding: 4px 8px;
+                    border: 1px solid #c3c4c7;
+                    border-radius: 4px;
+                }
+
+                .lms-cust-field select,
+                .lms-cust-field input[type="number"] {
+                    padding: 6px 10px;
+                    border: 1px solid #c3c4c7;
+                    border-radius: 4px;
+                    font-size: 13px;
+                }
+
+                .lms-cust-field select {
+                    max-width: 300px;
+                }
+
+                .lms-cust-field input[type="number"] {
+                    width: 80px;
+                }
+
+                .lms-cust-actions {
+                    display: flex;
+                    gap: 10px;
+                    align-items: center;
+                    margin-top: 20px;
+                }
+
+                .lms-cust-notice {
+                    padding: 8px 14px;
+                    border-radius: 4px;
+                    display: none;
+                    font-size: 13px;
+                }
+
+                .lms-cust-notice.success {
+                    background: #d1e7dd;
+                    color: #0f5132;
+                    border: 1px solid #badbcc;
+                    display: block;
+                }
+
+                .lms-cust-notice.error {
+                    background: #f8d7da;
+                    color: #842029;
+                    border: 1px solid #f5c2c7;
+                    display: block;
+                }
+
+                .lms-cust-preview {
+                    border: 1px solid #c3c4c7;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    margin-top: 16px;
+                }
+
+                .lms-cust-preview-inner {
+                    padding: 24px;
+                    transition: all 0.3s;
+                }
+
+                .lms-cust-preview-card {
+                    padding: 16px;
+                    border-radius: 8px;
+                    border: 1px solid;
+                    margin-bottom: 12px;
+                }
+
+                .lms-cust-preview-btn {
+                    display: inline-block;
+                    padding: 8px 20px;
+                    border-radius: 6px;
+                    font-weight: 600;
+                    font-size: 14px;
+                    border: none;
+                    cursor: default;
+                    color: #fff;
+                }
+
+                .lms-cust-preview-progress {
+                    height: 6px;
+                    border-radius: 3px;
+                    overflow: hidden;
+                    margin-top: 8px;
+                }
+
+                .lms-cust-preview-progress-fill {
+                    height: 100%;
+                    width: 65%;
+                    border-radius: 3px;
+                }
+
+                .lms-presets-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                    gap: 14px;
+                }
+
+                .lms-preset-card {
+                    border: 2px solid #dcdcde;
+                    border-radius: 10px;
+                    padding: 0;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    overflow: hidden;
+                    background: #fff;
+                }
+
+                .lms-preset-card:hover {
+                    border-color: #2271b1;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                }
+
+                .lms-preset-card.is-active {
+                    border-color: #2271b1;
+                    box-shadow: 0 0 0 1px #2271b1, 0 4px 12px rgba(34, 113, 177, 0.15);
+                }
+
+                .lms-preset-swatch {
+                    height: 80px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                    padding: 12px;
+                }
+
+                .lms-preset-swatch-dot {
+                    width: 22px;
+                    height: 22px;
+                    border-radius: 50%;
+                    border: 2px solid rgba(255, 255, 255, 0.25);
+                    flex-shrink: 0;
+                }
+
+                .lms-preset-swatch-accent {
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 50%;
+                    border: 3px solid rgba(255, 255, 255, 0.3);
+                    flex-shrink: 0;
+                }
+
+                .lms-preset-info {
+                    padding: 10px 12px;
+                    border-top: 1px solid #eee;
+                }
+
+                .lms-preset-name {
+                    font-weight: 600;
+                    font-size: 13px;
+                    color: #1d2327;
+                    margin: 0 0 2px;
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                }
+
+                .lms-preset-desc {
+                    font-size: 11px;
+                    color: #666;
+                    margin: 0;
+                    line-height: 1.3;
+                }
+
+                .lms-preset-badge {
+                    display: inline-block;
+                    font-size: 10px;
+                    padding: 1px 6px;
+                    border-radius: 3px;
+                    background: #f0f0f1;
+                    color: #50575e;
+                    font-weight: 500;
+                    margin-left: auto;
+                }
+
+                .lms-preset-card.is-active .lms-preset-badge {
+                    background: #2271b1;
+                    color: #fff;
+                }
             </style>
 
             <div class="lms-cust-wrap">
                 <h2>Personalizar Aparência do LMS</h2>
-                <p>Configure cores, fontes e bordas do sistema. Todas as alterações são <strong>isoladas do tema WordPress</strong> e afetam exclusivamente os componentes do LMS.</p>
+                <p>Configure cores, fontes e bordas do sistema. Todas as alterações são <strong>isoladas do tema
+                        WordPress</strong> e afetam exclusivamente os componentes do LMS.</p>
 
                 <!-- Preview -->
                 <div class="lms-cust-section">
@@ -1494,14 +1710,16 @@ function sistema_cursos_render_admin_page()
                             <p style="margin:0 0 12px;" class="lms-prev-text">Texto de exemplo do conteúdo do LMS.</p>
                             <p style="margin:0 0 16px; font-size:12px;" class="lms-prev-muted">Texto secundário / muted</p>
                             <div class="lms-cust-preview-card" id="lms-prev-card">
-                                <strong class="lms-prev-heading" style="display:block; margin-bottom:6px;">Card de Curso</strong>
+                                <strong class="lms-prev-heading" style="display:block; margin-bottom:6px;">Card de
+                                    Curso</strong>
                                 <span class="lms-prev-muted" style="font-size:12px;">Descrição do curso aqui</span>
                                 <div class="lms-cust-preview-progress" id="lms-prev-progress-bg">
                                     <div class="lms-cust-preview-progress-fill" id="lms-prev-progress-fill"></div>
                                 </div>
                             </div>
                             <span class="lms-cust-preview-btn" id="lms-prev-btn">Botão Primário</span>
-                            <span class="lms-cust-preview-btn" id="lms-prev-btn-success" style="margin-left:8px;">Concluído</span>
+                            <span class="lms-cust-preview-btn" id="lms-prev-btn-success"
+                                style="margin-left:8px;">Concluído</span>
                         </div>
                     </div>
                 </div>
@@ -1509,20 +1727,26 @@ function sistema_cursos_render_admin_page()
                 <!-- Presets -->
                 <div class="lms-cust-section">
                     <h3>🎨 Presets de Cores</h3>
-                    <p style="margin:0 0 14px; font-size:13px; color:#666;">Selecione um preset para aplicar uma combinação harmoniosa de cores. Você pode personalizar individualmente após aplicar.</p>
+                    <p style="margin:0 0 14px; font-size:13px; color:#666;">Selecione um preset para aplicar uma combinação
+                        harmoniosa de cores. Você pode personalizar individualmente após aplicar.</p>
                     <div class="lms-presets-grid">
                         <?php foreach ($presets as $key => $preset): ?>
-                        <div class="lms-preset-card" data-preset="<?php echo esc_attr($key); ?>">
-                            <div class="lms-preset-swatch" style="background: linear-gradient(135deg, <?php echo esc_attr($preset['colors']['color_bg_primary']); ?> 0%, <?php echo esc_attr($preset['colors']['color_bg_secondary']); ?> 100%);">
-                                <span class="lms-preset-swatch-dot" style="background:<?php echo esc_attr($preset['colors']['color_text_heading']); ?>;"></span>
-                                <span class="lms-preset-swatch-accent" style="background:<?php echo esc_attr($preset['colors']['color_accent']); ?>;"></span>
-                                <span class="lms-preset-swatch-dot" style="background:<?php echo esc_attr($preset['colors']['color_success']); ?>;"></span>
+                            <div class="lms-preset-card" data-preset="<?php echo esc_attr($key); ?>">
+                                <div class="lms-preset-swatch"
+                                    style="background: linear-gradient(135deg, <?php echo esc_attr($preset['colors']['color_bg_primary']); ?> 0%, <?php echo esc_attr($preset['colors']['color_bg_secondary']); ?> 100%);">
+                                    <span class="lms-preset-swatch-dot"
+                                        style="background:<?php echo esc_attr($preset['colors']['color_text_heading']); ?>;"></span>
+                                    <span class="lms-preset-swatch-accent"
+                                        style="background:<?php echo esc_attr($preset['colors']['color_accent']); ?>;"></span>
+                                    <span class="lms-preset-swatch-dot"
+                                        style="background:<?php echo esc_attr($preset['colors']['color_success']); ?>;"></span>
+                                </div>
+                                <div class="lms-preset-info">
+                                    <p class="lms-preset-name"><?php echo $preset['emoji']; ?>
+                                        <?php echo esc_html($preset['name']); ?><span class="lms-preset-badge">Aplicar</span></p>
+                                    <p class="lms-preset-desc"><?php echo esc_html($preset['desc']); ?></p>
+                                </div>
                             </div>
-                            <div class="lms-preset-info">
-                                <p class="lms-preset-name"><?php echo $preset['emoji']; ?> <?php echo esc_html($preset['name']); ?><span class="lms-preset-badge">Aplicar</span></p>
-                                <p class="lms-preset-desc"><?php echo esc_html($preset['desc']); ?></p>
-                            </div>
-                        </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -1541,14 +1765,16 @@ function sistema_cursos_render_admin_page()
                             'color_bg_footer' => 'Footer',
                         ];
                         foreach ($bg_fields as $key => $label):
-                        ?>
-                        <div class="lms-cust-field">
-                            <label><?php echo esc_html($label); ?></label>
-                            <div class="lms-cust-color-wrap">
-                                <input type="color" id="<?php echo $key; ?>_picker" value="<?php echo esc_attr($cust_settings[$key]); ?>" data-target="<?php echo $key; ?>">
-                                <input type="text" id="<?php echo $key; ?>" name="<?php echo $key; ?>" value="<?php echo esc_attr($cust_settings[$key]); ?>" maxlength="7">
+                            ?>
+                            <div class="lms-cust-field">
+                                <label><?php echo esc_html($label); ?></label>
+                                <div class="lms-cust-color-wrap">
+                                    <input type="color" id="<?php echo $key; ?>_picker"
+                                        value="<?php echo esc_attr($cust_settings[$key]); ?>" data-target="<?php echo $key; ?>">
+                                    <input type="text" id="<?php echo $key; ?>" name="<?php echo $key; ?>"
+                                        value="<?php echo esc_attr($cust_settings[$key]); ?>" maxlength="7">
+                                </div>
                             </div>
-                        </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -1565,14 +1791,16 @@ function sistema_cursos_render_admin_page()
                             'color_text_label' => 'Labels',
                         ];
                         foreach ($text_fields as $key => $label):
-                        ?>
-                        <div class="lms-cust-field">
-                            <label><?php echo esc_html($label); ?></label>
-                            <div class="lms-cust-color-wrap">
-                                <input type="color" id="<?php echo $key; ?>_picker" value="<?php echo esc_attr($cust_settings[$key]); ?>" data-target="<?php echo $key; ?>">
-                                <input type="text" id="<?php echo $key; ?>" name="<?php echo $key; ?>" value="<?php echo esc_attr($cust_settings[$key]); ?>" maxlength="7">
+                            ?>
+                            <div class="lms-cust-field">
+                                <label><?php echo esc_html($label); ?></label>
+                                <div class="lms-cust-color-wrap">
+                                    <input type="color" id="<?php echo $key; ?>_picker"
+                                        value="<?php echo esc_attr($cust_settings[$key]); ?>" data-target="<?php echo $key; ?>">
+                                    <input type="text" id="<?php echo $key; ?>" name="<?php echo $key; ?>"
+                                        value="<?php echo esc_attr($cust_settings[$key]); ?>" maxlength="7">
+                                </div>
                             </div>
-                        </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -1591,14 +1819,16 @@ function sistema_cursos_render_admin_page()
                             'color_border_input' => 'Borda dos Inputs',
                         ];
                         foreach ($accent_fields as $key => $label):
-                        ?>
-                        <div class="lms-cust-field">
-                            <label><?php echo esc_html($label); ?></label>
-                            <div class="lms-cust-color-wrap">
-                                <input type="color" id="<?php echo $key; ?>_picker" value="<?php echo esc_attr($cust_settings[$key]); ?>" data-target="<?php echo $key; ?>">
-                                <input type="text" id="<?php echo $key; ?>" name="<?php echo $key; ?>" value="<?php echo esc_attr($cust_settings[$key]); ?>" maxlength="7">
+                            ?>
+                            <div class="lms-cust-field">
+                                <label><?php echo esc_html($label); ?></label>
+                                <div class="lms-cust-color-wrap">
+                                    <input type="color" id="<?php echo $key; ?>_picker"
+                                        value="<?php echo esc_attr($cust_settings[$key]); ?>" data-target="<?php echo $key; ?>">
+                                    <input type="text" id="<?php echo $key; ?>" name="<?php echo $key; ?>"
+                                        value="<?php echo esc_attr($cust_settings[$key]); ?>" maxlength="7">
+                                </div>
                             </div>
-                        </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -1620,7 +1850,8 @@ function sistema_cursos_render_admin_page()
                         </div>
                         <div class="lms-cust-field">
                             <label>Tamanho Base (px)</label>
-                            <input type="number" id="font_size_base" name="font_size_base" value="<?php echo esc_attr($cust_settings['font_size_base']); ?>" min="12" max="22" step="1">
+                            <input type="number" id="font_size_base" name="font_size_base"
+                                value="<?php echo esc_attr($cust_settings['font_size_base']); ?>" min="12" max="22" step="1">
                             <p class="description">Padrão: 16px</p>
                         </div>
                     </div>
@@ -1632,12 +1863,14 @@ function sistema_cursos_render_admin_page()
                     <div class="lms-cust-grid">
                         <div class="lms-cust-field">
                             <label>Raio Base (px)</label>
-                            <input type="number" id="radius_base" name="radius_base" value="<?php echo esc_attr($cust_settings['radius_base']); ?>" min="0" max="20" step="1">
+                            <input type="number" id="radius_base" name="radius_base"
+                                value="<?php echo esc_attr($cust_settings['radius_base']); ?>" min="0" max="20" step="1">
                             <p class="description">Padrão: 6px. Afeta botões e inputs.</p>
                         </div>
                         <div class="lms-cust-field">
                             <label>Raio dos Cards (px)</label>
-                            <input type="number" id="radius_card" name="radius_card" value="<?php echo esc_attr($cust_settings['radius_card']); ?>" min="0" max="30" step="1">
+                            <input type="number" id="radius_card" name="radius_card"
+                                value="<?php echo esc_attr($cust_settings['radius_card']); ?>" min="0" max="30" step="1">
                             <p class="description">Padrão: 12px. Afeta cards e containers.</p>
                         </div>
                     </div>
@@ -1645,146 +1878,148 @@ function sistema_cursos_render_admin_page()
 
                 <!-- Ações -->
                 <div class="lms-cust-actions">
-                    <button type="button" class="button button-primary button-hero" id="lms-cust-save">💾 Salvar Personalização</button>
+                    <button type="button" class="button button-primary button-hero" id="lms-cust-save">💾 Salvar
+                        Personalização</button>
                     <button type="button" class="button" id="lms-cust-reset">Restaurar Padrão</button>
                     <span id="lms-cust-notice" class="lms-cust-notice"></span>
                 </div>
             </div>
 
             <script>
-            jQuery(document).ready(function($) {
-                // Sincronizar color picker com input text
-                $('input[type="color"]').on('input', function() {
-                    var target = $(this).data('target');
-                    $('#' + target).val($(this).val());
-                    updatePreview();
-                });
-
-                $('input[type="text"][maxlength="7"]').on('input', function() {
-                    var val = $(this).val();
-                    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
-                        var id = $(this).attr('id');
-                        $('#' + id + '_picker').val(val);
+                jQuery(document).ready(function ($) {
+                    // Sincronizar color picker com input text
+                    $('input[type="color"]').on('input', function () {
+                        var target = $(this).data('target');
+                        $('#' + target).val($(this).val());
                         updatePreview();
+                    });
+
+                    $('input[type="text"][maxlength="7"]').on('input', function () {
+                        var val = $(this).val();
+                        if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+                            var id = $(this).attr('id');
+                            $('#' + id + '_picker').val(val);
+                            updatePreview();
+                        }
+                    });
+
+                    $('select[name="font_family"], input[type="number"]').on('change', function () {
+                        updatePreview();
+                    });
+
+                    function updatePreview() {
+                        var preview = $('#lms-preview');
+                        var bgPrimary = $('#color_bg_primary').val();
+                        var bgSecondary = $('#color_bg_secondary').val();
+                        var textPrimary = $('#color_text_primary').val();
+                        var textHeading = $('#color_text_heading').val();
+                        var textMuted = $('#color_text_muted').val();
+                        var accent = $('#color_accent').val();
+                        var success = $('#color_success').val();
+                        var border = $('#color_border_input').val();
+                        var fontFamily = $('#font_family').val();
+                        var fontSize = $('#font_size_base').val() + 'px';
+                        var radiusCard = $('#radius_card').val() + 'px';
+                        var radiusBase = $('#radius_base').val() + 'px';
+
+                        preview.css({
+                            'background-color': bgPrimary,
+                            'font-family': fontFamily,
+                            'font-size': fontSize,
+                            'color': textPrimary,
+                            'border-radius': radiusCard
+                        });
+                        preview.find('.lms-prev-heading').css('color', textHeading);
+                        preview.find('.lms-prev-text').css('color', textPrimary);
+                        preview.find('.lms-prev-muted').css('color', textMuted);
+                        $('#lms-prev-card').css({
+                            'background-color': bgSecondary,
+                            'border-color': border,
+                            'border-radius': radiusCard
+                        });
+                        $('#lms-prev-btn').css({ 'background-color': accent, 'border-radius': radiusBase });
+                        $('#lms-prev-btn-success').css({ 'background-color': success, 'border-radius': radiusBase });
+                        $('#lms-prev-progress-bg').css({ 'background': 'rgba(255,255,255,0.1)', 'border-radius': '3px' });
+                        $('#lms-prev-progress-fill').css({ 'background-color': accent, 'border-radius': '3px' });
                     }
-                });
 
-                $('select[name="font_family"], input[type="number"]').on('change', function() {
+                    // Presets de cores
+                    var lmsPresets = <?php echo wp_json_encode(array_map(function ($p) {
+                        return $p['colors']; }, $presets)); ?>;
+
+                    $('.lms-preset-card').on('click', function () {
+                        var presetKey = $(this).data('preset');
+                        var colors = lmsPresets[presetKey];
+                        if (!colors) return;
+
+                        // Aplicar cada cor nos campos
+                        $.each(colors, function (field, value) {
+                            $('#' + field).val(value);
+                            $('#' + field + '_picker').val(value);
+                        });
+
+                        // Marcar card ativo
+                        $('.lms-preset-card').removeClass('is-active');
+                        $(this).addClass('is-active');
+
+                        // Atualizar preview
+                        updatePreview();
+                    });
+
+                    // Inicializar preview
                     updatePreview();
-                });
 
-                function updatePreview() {
-                    var preview = $('#lms-preview');
-                    var bgPrimary = $('#color_bg_primary').val();
-                    var bgSecondary = $('#color_bg_secondary').val();
-                    var textPrimary = $('#color_text_primary').val();
-                    var textHeading = $('#color_text_heading').val();
-                    var textMuted = $('#color_text_muted').val();
-                    var accent = $('#color_accent').val();
-                    var success = $('#color_success').val();
-                    var border = $('#color_border_input').val();
-                    var fontFamily = $('#font_family').val();
-                    var fontSize = $('#font_size_base').val() + 'px';
-                    var radiusCard = $('#radius_card').val() + 'px';
-                    var radiusBase = $('#radius_base').val() + 'px';
+                    // Salvar
+                    $('#lms-cust-save').on('click', function () {
+                        var $btn = $(this);
+                        var $notice = $('#lms-cust-notice');
+                        $btn.prop('disabled', true).text('Salvando...');
+                        $notice.removeClass('success error').hide();
 
-                    preview.css({
-                        'background-color': bgPrimary,
-                        'font-family': fontFamily,
-                        'font-size': fontSize,
-                        'color': textPrimary,
-                        'border-radius': radiusCard
-                    });
-                    preview.find('.lms-prev-heading').css('color', textHeading);
-                    preview.find('.lms-prev-text').css('color', textPrimary);
-                    preview.find('.lms-prev-muted').css('color', textMuted);
-                    $('#lms-prev-card').css({
-                        'background-color': bgSecondary,
-                        'border-color': border,
-                        'border-radius': radiusCard
-                    });
-                    $('#lms-prev-btn').css({ 'background-color': accent, 'border-radius': radiusBase });
-                    $('#lms-prev-btn-success').css({ 'background-color': success, 'border-radius': radiusBase });
-                    $('#lms-prev-progress-bg').css({ 'background': 'rgba(255,255,255,0.1)', 'border-radius': '3px' });
-                    $('#lms-prev-progress-fill').css({ 'background-color': accent, 'border-radius': '3px' });
-                }
+                        var data = {
+                            action: 'lms_sr_save_customizer',
+                            nonce: '<?php echo wp_create_nonce('lms_sr_customizer_nonce'); ?>'
+                        };
 
-                // Presets de cores
-                var lmsPresets = <?php echo wp_json_encode(array_map(function($p) { return $p['colors']; }, $presets)); ?>;
+                        // Coletar todos os campos
+                        <?php foreach (array_keys($cust_defaults) as $key): ?>
+                            data['<?php echo $key; ?>'] = $('#<?php echo $key; ?>').val();
+                        <?php endforeach; ?>
 
-                $('.lms-preset-card').on('click', function() {
-                    var presetKey = $(this).data('preset');
-                    var colors = lmsPresets[presetKey];
-                    if (!colors) return;
-
-                    // Aplicar cada cor nos campos
-                    $.each(colors, function(field, value) {
-                        $('#' + field).val(value);
-                        $('#' + field + '_picker').val(value);
+                        $.post(ajaxurl, data, function (response) {
+                            $btn.prop('disabled', false).text('💾 Salvar Personalização');
+                            if (response.success) {
+                                $notice.text('✅ ' + response.data).addClass('success').show();
+                                setTimeout(function () { $notice.fadeOut(); }, 4000);
+                            } else {
+                                $notice.text('❌ Erro: ' + response.data).addClass('error').show();
+                            }
+                        }).fail(function () {
+                            $btn.prop('disabled', false).text('💾 Salvar Personalização');
+                            $notice.text('❌ Erro de conexão').addClass('error').show();
+                        });
                     });
 
-                    // Marcar card ativo
-                    $('.lms-preset-card').removeClass('is-active');
-                    $(this).addClass('is-active');
+                    // Restaurar Padrão
+                    $('#lms-cust-reset').on('click', function () {
+                        if (!confirm('Tem certeza que deseja restaurar todas as configurações para o padrão?')) return;
 
-                    // Atualizar preview
-                    updatePreview();
-                });
+                        var $notice = $('#lms-cust-notice');
+                        $notice.removeClass('success error').hide();
 
-                // Inicializar preview
-                updatePreview();
-
-                // Salvar
-                $('#lms-cust-save').on('click', function() {
-                    var $btn = $(this);
-                    var $notice = $('#lms-cust-notice');
-                    $btn.prop('disabled', true).text('Salvando...');
-                    $notice.removeClass('success error').hide();
-
-                    var data = {
-                        action: 'lms_sr_save_customizer',
-                        nonce: '<?php echo wp_create_nonce('lms_sr_customizer_nonce'); ?>'
-                    };
-
-                    // Coletar todos os campos
-                    <?php foreach (array_keys($cust_defaults) as $key): ?>
-                    data['<?php echo $key; ?>'] = $('#<?php echo $key; ?>').val();
-                    <?php endforeach; ?>
-
-                    $.post(ajaxurl, data, function(response) {
-                        $btn.prop('disabled', false).text('💾 Salvar Personalização');
-                        if (response.success) {
-                            $notice.text('✅ ' + response.data).addClass('success').show();
-                            setTimeout(function() { $notice.fadeOut(); }, 4000);
-                        } else {
-                            $notice.text('❌ Erro: ' + response.data).addClass('error').show();
-                        }
-                    }).fail(function() {
-                        $btn.prop('disabled', false).text('💾 Salvar Personalização');
-                        $notice.text('❌ Erro de conexão').addClass('error').show();
+                        $.post(ajaxurl, {
+                            action: 'lms_sr_reset_customizer',
+                            nonce: '<?php echo wp_create_nonce('lms_sr_customizer_nonce'); ?>'
+                        }, function (response) {
+                            if (response.success) {
+                                $notice.text('✅ ' + response.data).addClass('success').show();
+                                setTimeout(function () { location.reload(); }, 1000);
+                            } else {
+                                $notice.text('❌ Erro: ' + response.data).addClass('error').show();
+                            }
+                        });
                     });
                 });
-
-                // Restaurar Padrão
-                $('#lms-cust-reset').on('click', function() {
-                    if (!confirm('Tem certeza que deseja restaurar todas as configurações para o padrão?')) return;
-
-                    var $notice = $('#lms-cust-notice');
-                    $notice.removeClass('success error').hide();
-
-                    $.post(ajaxurl, {
-                        action: 'lms_sr_reset_customizer',
-                        nonce: '<?php echo wp_create_nonce('lms_sr_customizer_nonce'); ?>'
-                    }, function(response) {
-                        if (response.success) {
-                            $notice.text('✅ ' + response.data).addClass('success').show();
-                            setTimeout(function() { location.reload(); }, 1000);
-                        } else {
-                            $notice.text('❌ Erro: ' + response.data).addClass('error').show();
-                        }
-                    });
-                });
-            });
             </script>
 
         <?php endif; ?>
