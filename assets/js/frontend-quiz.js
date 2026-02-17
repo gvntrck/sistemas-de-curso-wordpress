@@ -111,12 +111,23 @@ jQuery(document).ready(function ($) {
                                 tentativasMsg = '<p>Tentativa ' + data.attempts_used + ' de ' + data.max_attempts + '.</p>';
                             }
 
+                            // Ocultar questões e botão de envio
+                            $form.find('.mc-body').slideUp();
+                            $btn.hide();
+
                             $msg.html(`
                                 <h3>❌ Não foi dessa vez.</h3>
                                 <p>Sua nota: <strong>${data.score}%</strong> (Mínimo: ${data.passing_score}%)</p>
                                 ${tentativasMsg}
-                                <p>Tente novamente.</p>
+                                <button type="button" class="sc-btn sc-btn-restart" style="margin-top:10px;">Tentar Novamente</button>
                              `).addClass('error').show();
+
+                            // Bind unique click event for restart logic
+                            $msg.find('.sc-btn-restart').one('click', function () {
+                                $form.find('.mc-body').slideDown();
+                                $btn.show();
+                                $msg.hide().removeClass('error').empty();
+                            });
 
                             // Sacudir container como feedback visual
                             if ($.fn.effect) {
