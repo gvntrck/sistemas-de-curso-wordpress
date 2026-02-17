@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.6.5
+ * Version: 1.6.6
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.6.5');
+define('SISTEMA_CURSOS_VERSION', '1.6.6');
 
 /**
  * sistema-cursos-plugin.php
@@ -37,7 +37,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-access-control.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-user-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-admin-filters.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-course-progress.php';
-require_once plugin_dir_path(__FILE__) . 'includes/admin/class-admin-quiz-manager.php';
+// require_once plugin_dir_path(__FILE__) . 'includes/admin/class-admin-quiz-manager.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-listar-aulas.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-meus-cursos.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-certificates.php';
@@ -799,13 +799,13 @@ function sistema_cursos_render_admin_page()
                                 <p>Copie o exemplo abaixo, cole na sua página e ajuste as URLs conforme necessário:</p>
                                 <pre
                                     style="background: #f0f0f1; padding: 15px; border-radius: 4px; border-left: 4px solid #2271b1; overflow-x: auto;"><code>[barra-lateral-aluno 
-                                                            link_inicio="/inicio" 
-                                                            link_minha_conta="/perfil"
-                                                            link_meus_cursos="/meus-cursos" 
-                                                            link_todos_cursos="/loja"
-                                                            link_certificados="/certificados"
-                                                            link_admin="/wp-admin"
-                                                        ]</code></pre>
+                                                                    link_inicio="/inicio" 
+                                                                    link_minha_conta="/perfil"
+                                                                    link_meus_cursos="/meus-cursos" 
+                                                                    link_todos_cursos="/loja"
+                                                                    link_certificados="/certificados"
+                                                                    link_admin="/wp-admin"
+                                                                ]</code></pre>
                             </div>
                         </td>
                     </tr>
@@ -1743,7 +1743,8 @@ function sistema_cursos_render_admin_page()
                                 </div>
                                 <div class="lms-preset-info">
                                     <p class="lms-preset-name"><?php echo $preset['emoji']; ?>
-                                        <?php echo esc_html($preset['name']); ?><span class="lms-preset-badge">Aplicar</span></p>
+                                        <?php echo esc_html($preset['name']); ?><span class="lms-preset-badge">Aplicar</span>
+                                    </p>
                                     <p class="lms-preset-desc"><?php echo esc_html($preset['desc']); ?></p>
                                 </div>
                             </div>
@@ -1945,7 +1946,8 @@ function sistema_cursos_render_admin_page()
 
                     // Presets de cores
                     var lmsPresets = <?php echo wp_json_encode(array_map(function ($p) {
-                        return $p['colors']; }, $presets)); ?>;
+                        return $p['colors'];
+                    }, $presets)); ?>;
 
                     $('.lms-preset-card').on('click', function () {
                         var presetKey = $(this).data('preset');
