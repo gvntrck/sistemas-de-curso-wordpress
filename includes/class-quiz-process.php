@@ -134,6 +134,41 @@ class System_Cursos_Quiz_Process
         $max_attempts = intval($quiz['max_attempts'] ?? 0);
         $used_attempts = ($user_id > 0) ? self::get_user_attempts($user_id, $aula_id) : 0;
         $attempts_exhausted = ($max_attempts > 0 && $used_attempts >= $max_attempts);
+        $already_passed = ($user_id > 0) ? self::user_passed($user_id, $aula_id) : false;
+
+        // Se o aluno já passou, mostrar card de sucesso simplificado
+        if ($already_passed) {
+            // Buscar pontuação salva
+            global $wpdb;
+            $table_name = $wpdb->prefix . 'progresso_aluno';
+            $row = $wpdb->get_row($wpdb->prepare(
+                "SELECT pontuacao, tentativas FROM $table_name WHERE user_id = %d AND aula_id = %d",
+                $user_id,
+                $aula_id
+            ));
+            $score = $row ? intval($row->pontuacao) : 0;
+            $attempts_used = $row && $row->tentativas ? intval($row->tentativas) : $used_attempts;
+
+            ob_start();
+            ?>
+            <div class="lms-sr">
+                <div class="mc-container sc-quiz-container">
+                    <div class="mc-header sc-quiz-intro">
+                        <div class="sc-quiz-message success" style="display:block;">
+                            <h3>✅ Avaliação Concluída</h3>
+                            <p>Você já foi aprovado nesta
+                                avaliação<?php echo $score > 0 ? ' com <strong>' . $score . '%</strong> de acerto' : ''; ?>.</p>
+                            <?php if ($attempts_used > 0): ?>
+                                <p style="margin-top:5px;font-size:0.9em;opacity:0.8;">Tentativas utilizadas:
+                                    <?php echo $attempts_used; ?></p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php
+            return ob_get_clean();
+        }
 
         ob_start();
         ?>
@@ -225,9 +260,9 @@ class System_Cursos_Quiz_Process
                 </form>
             </div>
 
-            </div>
-            <?php
-            return ob_get_clean();
+        </div>
+        <?php
+        return ob_get_clean();
     }
 
     /**
