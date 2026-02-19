@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.6.9
+ * Version: 1.7.0
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.6.9');
+define('SISTEMA_CURSOS_VERSION', '1.7.0');
 
 /**
  * sistema-cursos-plugin.php
@@ -103,7 +103,7 @@ function sistema_cursos_activate()
     $cpt_manager->register_cpts();
 
     flush_rewrite_rules();
-    update_option('sistema_cursos_version', '1.6.2');
+    update_option('sistema_cursos_version', SISTEMA_CURSOS_VERSION);
 }
 
 /**
@@ -116,7 +116,7 @@ add_action('init', 'sistema_cursos_check_version', 99);
 
 function sistema_cursos_check_version()
 {
-    $current_version = '1.6.2';
+    $current_version = SISTEMA_CURSOS_VERSION;
     $db_version = get_option('sistema_cursos_version');
 
     if ($db_version !== $current_version) {
@@ -1018,7 +1018,6 @@ function sistema_cursos_render_admin_page()
                             Página de resultados da pesquisa (o formulário de busca deve apontar para esta página).
                         </td>
                     </tr>
-                </tbody>
                 </tbody>
             </table>
 

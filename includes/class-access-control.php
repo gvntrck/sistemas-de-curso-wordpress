@@ -65,6 +65,13 @@ class System_Cursos_Access_Control
 
     public function create_table()
     {
+        $db_schema_version = get_option('sistema_cursos_db_schema', '0');
+        $current_schema = defined('SISTEMA_CURSOS_VERSION') ? SISTEMA_CURSOS_VERSION : '1.0.0';
+
+        if ($db_schema_version === $current_schema) {
+            return;
+        }
+
         global $wpdb;
         $table_name = $wpdb->prefix . 'acesso_cursos';
         $charset_collate = $wpdb->get_charset_collate();
@@ -105,6 +112,8 @@ class System_Cursos_Access_Control
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql);
         dbDelta($sql_log);
+
+        update_option('sistema_cursos_db_schema', $current_schema);
     }
 
     // =============================================================================

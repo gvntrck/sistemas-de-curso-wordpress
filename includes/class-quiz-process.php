@@ -347,6 +347,10 @@ class System_Cursos_Quiz_Process
         if ($passed) {
             if (class_exists('System_Cursos_Progress')) {
                 $curso_id = get_post_meta($aula_id, 'curso', true);
+                if (is_array($curso_id)) {
+                    $curso_id = reset($curso_id);
+                }
+                $curso_id = (int) $curso_id;
 
                 global $wpdb;
                 $table_name = $wpdb->prefix . 'progresso_aluno';
