@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.7.9
+ * Version: 1.8.0
  */
 
 if (!defined('ABSPATH')) {
@@ -845,13 +845,13 @@ function sistema_cursos_render_admin_page()
                                 <p>Copie o exemplo abaixo, cole na sua página e ajuste as URLs conforme necessário:</p>
                                 <pre
                                     style="background: #f0f0f1; padding: 15px; border-radius: 4px; border-left: 4px solid #2271b1; overflow-x: auto;"><code>[barra-lateral-aluno 
-                                                                                                                                                                                                                                            link_inicio="/inicio" 
-                                                                                                                                                                                                                                            link_minha_conta="/perfil"
-                                                                                                                                                                                                                                            link_meus_cursos="/meus-cursos" 
-                                                                                                                                                                                                                                            link_todos_cursos="/loja"
-                                                                                                                                                                                                                                            link_certificados="/certificados"
-                                                                                                                                                                                                                                            link_admin="/wp-admin"
-                                                                                                                                                                                                                                        ]</code></pre>
+                                                                                                                                                                                                                                                    link_inicio="/inicio" 
+                                                                                                                                                                                                                                                    link_minha_conta="/perfil"
+                                                                                                                                                                                                                                                    link_meus_cursos="/meus-cursos" 
+                                                                                                                                                                                                                                                    link_todos_cursos="/loja"
+                                                                                                                                                                                                                                                    link_certificados="/certificados"
+                                                                                                                                                                                                                                                    link_admin="/wp-admin"
+                                                                                                                                                                                                                                                ]</code></pre>
                             </div>
                         </td>
                     </tr>
@@ -2412,15 +2412,23 @@ function sistema_cursos_enviar_email_boas_vindas_aluno($user_id)
     }
 }
 
-// Hook de cadastro 
+// Hook de cadastro
 add_action('user_register', 'sistema_cursos_enviar_email_boas_vindas_aluno', 20, 1);
 
-// Hook para capturar mudança de role via painel ou ferramentas
+// Hook para capturar substituição de role via painel nativo do WordPress
 add_action('set_user_role', function ($user_id, $role, $old_roles) {
     if ($role === 'aluno') {
         sistema_cursos_enviar_email_boas_vindas_aluno($user_id);
     }
 }, 20, 3);
+
+// Hook para capturar ADIÇÃO de role via plugins de multi-role (ex: User Role Editor)
+// Esses plugins usam WP_User::add_role() que dispara 'add_user_role', não 'set_user_role'
+add_action('add_user_role', function ($user_id, $role) {
+    if ($role === 'aluno') {
+        sistema_cursos_enviar_email_boas_vindas_aluno($user_id);
+    }
+}, 20, 2);
 
 
 /**
