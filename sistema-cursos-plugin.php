@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.7.3
+ * Version: 1.7.4
  */
 
 if (!defined('ABSPATH')) {
@@ -289,6 +289,24 @@ function sistema_cursos_render_admin_page()
         update_option('lms_sr_banner_settings', $banner_settings);
         $settings_notice = '<div class="notice notice-success is-dismissible"><p>Configurações do banner salvas com sucesso.</p></div>';
     }
+
+    if (isset($_POST['lms_sr_save_emailaluno_settings'])) {
+        if (!current_user_can('manage_options')) {
+            wp_die('Sem permissão para salvar esta configuração.');
+        }
+
+        check_admin_referer('lms_sr_save_emailaluno_settings', 'lms_sr_emailaluno_nonce');
+
+        $email_ativo = isset($_POST['lms_sr_emailaluno_ativo']) ? '1' : '0';
+        $email_assunto = isset($_POST['lms_sr_emailaluno_assunto']) ? sanitize_text_field(wp_unslash($_POST['lms_sr_emailaluno_assunto'])) : '';
+        $email_html = isset($_POST['lms_sr_emailaluno_html']) ? wp_kses_post(wp_unslash($_POST['lms_sr_emailaluno_html'])) : '';
+
+        update_option('lms_sr_emailaluno_ativo', $email_ativo);
+        update_option('lms_sr_emailaluno_assunto', $email_assunto);
+        update_option('lms_sr_emailaluno_html', $email_html);
+
+        $settings_notice = '<div class="notice notice-success is-dismissible"><p>Configurações de email salvas com sucesso.</p></div>';
+    }
     ?>
     <div class="wrap">
         <h1>LMS SuporteRapido - Configuração do Sistema</h1>
@@ -310,6 +328,8 @@ function sistema_cursos_render_admin_page()
                 class="nav-tab <?php echo $active_tab == 'banner' ? 'nav-tab-active' : ''; ?>">Banner Home</a>
             <a href="?page=lms-suporte-rapido&tab=personalizar"
                 class="nav-tab <?php echo $active_tab == 'personalizar' ? 'nav-tab-active' : ''; ?>">🎨 Personalizar</a>
+            <a href="?page=lms-suporte-rapido&tab=emailaluno"
+                class="nav-tab <?php echo $active_tab == 'emailaluno' ? 'nav-tab-active' : ''; ?>">✉️ Email Aluno</a>
         </nav>
 
         <style>
@@ -825,13 +845,13 @@ function sistema_cursos_render_admin_page()
                                 <p>Copie o exemplo abaixo, cole na sua página e ajuste as URLs conforme necessário:</p>
                                 <pre
                                     style="background: #f0f0f1; padding: 15px; border-radius: 4px; border-left: 4px solid #2271b1; overflow-x: auto;"><code>[barra-lateral-aluno 
-                                                                                                                                                            link_inicio="/inicio" 
-                                                                                                                                                            link_minha_conta="/perfil"
-                                                                                                                                                            link_meus_cursos="/meus-cursos" 
-                                                                                                                                                            link_todos_cursos="/loja"
-                                                                                                                                                            link_certificados="/certificados"
-                                                                                                                                                            link_admin="/wp-admin"
-                                                                                                                                                        ]</code></pre>
+                                                                                                                                                                            link_inicio="/inicio" 
+                                                                                                                                                                            link_minha_conta="/perfil"
+                                                                                                                                                                            link_meus_cursos="/meus-cursos" 
+                                                                                                                                                                            link_todos_cursos="/loja"
+                                                                                                                                                                            link_certificados="/certificados"
+                                                                                                                                                                            link_admin="/wp-admin"
+                                                                                                                                                                        ]</code></pre>
                             </div>
                         </td>
                     </tr>
@@ -2074,6 +2094,119 @@ function sistema_cursos_render_admin_page()
                 });
             </script>
 
+        <?php elseif ($active_tab == 'emailaluno'): ?>
+            <?php
+            $email_ativo = get_option('lms_sr_emailaluno_ativo', '0');
+            $email_assunto = get_option('lms_sr_emailaluno_assunto', 'Bem-vindo ao nosso curso!');
+            $email_html = get_option('lms_sr_emailaluno_html', '<h1>Olá {nome}!</h1><p>Seja bem-vindo. Seu acesso foi liberado.</p>');
+            ?>
+
+            <h2>Email de Cadastro: Aluno</h2>
+            <p>Configure o email de boas vindas que será enviado aos usuários que receberem o papel <strong>Aluno</strong>.</p>
+
+            <?php echo $settings_notice; ?>
+
+            <form method="post" action="">
+                <?php wp_nonce_field('lms_sr_save_emailaluno_settings', 'lms_sr_emailaluno_nonce'); ?>
+
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">Ativar Envio de Email</th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="lms_sr_emailaluno_ativo" value="1" <?php checked('1', $email_ativo); ?> />
+                                Enviar email automaticamente quando um aluno for cadastrado ou promovido para a role 'aluno'.
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="lms_sr_emailaluno_assunto">Assunto do Email</label></th>
+                        <td>
+                            <input type="text" id="lms_sr_emailaluno_assunto" name="lms_sr_emailaluno_assunto"
+                                value="<?php echo esc_attr($email_assunto); ?>" class="regular-text" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="lms_sr_emailaluno_html">Corpo do Email (HTML)</label></th>
+                        <td>
+                            <p class="description">Utilize as tags <code>{nome}</code>, <code>{login}</code> e
+                                <code>{email}</code> para inserir dados do usuário dinamicamente.
+                            </p>
+                            <?php
+                            $settings = array(
+                                'textarea_name' => 'lms_sr_emailaluno_html',
+                                'textarea_rows' => 15,
+                                'media_buttons' => true
+                            );
+                            wp_editor($email_html, 'lms_sr_emailaluno_html_id', $settings);
+                            ?>
+                        </td>
+                    </tr>
+                </table>
+
+                <p class="submit">
+                    <input type="submit" name="lms_sr_save_emailaluno_settings" class="button button-primary"
+                        value="Salvar Configurações de Email" />
+                </p>
+            </form>
+
+            <hr />
+
+            <h3>Testar Envio de Email</h3>
+            <p>Insira um e-mail para enviar um teste utilizando o template acima (é recomendado salvar as configurações antes de
+                testar).</p>
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="lms_sr_emailaluno_teste">Email de Teste</label></th>
+                    <td>
+                        <input type="email" id="lms_sr_emailaluno_teste" value="" class="regular-text" />
+                        <button type="button" class="button button-secondary" id="btn-testar-email-aluno">Enviar Teste</button>
+                        <span id="testar-email-aviso" style="display:none; margin-left: 10px; font-weight:bold;"></span>
+                    </td>
+                </tr>
+            </table>
+
+            <script>
+                jQuery(document).ready(function ($) {
+                    $('#btn-testar-email-aluno').on('click', function (e) {
+                        e.preventDefault();
+                        var emailDestino = $('#lms_sr_emailaluno_teste').val();
+                        var $aviso = $('#testar-email-aviso');
+
+                        if (!emailDestino) {
+                            alert('Por favor, informe um e-mail para teste.');
+                            return;
+                        }
+
+                        $aviso.text('Enviando...').css('color', 'orange').show();
+                        $(this).prop('disabled', true);
+
+                        $.ajax({
+                            url: ajaxurl,
+                            type: 'POST',
+                            data: {
+                                action: 'lms_sr_test_emailaluno',
+                                email_teste: emailDestino,
+                                nonce: '<?php echo wp_create_nonce('lms_sr_test_emailaluno_nonce'); ?>'
+                            },
+                            success: function (response) {
+                                if (response.success) {
+                                    $aviso.text('E-mail enviado com sucesso!').css('color', 'green');
+                                } else {
+                                    $aviso.text('Erro: ' + response.data).css('color', 'red');
+                                }
+                                $('#btn-testar-email-aluno').prop('disabled', false);
+                                setTimeout(function () { $aviso.fadeOut(); }, 5000);
+                            },
+                            error: function () {
+                                $aviso.text('Erro na requisição. Tente novamente.').css('color', 'red');
+                                $('#btn-testar-email-aluno').prop('disabled', false);
+                            }
+                        });
+                    });
+                });
+            </script>
+
         <?php endif; ?>
 
     </div>
@@ -2214,3 +2347,121 @@ function sistema_cursos_enqueue_sortable_handler($hook)
     }
 }
 
+
+/**
+ * Funções de Email Aluno (Boas-vindas)
+ */
+
+function sistema_cursos_enviar_email_boas_vindas_aluno($user_id)
+{
+    if (!$user_id)
+        return;
+
+    // Verifica se a funcionalidade está ativa
+    $ativo = get_option('lms_sr_emailaluno_ativo', '0');
+    if ($ativo !== '1')
+        return;
+
+    // Evita loop ou duplicação com importadores em massa
+    if (get_user_meta($user_id, '_lms_sr_welcome_email_sent', true)) {
+        return;
+    }
+
+    $user = get_userdata($user_id);
+    if (!$user)
+        return;
+
+    // Apenas para role "aluno"
+    if (!in_array('aluno', (array) $user->roles)) {
+        return;
+    }
+
+    $assunto_template = get_option('lms_sr_emailaluno_assunto', 'Bem-vindo ao nosso curso!');
+    $html_template = get_option('lms_sr_emailaluno_html', '<h1>Olá {nome}!</h1><p>Seja bem-vindo. Seu acesso foi liberado.</p>');
+
+    $nome_display = $user->first_name ? $user->first_name : $user->display_name;
+
+    // Replace de tags
+    $assunto = str_replace(
+        array('{nome}', '{login}', '{email}'),
+        array($nome_display, $user->user_login, $user->user_email),
+        $assunto_template
+    );
+
+    $mensagem = str_replace(
+        array('{nome}', '{login}', '{email}'),
+        array($nome_display, $user->user_login, $user->user_email),
+        $html_template
+    );
+
+    $headers = array('Content-Type: text/html; charset=UTF-8');
+
+    // Envio do email
+    $enviado = wp_mail($user->user_email, wp_strip_all_tags($assunto), $mensagem, $headers);
+
+    if ($enviado) {
+        update_user_meta($user_id, '_lms_sr_welcome_email_sent', current_time('mysql'));
+    }
+}
+
+// Hook de cadastro 
+add_action('user_register', 'sistema_cursos_enviar_email_boas_vindas_aluno', 20, 1);
+
+// Hook para capturar mudança de role via painel ou ferramentas
+add_action('set_user_role', function ($user_id, $role, $old_roles) {
+    if ($role === 'aluno') {
+        sistema_cursos_enviar_email_boas_vindas_aluno($user_id);
+    }
+}, 20, 3);
+
+
+/**
+ * AJAX: Testar envio de email de boas vindas do aluno
+ */
+add_action('wp_ajax_lms_sr_test_emailaluno', 'sistema_cursos_test_emailaluno_handler');
+function sistema_cursos_test_emailaluno_handler()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'lms_sr_test_emailaluno_nonce')) {
+        wp_send_json_error('Nonce inválido.');
+    }
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Sem permissão.');
+    }
+
+    $email_teste = isset($_POST['email_teste']) ? sanitize_email($_POST['email_teste']) : '';
+    if (!is_email($email_teste)) {
+        wp_send_json_error('E-mail inválido.');
+    }
+
+    $assunto_template = get_option('lms_sr_emailaluno_assunto', 'Bem-vindo ao nosso curso!');
+    $html_template = get_option('lms_sr_emailaluno_html', '<h1>Olá {nome}!</h1><p>Seja bem-vindo. Seu acesso foi liberado.</p>');
+
+    $nome_teste = 'Usuário Teste';
+    $login_teste = 'login_teste';
+
+    $assunto = str_replace(
+        array('{nome}', '{login}', '{email}'),
+        array($nome_teste, $login_teste, $email_teste),
+        $assunto_template
+    );
+
+    $mensagem = str_replace(
+        array('{nome}', '{login}', '{email}'),
+        array($nome_teste, $login_teste, $email_teste),
+        $html_template
+    );
+
+    // Identificação de ser um teste
+    $assunto = '[TESTE] ' . wp_strip_all_tags($assunto);
+
+    $headers = array('Content-Type: text/html; charset=UTF-8');
+
+    $enviado = wp_mail($email_teste, $assunto, $mensagem, $headers);
+
+    if ($enviado) {
+        wp_send_json_success('E-mail enviado.');
+    } else {
+        wp_send_json_error('Falha ao enviar via wp_mail(). Verifique a configuração de SMTP do WordPress.');
+    }
+}
