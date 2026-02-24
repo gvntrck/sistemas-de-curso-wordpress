@@ -378,7 +378,7 @@ class System_Cursos_Shortcode_Listar_Aulas
         wp_send_json_success([
             'titulo' => esc_html(get_the_title($aulaId)),
             'embed' => $embed ? $this->kses_embed($embed) : '<div class="lista-aulas__placeholder">Video nao disponivel.</div>',
-            'descricao' => $descricao ? do_shortcode(wp_kses_post($descricao)) : '',
+            'descricao' => $descricao ? do_shortcode(wpautop(wp_kses_post($descricao))) : '',
             'anexos' => $this->get_anexos_html($aulaId),
             'quiz' => $quizHtml,
             'comentarios' => $commentsHtml,
