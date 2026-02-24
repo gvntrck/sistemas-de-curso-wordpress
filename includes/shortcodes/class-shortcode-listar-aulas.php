@@ -130,7 +130,7 @@ class System_Cursos_Shortcode_Listar_Aulas
         $descricao = get_post_meta($aulaId, 'descricao', true);
 
         $titulo = esc_html(get_the_title($aulaId));
-        $descricaoHtml = $descricao ? wp_kses_post($descricao) : '';
+        $descricaoHtml = $descricao ? do_shortcode(wpautop(wp_kses_post($descricao))) : '';
         $embedHtml = $embed ? $this->kses_embed($embed) : '<div class="lista-aulas__placeholder">Video nao disponivel.</div>';
         $anexosHtml = $this->get_anexos_html($aulaId);
 

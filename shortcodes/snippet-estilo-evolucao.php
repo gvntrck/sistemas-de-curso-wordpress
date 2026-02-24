@@ -353,7 +353,7 @@ function render_estilo_evolucao_shortcode()
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        ; (function () {
             const form = document.getElementById('ee-quiz-form');
             const options = form.querySelectorAll('.ee-option');
             const submitBtn = document.getElementById('ee-btn-submit');
@@ -459,7 +459,7 @@ function render_estilo_evolucao_shortcode()
 
                 document.getElementById('ee-quiz-wrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
-        });
+        })();
     </script>
     <?php
     return ob_get_clean();

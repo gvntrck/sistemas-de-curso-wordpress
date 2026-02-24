@@ -426,6 +426,19 @@ window.SystemCursos.initListaAulas = function (containerId) {
         ensureLessonLoadingEl();
     }
 
+    function executeInlineScripts(container) {
+        var scripts = container.querySelectorAll('script');
+        scripts.forEach(function(oldScript) {
+            var newScript = document.createElement('script');
+            if (oldScript.src) {
+                newScript.src = oldScript.src;
+            } else {
+                newScript.textContent = oldScript.textContent;
+            }
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+        });
+    }
+
     function normalizeMainSectionsOrder() {
         if (!mainEl) return;
 
@@ -731,12 +744,14 @@ window.SystemCursos.initListaAulas = function (containerId) {
                         if (data.data.descricao) {
                             if (descricaoEl) {
                                 descricaoEl.innerHTML = data.data.descricao;
+                                executeInlineScripts(descricaoEl);
                                 descricaoEl.style.display = '';
                             } else {
                                 // Create if missing
                                 var newDesc = document.createElement('div');
                                 newDesc.className = 'lista-aulas__descricao';
                                 newDesc.innerHTML = data.data.descricao;
+                                executeInlineScripts(newDesc);
                                 if (mainEl) {
                                     mainEl.appendChild(newDesc);
                                 }
