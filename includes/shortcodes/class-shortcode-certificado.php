@@ -45,7 +45,7 @@ class System_Cursos_Shortcode_Certificado
             return sprintf(
                 '<div class="mc-alert mc-error" style="color: #fff; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.2); padding: 15px; border-radius: 6px; text-align: center;">%s <a href="%s" style="color: inherit; text-decoration: underline;">%s</a></div>',
                 'Você precisa estar logado para acessar seus certificados.',
-                wp_login_url(get_permalink()),
+                sistema_cursos_get_login_url(get_permalink()),
                 'Fazer login'
             );
         }
@@ -110,29 +110,29 @@ class System_Cursos_Shortcode_Certificado
         ob_start();
         ?>
         <div class="mc-container" style="max-width: 100%; margin-left: 0; margin-right: 0;">
-        <div class="mc-body">
-            <h2 style="margin-bottom: 20px; color: var(--color-text-heading, #fff);">Meus Certificados</h2>
-            <div class="cert-grid">
-                <?php foreach ($certificados_disponiveis as $id):
-                    $titulo = get_the_title($id);
-                    $link = add_query_arg('curso_id', $id, get_permalink());
-                    ?>
-                    <a href="#" class="cert-card" data-curso-id="<?php echo esc_attr($id); ?>" data-view="certificado-view">
-                        <svg class="cert-icon" style="width: 48px; height: 48px; display: block; margin: 0 auto 15px;"
-                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                            stroke-linejoin="round">
-                            <circle cx="12" cy="8" r="6" />
-                            <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
-                        </svg>
-                        <h4>
-                            <?php echo esc_html($titulo); ?>
-                        </h4>
-                        <span class="mc-btn mc-btn-primary" style="font-size: 0.8rem; padding: 6px 12px; margin-top: auto;">Ver
-                            Certificado</span>
-                    </a>
-                <?php endforeach; ?>
+            <div class="mc-body">
+                <h2 style="margin-bottom: 20px; color: var(--color-text-heading, #fff);">Meus Certificados</h2>
+                <div class="cert-grid">
+                    <?php foreach ($certificados_disponiveis as $id):
+                        $titulo = get_the_title($id);
+                        $link = add_query_arg('curso_id', $id, get_permalink());
+                        ?>
+                        <a href="#" class="cert-card" data-curso-id="<?php echo esc_attr($id); ?>" data-view="certificado-view">
+                            <svg class="cert-icon" style="width: 48px; height: 48px; display: block; margin: 0 auto 15px;"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <circle cx="12" cy="8" r="6" />
+                                <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+                            </svg>
+                            <h4>
+                                <?php echo esc_html($titulo); ?>
+                            </h4>
+                            <span class="mc-btn mc-btn-primary" style="font-size: 0.8rem; padding: 6px 12px; margin-top: auto;">Ver
+                                Certificado</span>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
             </div>
-        </div>
         </div>
         <?php
         return ob_get_clean();
@@ -210,65 +210,66 @@ class System_Cursos_Shortcode_Certificado
         <link href="<?php echo esc_url($font_url); ?>" rel="stylesheet">
 
         <div class="mc-container" style="max-width: 100%; margin-left: 0; margin-right: 0;">
-        <div class="mc-body cert-wrapper">
-            <?php if ($progresso < 100 && $can_emitir_sem_conclusao): ?>
-                <div
-                    style="margin-bottom: 20px; padding: 12px 14px; border-radius: 8px; border: 1px solid #f59e0b; background: rgba(245, 158, 11, 0.12); color: #fbbf24;">
-                    Emissao manual por administrador. Progresso atual do aluno: <?php echo esc_html($progresso); ?>%.
-                </div>
-            <?php endif; ?>
-            <h2 style="margin-bottom: 20px; color: var(--color-text-heading, #fff);">Parabéns,
-                <?php echo esc_html($user_data->first_name); ?>!
-            </h2>
-            <p style="margin-bottom: 30px; color: var(--color-text-muted, #aaa);">Aqui está o seu certificado de conclusão do curso <strong>
-                    <?php echo esc_html($curso_titulo); ?>
-                </strong>.</p>
-
-            <div class="cert-container" id="printable-cert" data-font="<?php echo esc_attr($font_family); ?>"
-                data-font-url="<?php echo esc_attr($font_url); ?>"
-                data-filename="<?php echo esc_attr($curso_titulo . ' - ' . $nome_aluno); ?>"
-                data-align="<?php echo esc_attr($align); ?>">
-                <?php if ($bg_url): ?>
-                    <img src="<?php echo esc_url($bg_url); ?>" class="cert-bg" alt="Fundo Certificado">
-                <?php else: ?>
+            <div class="mc-body cert-wrapper">
+                <?php if ($progresso < 100 && $can_emitir_sem_conclusao): ?>
                     <div
-                        style="width:100%; height:100%; background:#f0f0f0; display:flex; align-items:center; justify-content:center; color:#333;">
-                        Fundo não configurado.
+                        style="margin-bottom: 20px; padding: 12px 14px; border-radius: 8px; border: 1px solid #f59e0b; background: rgba(245, 158, 11, 0.12); color: #fbbf24;">
+                        Emissao manual por administrador. Progresso atual do aluno: <?php echo esc_html($progresso); ?>%.
                     </div>
                 <?php endif; ?>
+                <h2 style="margin-bottom: 20px; color: var(--color-text-heading, #fff);">Parabéns,
+                    <?php echo esc_html($user_data->first_name); ?>!
+                </h2>
+                <p style="margin-bottom: 30px; color: var(--color-text-muted, #aaa);">Aqui está o seu certificado de conclusão
+                    do curso <strong>
+                        <?php echo esc_html($curso_titulo); ?>
+                    </strong>.</p>
 
-                <div class="cert-element <?php echo esc_attr($align_class); ?>"
-                    style="top: <?php echo esc_attr($nome_top); ?>; left: <?php echo esc_attr($nome_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>; font-family: '<?php echo esc_attr($font_family); ?>', sans-serif;">
-                    <?php echo esc_html($nome_aluno); ?>
+                <div class="cert-container" id="printable-cert" data-font="<?php echo esc_attr($font_family); ?>"
+                    data-font-url="<?php echo esc_attr($font_url); ?>"
+                    data-filename="<?php echo esc_attr($curso_titulo . ' - ' . $nome_aluno); ?>"
+                    data-align="<?php echo esc_attr($align); ?>">
+                    <?php if ($bg_url): ?>
+                        <img src="<?php echo esc_url($bg_url); ?>" class="cert-bg" alt="Fundo Certificado">
+                    <?php else: ?>
+                        <div
+                            style="width:100%; height:100%; background:#f0f0f0; display:flex; align-items:center; justify-content:center; color:#333;">
+                            Fundo não configurado.
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="cert-element <?php echo esc_attr($align_class); ?>"
+                        style="top: <?php echo esc_attr($nome_top); ?>; left: <?php echo esc_attr($nome_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>; font-family: '<?php echo esc_attr($font_family); ?>', sans-serif;">
+                        <?php echo esc_html($nome_aluno); ?>
+                    </div>
+
+                    <?php if ($show_curso === '1'): ?>
+                        <div class="cert-element <?php echo esc_attr($align_class); ?>"
+                            style="top: <?php echo esc_attr($curso_top); ?>; left: <?php echo esc_attr($curso_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>; font-family: '<?php echo esc_attr($font_family); ?>', sans-serif;">
+                            <?php echo esc_html($curso_titulo); ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if ($show_data === '1'): ?>
+                        <div class="cert-element <?php echo esc_attr($align_class); ?>"
+                            style="top: <?php echo esc_attr($data_top); ?>; left: <?php echo esc_attr($data_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>; font-family: '<?php echo esc_attr($font_family); ?>', sans-serif;">
+                            <?php echo esc_html($data_conclusao); ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
-                <?php if ($show_curso === '1'): ?>
-                    <div class="cert-element <?php echo esc_attr($align_class); ?>"
-                        style="top: <?php echo esc_attr($curso_top); ?>; left: <?php echo esc_attr($curso_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>; font-family: '<?php echo esc_attr($font_family); ?>', sans-serif;">
-                        <?php echo esc_html($curso_titulo); ?>
-                    </div>
-                <?php endif; ?>
-
-                <?php if ($show_data === '1'): ?>
-                    <div class="cert-element <?php echo esc_attr($align_class); ?>"
-                        style="top: <?php echo esc_attr($data_top); ?>; left: <?php echo esc_attr($data_left); ?>; color: <?php echo esc_attr($color); ?>; font-size: <?php echo esc_attr($font_size); ?>; font-family: '<?php echo esc_attr($font_family); ?>', sans-serif;">
-                        <?php echo esc_html($data_conclusao); ?>
-                    </div>
-                <?php endif; ?>
+                <div class="cert-actions">
+                    <button onclick="imprimirCertificado();" class="mc-btn mc-btn-secondary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                            <rect x="6" y="14" width="12" height="8"></rect>
+                        </svg>
+                        Imprimir / Salvar PDF
+                    </button>
+                </div>
             </div>
-
-            <div class="cert-actions">
-                <button onclick="imprimirCertificado();" class="mc-btn mc-btn-secondary">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                        <rect x="6" y="14" width="12" height="8"></rect>
-                    </svg>
-                    Imprimir / Salvar PDF
-                </button>
-            </div>
-        </div>
         </div>
 
         <?php

@@ -22,7 +22,7 @@ class System_Cursos_Config
     {
         $messages = [
             'access_denied' => '<div class="mc-alert mc-error">
-                Você precisa estar logado para ver esta página. <a href="' . wp_login_url(get_permalink()) . '" style="color: inherit; text-decoration: underline;">Fazer login</a>
+                Você precisa estar logado para ver esta página. <a href="' . sistema_cursos_get_login_url(get_permalink()) . '" style="color: inherit; text-decoration: underline;">Fazer login</a>
             </div>',
             'not_enrolled' => '<div class="mc-alert mc-error">
                 Você não tem permissão para acessar este curso.

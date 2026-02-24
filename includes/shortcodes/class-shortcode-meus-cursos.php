@@ -40,7 +40,7 @@ class System_Cursos_Shortcode_Meus_Cursos
             return sprintf(
                 '<div class="mc-alert mc-error" style="color: #fff; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.2); padding: 15px; border-radius: 6px; text-align: center;">%s <a href="%s" style="color: inherit; text-decoration: underline;">%s</a></div>',
                 'Você precisa estar logado para ver seus cursos.',
-                wp_login_url(get_permalink()),
+                sistema_cursos_get_login_url(get_permalink()),
                 'Fazer login'
             );
         }
@@ -463,22 +463,20 @@ class System_Cursos_Shortcode_Meus_Cursos
 
         ob_start();
         ?>
-        <div class="mc-container lms-banner-container" style="margin-bottom: 30px; max-width: 100%; margin-left: 0; margin-right: 0;">
-            <div
-                class="lms-banner-carousel"
-                id="<?php echo esc_attr($carousel_id); ?>"
+        <div class="mc-container lms-banner-container"
+            style="margin-bottom: 30px; max-width: 100%; margin-left: 0; margin-right: 0;">
+            <div class="lms-banner-carousel" id="<?php echo esc_attr($carousel_id); ?>"
                 data-autoplay="<?php echo esc_attr((string) ($autoplay_seconds * 1000)); ?>">
                 <div class="lms-banner-track">
                     <?php foreach ($slides as $index => $slide): ?>
-                        <div class="lms-banner-slide<?php echo $index === 0 ? ' is-active' : ''; ?>" data-index="<?php echo esc_attr((string) $index); ?>">
+                        <div class="lms-banner-slide<?php echo $index === 0 ? ' is-active' : ''; ?>"
+                            data-index="<?php echo esc_attr((string) $index); ?>">
                             <?php if (!empty($slide['link'])): ?>
                                 <a class="lms-banner-link" href="<?php echo esc_url($slide['link']); ?>">
-                            <?php endif; ?>
-                            <img
-                                src="<?php echo esc_url($slide['image_url']); ?>"
-                                alt="<?php echo esc_attr($slide['alt']); ?>"
-                                loading="<?php echo $index === 0 ? 'eager' : 'lazy'; ?>">
-                            <?php if (!empty($slide['link'])): ?>
+                                <?php endif; ?>
+                                <img src="<?php echo esc_url($slide['image_url']); ?>" alt="<?php echo esc_attr($slide['alt']); ?>"
+                                    loading="<?php echo $index === 0 ? 'eager' : 'lazy'; ?>">
+                                <?php if (!empty($slide['link'])): ?>
                                 </a>
                             <?php endif; ?>
                         </div>
@@ -495,9 +493,7 @@ class System_Cursos_Shortcode_Meus_Cursos
 
                     <div class="lms-banner-dots" role="tablist" aria-label="Selecao de banners">
                         <?php foreach ($slides as $index => $slide): ?>
-                            <button
-                                type="button"
-                                class="lms-banner-dot<?php echo $index === 0 ? ' is-active' : ''; ?>"
+                            <button type="button" class="lms-banner-dot<?php echo $index === 0 ? ' is-active' : ''; ?>"
                                 data-index="<?php echo esc_attr((string) $index); ?>"
                                 aria-label="<?php echo esc_attr('Ir para banner ' . ($index + 1)); ?>"></button>
                         <?php endforeach; ?>

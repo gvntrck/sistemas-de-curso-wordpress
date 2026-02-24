@@ -40,7 +40,7 @@ class System_Cursos_Shortcode_Painel
             return sprintf(
                 '<div class="mc-alert mc-error" style="color: #fff; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.2); padding: 15px; border-radius: 6px; text-align: center;">%s <a href="%s" style="color: inherit; text-decoration: underline;">%s</a></div>',
                 'Você precisa estar logado para acessar o painel.',
-                wp_login_url(get_permalink()),
+                sistema_cursos_get_login_url(get_permalink()),
                 'Fazer login'
             );
         }

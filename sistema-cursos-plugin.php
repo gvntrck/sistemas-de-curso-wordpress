@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.7.0
+ * Version: 1.7.1
  */
 
 if (!defined('ABSPATH')) {
@@ -161,6 +161,27 @@ function sistema_cursos_add_admin_menu()
 }
 
 /**
+ * Retorna a URL da página de login.
+ * Se houver uma página configurada no admin, retorna ela.
+ * Caso contrário, retorna wp_login_url padrão.
+ *
+ * @param string $redirect_url URL para redirecionar após o login.
+ * @return string
+ */
+function sistema_cursos_get_login_url($redirect_url = '')
+{
+    $login_page_id = (int) get_option('lms_sr_aluno_login_page_id', 0);
+    if ($login_page_id > 0 && get_post_type($login_page_id) === 'page') {
+        $url = get_permalink($login_page_id);
+        if (!empty($redirect_url)) {
+            $url = add_query_arg('redirect_to', urlencode($redirect_url), $url);
+        }
+        return esc_url($url);
+    }
+    return wp_login_url($redirect_url);
+}
+
+/**
  * Retorna as configuracoes do banner da pagina inicial.
  *
  * @return array{autoplay_seconds:int,slides:array<int,array{image_id:int,link:string}>}
@@ -238,13 +259,18 @@ function sistema_cursos_render_admin_page()
         check_admin_referer('lms_sr_save_acesso_settings', 'lms_sr_acesso_nonce');
 
         $redirect_page_id = isset($_POST['lms_sr_aluno_redirect_page_id']) ? absint(wp_unslash($_POST['lms_sr_aluno_redirect_page_id'])) : 0;
-
         if ($redirect_page_id > 0 && get_post_type($redirect_page_id) !== 'page') {
             $redirect_page_id = 0;
         }
 
+        $login_page_id = isset($_POST['lms_sr_aluno_login_page_id']) ? absint(wp_unslash($_POST['lms_sr_aluno_login_page_id'])) : 0;
+        if ($login_page_id > 0 && get_post_type($login_page_id) !== 'page') {
+            $login_page_id = 0;
+        }
+
         update_option('lms_sr_aluno_redirect_page_id', $redirect_page_id);
-        $settings_notice = '<div class="notice notice-success is-dismissible"><p>Configuração de redirecionamento salva com sucesso.</p></div>';
+        update_option('lms_sr_aluno_login_page_id', $login_page_id);
+        $settings_notice = '<div class="notice notice-success is-dismissible"><p>Configurações de acesso salvas com sucesso.</p></div>';
     }
 
     if (isset($_POST['lms_sr_save_banner_settings'])) {
@@ -799,13 +825,13 @@ function sistema_cursos_render_admin_page()
                                 <p>Copie o exemplo abaixo, cole na sua página e ajuste as URLs conforme necessário:</p>
                                 <pre
                                     style="background: #f0f0f1; padding: 15px; border-radius: 4px; border-left: 4px solid #2271b1; overflow-x: auto;"><code>[barra-lateral-aluno 
-                                                                                                            link_inicio="/inicio" 
-                                                                                                            link_minha_conta="/perfil"
-                                                                                                            link_meus_cursos="/meus-cursos" 
-                                                                                                            link_todos_cursos="/loja"
-                                                                                                            link_certificados="/certificados"
-                                                                                                            link_admin="/wp-admin"
-                                                                                                        ]</code></pre>
+                                                                                                                                            link_inicio="/inicio" 
+                                                                                                                                            link_minha_conta="/perfil"
+                                                                                                                                            link_meus_cursos="/meus-cursos" 
+                                                                                                                                            link_todos_cursos="/loja"
+                                                                                                                                            link_certificados="/certificados"
+                                                                                                                                            link_admin="/wp-admin"
+                                                                                                                                        ]</code></pre>
                             </div>
                         </td>
                     </tr>
@@ -1178,6 +1204,9 @@ function sistema_cursos_render_admin_page()
             <?php
             $aluno_redirect_page_id = (int) get_option('lms_sr_aluno_redirect_page_id', 0);
             $aluno_redirect_page_url = $aluno_redirect_page_id > 0 ? get_permalink($aluno_redirect_page_id) : '';
+
+            $aluno_login_page_id = (int) get_option('lms_sr_aluno_login_page_id', 0);
+            $aluno_login_page_url = $aluno_login_page_id > 0 ? get_permalink($aluno_login_page_id) : '';
             ?>
 
             <?php if (!empty($settings_notice)): ?>
@@ -1185,7 +1214,8 @@ function sistema_cursos_render_admin_page()
             <?php endif; ?>
 
             <h2>Configuração de Acesso</h2>
-            <p>Escolha para qual página usuários com role <code>aluno</code> devem ser redirecionados depois do login.</p>
+            <p>Escolha para qual página usuários com role <code>aluno</code> devem ser redirecionados depois do login, e defina
+                uma página de login exclusiva para o LMS.</p>
 
             <form method="post" action="">
                 <?php wp_nonce_field('lms_sr_save_acesso_settings', 'lms_sr_acesso_nonce'); ?>
@@ -1193,7 +1223,28 @@ function sistema_cursos_render_admin_page()
                 <table class="form-table" role="presentation">
                     <tr>
                         <th scope="row">
-                            <label for="lms_sr_aluno_redirect_page_id">Página de redirecionamento do aluno</label>
+                            <label for="lms_sr_aluno_login_page_id">Página de login LMS</label>
+                        </th>
+                        <td>
+                            <?php
+                            wp_dropdown_pages([
+                                'name' => 'lms_sr_aluno_login_page_id',
+                                'id' => 'lms_sr_aluno_login_page_id',
+                                'selected' => $aluno_login_page_id,
+                                'show_option_none' => '-- Selecione uma página --',
+                                'option_none_value' => '0',
+                            ]);
+                            ?>
+                            <p class="description">A página indicada aqui será usada em redirecionamentos quando o usuário do
+                                LMS não estiver autenticado.</p>
+                            <?php if (!empty($aluno_login_page_url)): ?>
+                                <p class="description">URL atual: <code><?php echo esc_url($aluno_login_page_url); ?></code></p>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="lms_sr_aluno_redirect_page_id">Página de redirecionamento pós-login</label>
                         </th>
                         <td>
                             <?php
