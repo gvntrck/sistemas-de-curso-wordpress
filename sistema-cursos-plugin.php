@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.7.4
+ * Version: 1.7.5
  */
 
 if (!defined('ABSPATH')) {
@@ -845,13 +845,13 @@ function sistema_cursos_render_admin_page()
                                 <p>Copie o exemplo abaixo, cole na sua página e ajuste as URLs conforme necessário:</p>
                                 <pre
                                     style="background: #f0f0f1; padding: 15px; border-radius: 4px; border-left: 4px solid #2271b1; overflow-x: auto;"><code>[barra-lateral-aluno 
-                                                                                                                                                                            link_inicio="/inicio" 
-                                                                                                                                                                            link_minha_conta="/perfil"
-                                                                                                                                                                            link_meus_cursos="/meus-cursos" 
-                                                                                                                                                                            link_todos_cursos="/loja"
-                                                                                                                                                                            link_certificados="/certificados"
-                                                                                                                                                                            link_admin="/wp-admin"
-                                                                                                                                                                        ]</code></pre>
+                                                                                                                                                                                            link_inicio="/inicio" 
+                                                                                                                                                                                            link_minha_conta="/perfil"
+                                                                                                                                                                                            link_meus_cursos="/meus-cursos" 
+                                                                                                                                                                                            link_todos_cursos="/loja"
+                                                                                                                                                                                            link_certificados="/certificados"
+                                                                                                                                                                                            link_admin="/wp-admin"
+                                                                                                                                                                                        ]</code></pre>
                             </div>
                         </td>
                     </tr>
@@ -2132,14 +2132,9 @@ function sistema_cursos_render_admin_page()
                             <p class="description">Utilize as tags <code>{nome}</code>, <code>{login}</code> e
                                 <code>{email}</code> para inserir dados do usuário dinamicamente.
                             </p>
-                            <?php
-                            $settings = array(
-                                'textarea_name' => 'lms_sr_emailaluno_html',
-                                'textarea_rows' => 15,
-                                'media_buttons' => true
-                            );
-                            wp_editor($email_html, 'lms_sr_emailaluno_html_id', $settings);
-                            ?>
+                            <textarea id="lms_sr_emailaluno_html" name="lms_sr_emailaluno_html" rows="15"
+                                class="large-text code"><?php echo esc_textarea($email_html); ?></textarea>
+
                         </td>
                     </tr>
                 </table>
@@ -2337,13 +2332,26 @@ function sistema_cursos_salvar_ordem_cursos_trilha_handler()
 }
 
 /**
- * Carregar jQuery UI Sortable na página de ordenação
+ * Carregar scripts nas abas de administração
  */
-add_action('admin_enqueue_scripts', 'sistema_cursos_enqueue_sortable_handler');
-function sistema_cursos_enqueue_sortable_handler($hook)
+add_action('admin_enqueue_scripts', 'sistema_cursos_admin_enqueue_scripts_handler');
+function sistema_cursos_admin_enqueue_scripts_handler($hook)
 {
-    if ($hook === 'toplevel_page_lms-suporte-rapido' && isset($_GET['tab']) && $_GET['tab'] === 'ordenacao') {
-        wp_enqueue_script('jquery-ui-sortable');
+    if ($hook === 'toplevel_page_lms-suporte-rapido' && isset($_GET['tab'])) {
+        if ($_GET['tab'] === 'ordenacao') {
+            wp_enqueue_script('jquery-ui-sortable');
+        } elseif ($_GET['tab'] === 'emailaluno') {
+            $settings = wp_enqueue_code_editor(array('type' => 'text/html'));
+            if ($settings !== false) {
+                wp_add_inline_script(
+                    'code-editor',
+                    sprintf(
+                        'jQuery( function() { wp.codeEditor.initialize( "lms_sr_emailaluno_html", %s ); } );',
+                        wp_json_encode($settings)
+                    )
+                );
+            }
+        }
     }
 }
 
