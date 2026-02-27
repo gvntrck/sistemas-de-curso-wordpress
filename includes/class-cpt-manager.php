@@ -201,6 +201,16 @@ class System_Cursos_CPT_Manager
             'default'
         );
 
+        // Gerenciamento de Alunos (Matrícula Direta no Curso)
+        add_meta_box(
+            'curso_alunos_manager',
+            'Matricular Alunos no Curso',
+            [$this, 'render_curso_alunos_metabox'],
+            'curso',
+            'normal',
+            'default'
+        );
+
         // Criacao rapida de aulas (estilo LearnDash)
         add_meta_box(
             'curso_quick_add_aulas',
@@ -875,6 +885,41 @@ class System_Cursos_CPT_Manager
             }
         }
 
+        // ----- Processar Matrículas Diretas de Alunos no Curso -----
+        if ('curso' === $post_type) {
+            if (isset($_POST['sistema_cursos_nonce']) && wp_verify_nonce(wp_unslash($_POST['sistema_cursos_nonce']), 'sistema_cursos_save_meta')) {
+                // Obter os IDs dos alunos submetidos
+                $submitted_alunos = isset($_POST['curso_alunos_diretos']) ? array_map('absint', wp_unslash($_POST['curso_alunos_diretos'])) : [];
+
+                // Obter os alunos atualmente matriculados no curso (acesso direto)
+                $current_accesses_raw = System_Cursos_Access_Control::list_accesses([
+                    'curso_id' => $post_id,
+                    'status' => 'ativo',
+                    'expirados' => false,
+                    'limit' => 99999
+                ]);
+
+                $current_alunos = [];
+                if (!empty($current_accesses_raw)) {
+                    foreach ($current_accesses_raw as $ac) {
+                        $current_alunos[] = (int) $ac->user_id;
+                    }
+                }
+
+                // Determinar alunos a adicionar
+                $alunos_to_add = array_diff($submitted_alunos, $current_alunos);
+                foreach ($alunos_to_add as $user_id) {
+                    System_Cursos_Access_Control::grant_access($user_id, $post_id);
+                }
+
+                // Determinar alunos a remover
+                $alunos_to_remove = array_diff($current_alunos, $submitted_alunos);
+                foreach ($alunos_to_remove as $user_id) {
+                    System_Cursos_Access_Control::revoke_access($user_id, $post_id);
+                }
+            }
+        }
+
         // 4. Embed Vimeo
         if (isset($_POST['embed_do_vimeo'])) {
             // Permitir iframe e HTML seguro
@@ -1138,5 +1183,131 @@ class System_Cursos_CPT_Manager
 
         echo '</div>';
         echo '<p class="description">Selecione os conteúdos aos quais este grupo terá acesso automático.</p>';
+    }
+
+    /**
+     * Renderiza Metabox de Gestão de Alunos (Matrícula Direta CPT Curso)
+     */
+    public function render_curso_alunos_metabox($post)
+    {
+        wp_nonce_field('sistema_cursos_save_meta', 'sistema_cursos_nonce');
+
+        // Buscar todos os usuários
+        $users = get_users([
+            'orderby' => 'display_name',
+            'order' => 'ASC',
+            'fields' => ['ID', 'display_name', 'user_email']
+        ]);
+
+        // Acessos diretos ativos
+        $acessos_diretos_raw = System_Cursos_Access_Control::list_accesses([
+            'curso_id' => $post->ID,
+            'status' => 'ativo',
+            'expirados' => false,
+            'limit' => 99999
+        ]);
+
+        $acessos_diretos_ids = [];
+        if (!empty($acessos_diretos_raw)) {
+            foreach ($acessos_diretos_raw as $ac) {
+                $acessos_diretos_ids[] = (int) $ac->user_id;
+            }
+        }
+
+        // Dividir em duas listas
+        $disponiveis = [];
+        $selecionados = [];
+
+        foreach ($users as $user) {
+            if (in_array((int)$user->ID, $acessos_diretos_ids, true)) {
+                $selecionados[] = $user;
+            } else {
+                $disponiveis[] = $user;
+            }
+        }
+
+        ?>
+        <div class="sc-dual-listbox-container" style="display: flex; gap: 20px; align-items: stretch; margin-top: 10px;">
+            
+            <!-- Default / Available List -->
+            <div class="sc-listbox-half" style="flex: 1; border: 1px solid #ccd0d4; padding: 10px; background: #fff;">
+                <strong>Pesquisar todos os usuários</strong>
+                <input type="text" id="sc_search_available" class="widefat" placeholder="Pesquisar..." style="margin: 8px 0;">
+                <select id="sc_available_users" multiple="multiple" style="width: 100%; height: 300px; padding: 5px;">
+                    <?php foreach ($disponiveis as $user): ?>
+                        <option value="<?php echo esc_attr($user->ID); ?>" data-search="<?php echo esc_attr(strtolower($user->display_name . ' ' . $user->user_email)); ?>">
+                            <?php echo esc_html($user->display_name . ' (' . $user->user_email . ')'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Controls -->
+            <div class="sc-listbox-controls" style="display: flex; flex-direction: column; justify-content: center; gap: 10px;">
+                <button type="button" class="button button-secondary" id="sc_btn_move_right" title="Matricular Selecionados">&rarr;</button>
+                <button type="button" class="button button-secondary" id="sc_btn_move_left" title="Remover Selecionados">&larr;</button>
+            </div>
+
+            <!-- Selected List -->
+            <div class="sc-listbox-half" style="flex: 1; border: 1px solid #ccd0d4; padding: 10px; background: #fff;">
+                <strong>Usuários matriculados no Curso</strong>
+                <input type="text" id="sc_search_selected" class="widefat" placeholder="Pesquisar..." style="margin: 8px 0;">
+                <select id="sc_selected_users" name="curso_alunos_diretos[]" multiple="multiple" style="width: 100%; height: 300px; padding: 5px;">
+                    <?php foreach ($selecionados as $user): ?>
+                        <option value="<?php echo esc_attr($user->ID); ?>" data-search="<?php echo esc_attr(strtolower($user->display_name . ' ' . $user->user_email)); ?>" selected="selected">
+                            <?php echo esc_html($user->display_name . ' (' . $user->user_email . ')'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+        </div>
+        <p class="description">Alunos matriculados via Grupos ou Trilhas não aparecem aqui e devem ser gerenciados nas respectivas telas.</p>
+
+        <script>
+        jQuery(document).ready(function($) {
+            // Function to filter options
+            function filterSelect(inputId, selectId) {
+                $(inputId).on('keyup', function() {
+                    var term = $(this).val().toLowerCase();
+                    $(selectId + ' option').each(function() {
+                        var searchData = $(this).data('search') || '';
+                        if (searchData.indexOf(term) > -1 || term === '') {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+                });
+            }
+
+            filterSelect('#sc_search_available', '#sc_available_users');
+            filterSelect('#sc_search_selected', '#sc_selected_users');
+
+            // Move Right
+            $('#sc_btn_move_right').on('click', function(e) {
+                e.preventDefault();
+                $('#sc_available_users option:selected').each(function() {
+                    $(this).prop('selected', false); // unselect before moving
+                    $('#sc_selected_users').append($(this));
+                });
+            });
+
+            // Move Left
+            $('#sc_btn_move_left').on('click', function(e) {
+                e.preventDefault();
+                $('#sc_selected_users option:selected').each(function() {
+                    $(this).prop('selected', false); // unselect before moving
+                    $('#sc_available_users').append($(this));
+                });
+            });
+
+            // Ensure all right-side options are selected on form submit so they are sent via POST
+            $('form#post').on('submit', function() {
+                $('#sc_selected_users option').prop('selected', true);
+            });
+        });
+        </script>
+        <?php
     }
 }
