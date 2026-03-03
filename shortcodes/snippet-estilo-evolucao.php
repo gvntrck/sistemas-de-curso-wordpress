@@ -231,234 +231,301 @@ function render_estilo_evolucao_shortcode()
         }
     </style>
 
-    <div class="ee-quiz-container" id="ee-quiz-wrapper">
-        <div class="ee-header">
-            <h1 class="ee-demo-title">🧭 Descubra seu Estilo de Evolução</h1>
-            <p class="ee-subtitle">No Chess Broadcasters</p>
+    <div class="ee-quiz-wrapper-outer">
+        <div class="ee-preloader-instance"
+            style="text-align: center; padding: 40px; color: var(--ee-accent-color); font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 1.2rem; display: flex; justify-content: center; align-items: center; min-height: 200px; font-weight: bold; animation: fadeIn 0.5s ease;">
+            ⏳ Carregando...
         </div>
 
-        <div class="ee-body" id="ee-quiz-body">
-            <p class="ee-intro">
-                Responda as 5 perguntas abaixo e veja qual perfil representa melhor o seu jeito de aprender e crescer:
-            </p>
-
-            <form id="ee-quiz-form">
-                <!-- Pergunta 1 -->
-                <div class="ee-question">
-                    <h3>1. Quando eu quero aprender algo novo...</h3>
-                    <label class="ee-option">
-                        <input type="radio" name="q1" value="A"> A) Prefiro ver o passo a passo e colocar em prática logo.
-                    </label>
-                    <label class="ee-option">
-                        <input type="radio" name="q1" value="B"> B) Gosto de conversar sobre o assunto, trocar ideias com
-                        outras pessoas.
-                    </label>
-                    <label class="ee-option">
-                        <input type="radio" name="q1" value="C"> C) Quero entender profundamente o conceito e o “porquê” das
-                        coisas.
-                    </label>
-                </div>
-
-                <!-- Pergunta 2 -->
-                <div class="ee-question">
-                    <h3>2. Durante as Aulas da Recorrência, eu...</h3>
-                    <label class="ee-option">
-                        <input type="radio" name="q2" value="A"> A) Já anoto as tarefas e penso em como aplicar no meu
-                        negócio.
-                    </label>
-                    <label class="ee-option">
-                        <input type="radio" name="q2" value="B"> B) Me empolgo com as interações e comentários do grupo.
-                    </label>
-                    <label class="ee-option">
-                        <input type="radio" name="q2" value="C"> C) Curto ouvir a explicação e conectar os pontos
-                        conceituais.
-                    </label>
-                </div>
-
-                <!-- Pergunta 3 -->
-                <div class="ee-question">
-                    <h3>3. Quando enfrento um desafio no meu negócio...</h3>
-                    <label class="ee-option">
-                        <input type="radio" name="q3" value="A"> A) Sigo um checklist ou peço um passo a passo pra resolver.
-                    </label>
-                    <label class="ee-option">
-                        <input type="radio" name="q3" value="B"> B) Falo com alguém que já passou por isso pra trocar
-                        experiências.
-                    </label>
-                    <label class="ee-option">
-                        <input type="radio" name="q3" value="C"> C) Assisto vídeos ou leio materiais pra entender a causa do
-                        problema.
-                    </label>
-                </div>
-
-                <!-- Pergunta 4 -->
-                <div class="ee-question">
-                    <h3>4. O que mais me motiva a continuar no RR é...</h3>
-                    <label class="ee-option">
-                        <input type="radio" name="q4" value="A"> A) Ver o progresso real com base na execução das tarefas.
-                    </label>
-                    <label class="ee-option">
-                        <input type="radio" name="q4" value="B"> B) Estar com a tribo, sentir a energia e aprender em grupo.
-                    </label>
-                    <label class="ee-option">
-                        <input type="radio" name="q4" value="C"> C) Aprender novas estratégias e teorias que ampliam minha
-                        visão.
-                    </label>
-                </div>
-
-                <!-- Pergunta 5 -->
-                <div class="ee-question">
-                    <h3>5. Quando recebo uma orientação nova...</h3>
-                    <label class="ee-option">
-                        <input type="radio" name="q5" value="A"> A) Quero testar imediatamente.
-                    </label>
-                    <label class="ee-option">
-                        <input type="radio" name="q5" value="B"> B) Quero discutir com o grupo ou com o mentor.
-                    </label>
-                    <label class="ee-option">
-                        <input type="radio" name="q5" value="C"> C) Quero refletir, entender o raciocínio e só depois
-                        aplicar.
-                    </label>
-                </div>
-            </form>
-
-            <div id="ee-error-msg" class="ee-error">⚠️ Por favor, responda todas as opções antes de ver o resultado.</div>
-        </div>
-
-        <div class="ee-footer" id="ee-quiz-footer">
-            <button class="ee-btn-save" id="ee-btn-submit" type="button">Ver Meu Resultado</button>
-        </div>
-
-        <!-- Seção de Resultado -->
-        <div class="ee-result-container" id="ee-result-section">
-            <h2 class="ee-result-title" id="ee-res-title"></h2>
-            <p class="ee-result-desc" id="ee-res-desc"></p>
-
-            <div class="ee-scoring-rules">
-                <h4>💡 Como a pontuação funciona:</h4>
-                <p>O teste soma 1 ponto para cada letra escolhida. A sua maior pontuação define seu perfil principal:</p>
-                <ul>
-                    <li><strong>Mais respostas A</strong> → FAZEDOR 🧱 (aprende na prática, checklist e execução)</li>
-                    <li><strong>Mais respostas B</strong> → FESTEIRO 🎉 (aprende na troca, comunidade e eventos)</li>
-                    <li><strong>Mais respostas C</strong> → APRENDEDOR 📚 (aprende com conceitos e fundamentos)</li>
-                </ul>
+        <div class="ee-quiz-container ee-quiz-container-instance" style="display: none;">
+            <div class="ee-header">
+                <h1 class="ee-demo-title">🧭 Descubra seu Estilo de Evolução</h1>
+                <p class="ee-subtitle">No Chess Broadcasters</p>
             </div>
 
-            <div style="margin-top: 40px;">
-                <button class="ee-btn-save" id="ee-btn-retry" type="button"
-                    style="background-color: transparent; border: 2px solid var(--ee-accent-color); color: var(--ee-accent-color);">Fazer
-                    o Teste Novamente</button>
+            <div class="ee-body ee-quiz-body">
+                <p class="ee-intro">
+                    Responda as 5 perguntas abaixo e veja qual perfil representa melhor o seu jeito de aprender e crescer:
+                </p>
+
+                <form class="ee-quiz-form">
+                    <!-- Pergunta 1 -->
+                    <div class="ee-question">
+                        <h3>1. Quando eu quero aprender algo novo...</h3>
+                        <label class="ee-option">
+                            <input type="radio" name="q1" value="A"> A) Prefiro ver o passo a passo e colocar em prática
+                            logo.
+                        </label>
+                        <label class="ee-option">
+                            <input type="radio" name="q1" value="B"> B) Gosto de conversar sobre o assunto, trocar ideias
+                            com
+                            outras pessoas.
+                        </label>
+                        <label class="ee-option">
+                            <input type="radio" name="q1" value="C"> C) Quero entender profundamente o conceito e o “porquê”
+                            das
+                            coisas.
+                        </label>
+                    </div>
+
+                    <!-- Pergunta 2 -->
+                    <div class="ee-question">
+                        <h3>2. Durante as Aulas da Recorrência, eu...</h3>
+                        <label class="ee-option">
+                            <input type="radio" name="q2" value="A"> A) Já anoto as tarefas e penso em como aplicar no meu
+                            negócio.
+                        </label>
+                        <label class="ee-option">
+                            <input type="radio" name="q2" value="B"> B) Me empolgo com as interações e comentários do grupo.
+                        </label>
+                        <label class="ee-option">
+                            <input type="radio" name="q2" value="C"> C) Curto ouvir a explicação e conectar os pontos
+                            conceituais.
+                        </label>
+                    </div>
+
+                    <!-- Pergunta 3 -->
+                    <div class="ee-question">
+                        <h3>3. Quando enfrento um desafio no meu negócio...</h3>
+                        <label class="ee-option">
+                            <input type="radio" name="q3" value="A"> A) Sigo um checklist ou peço um passo a passo pra
+                            resolver.
+                        </label>
+                        <label class="ee-option">
+                            <input type="radio" name="q3" value="B"> B) Falo com alguém que já passou por isso pra trocar
+                            experiências.
+                        </label>
+                        <label class="ee-option">
+                            <input type="radio" name="q3" value="C"> C) Assisto vídeos ou leio materiais pra entender a
+                            causa do
+                            problema.
+                        </label>
+                    </div>
+
+                    <!-- Pergunta 4 -->
+                    <div class="ee-question">
+                        <h3>4. O que mais me motiva a continuar no RR é...</h3>
+                        <label class="ee-option">
+                            <input type="radio" name="q4" value="A"> A) Ver o progresso real com base na execução das
+                            tarefas.
+                        </label>
+                        <label class="ee-option">
+                            <input type="radio" name="q4" value="B"> B) Estar com a tribo, sentir a energia e aprender em
+                            grupo.
+                        </label>
+                        <label class="ee-option">
+                            <input type="radio" name="q4" value="C"> C) Aprender novas estratégias e teorias que ampliam
+                            minha
+                            visão.
+                        </label>
+                    </div>
+
+                    <!-- Pergunta 5 -->
+                    <div class="ee-question">
+                        <h3>5. Quando recebo uma orientação nova...</h3>
+                        <label class="ee-option">
+                            <input type="radio" name="q5" value="A"> A) Quero testar imediatamente.
+                        </label>
+                        <label class="ee-option">
+                            <input type="radio" name="q5" value="B"> B) Quero discutir com o grupo ou com o mentor.
+                        </label>
+                        <label class="ee-option">
+                            <input type="radio" name="q5" value="C"> C) Quero refletir, entender o raciocínio e só depois
+                            aplicar.
+                        </label>
+                    </div>
+                </form>
+
+                <div class="ee-error-msg ee-error">⚠️ Por favor, responda todas as opções antes de ver o resultado.
+                </div>
+            </div>
+
+            <div class="ee-footer ee-quiz-footer">
+                <button class="ee-btn-save ee-btn-submit" type="button">Ver Meu Resultado</button>
+            </div>
+
+            <!-- Seção de Resultado -->
+            <div class="ee-result-container ee-result-section">
+                <h2 class="ee-result-title ee-res-title"></h2>
+                <p class="ee-result-desc ee-res-desc"></p>
+
+                <div class="ee-scoring-rules">
+                    <h4>💡 Como a pontuação funciona:</h4>
+                    <p>O teste soma 1 ponto para cada letra escolhida. A sua maior pontuação define seu perfil principal:
+                    </p>
+                    <ul>
+                        <li><strong>Mais respostas A</strong> → FAZEDOR 🧱 (aprende na prática, checklist e execução)</li>
+                        <li><strong>Mais respostas B</strong> → FESTEIRO 🎉 (aprende na troca, comunidade e eventos)</li>
+                        <li><strong>Mais respostas C</strong> → APRENDEDOR 📚 (aprende com conceitos e fundamentos)</li>
+                    </ul>
+                </div>
+
+                <div style="margin-top: 40px;">
+                    <button class="ee-btn-save ee-btn-retry" type="button"
+                        style="background-color: transparent; border: 2px solid var(--ee-accent-color); color: var(--ee-accent-color);">Fazer
+                        o Teste Novamente</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         ; (function () {
-            const form = document.getElementById('ee-quiz-form');
-            const options = form.querySelectorAll('.ee-option');
-            const submitBtn = document.getElementById('ee-btn-submit');
-            const retryBtn = document.getElementById('ee-btn-retry');
-            const bodySection = document.getElementById('ee-quiz-body');
-            const footerSection = document.getElementById('ee-quiz-footer');
-            const resultSection = document.getElementById('ee-result-section');
-            const errorMsg = document.getElementById('ee-error-msg');
+            function initEvolutionQuiz(wrapperEl) {
+                // Previne dupla inicialização
+                if (wrapperEl.hasAttribute('data-ee-initialized')) return;
+                wrapperEl.setAttribute('data-ee-initialized', 'true');
 
-            // Lógica visual para seleção de opções
-            options.forEach(option => {
-                const radio = option.querySelector('input[type="radio"]');
+                const parent = wrapperEl.parentElement;
+                const preloader = parent.querySelector('.ee-preloader-instance');
 
-                radio.addEventListener('change', function () {
-                    // Remove classe de selecionar de todas as opções da mesma pergunta
-                    const questionName = this.name;
-                    const allQuestionOptions = form.querySelectorAll(`input[name="${questionName}"]`);
-                    allQuestionOptions.forEach(opt => {
-                        opt.closest('.ee-option').classList.remove('selected');
+                // Delay de 2 segundos para apresentar o shortcode
+                setTimeout(function () {
+                    if (preloader) preloader.style.display = 'none';
+                    wrapperEl.style.display = 'block';
+                    wrapperEl.style.animation = 'fadeIn 0.5s ease';
+                }, 2000);
+
+                const form = wrapperEl.querySelector('.ee-quiz-form');
+                if (!form) return;
+
+                const options = form.querySelectorAll('.ee-option');
+                const submitBtn = wrapperEl.querySelector('.ee-btn-submit');
+                const retryBtn = wrapperEl.querySelector('.ee-btn-retry');
+                const bodySection = wrapperEl.querySelector('.ee-quiz-body');
+                const footerSection = wrapperEl.querySelector('.ee-quiz-footer');
+                const resultSection = wrapperEl.querySelector('.ee-result-section');
+                const errorMsg = wrapperEl.querySelector('.ee-error-msg');
+                const resTitle = wrapperEl.querySelector('.ee-res-title');
+                const resDesc = wrapperEl.querySelector('.ee-res-desc');
+
+                // Lógica visual para seleção de opções
+                options.forEach(option => {
+                    const radio = option.querySelector('input[type="radio"]');
+                    if (!radio) return;
+
+                    radio.addEventListener('change', function () {
+                        // Remove classe de selecionar de todas as opções da mesma pergunta
+                        const questionName = this.name;
+                        const allQuestionOptions = form.querySelectorAll(`input[name="${questionName}"]`);
+                        allQuestionOptions.forEach(opt => {
+                            opt.closest('.ee-option').classList.remove('selected');
+                        });
+
+                        // Adiciona classe na opção escolhida
+                        if (this.checked) {
+                            option.classList.add('selected');
+                        }
+
+                        // Oculta mensagem de erro se as 5 perguntas foram respondidas
+                        const formData = new FormData(form);
+                        let answeredCount = 0;
+                        for (let value of formData.values()) {
+                            answeredCount++;
+                        }
+                        if (answeredCount === 5) {
+                            errorMsg.classList.remove('active');
+                        }
                     });
+                });
 
-                    // Adiciona classe na opção escolhida
-                    if (this.checked) {
-                        option.classList.add('selected');
-                    }
+                // Lógica ao clicar no botão "Ver Meu Resultado"
+                if (submitBtn) {
+                    submitBtn.addEventListener('click', function () {
+                        const formData = new FormData(form);
+                        let counts = { 'A': 0, 'B': 0, 'C': 0 };
+                        let answeredCount = 0;
 
-                    // Oculta mensagem de erro se as 5 perguntas foram respondidas
-                    const formData = new FormData(form);
-                    let answeredCount = 0;
-                    for (let value of formData.values()) {
-                        answeredCount++;
-                    }
-                    if (answeredCount === 5) {
-                        errorMsg.classList.remove('active');
+                        for (let value of formData.values()) {
+                            if (counts[value] !== undefined) {
+                                counts[value]++;
+                            }
+                            answeredCount++;
+                        }
+
+                        // Verifica se faltou alguma pergunta a ser respondida
+                        if (answeredCount < 5) {
+                            errorMsg.classList.add('active');
+                            return;
+                        }
+
+                        // Determina o resultado através da maior escolha
+                        let maxCount = 0;
+                        let resultType = 'A';
+
+                        for (let type in counts) {
+                            if (counts[type] > maxCount) {
+                                maxCount = counts[type];
+                                resultType = type;
+                            }
+                        }
+
+                        let resultTitleText = "";
+                        let resultDescText = "";
+
+                        if (resultType === 'A') {
+                            resultTitleText = "FAZEDOR 🧱";
+                            resultDescText = "Você aprende na prática, focando em checklist e execução rápida. Seu estilo é colocar a mão na massa e ver resultados através da ação!";
+                        } else if (resultType === 'B') {
+                            resultTitleText = "FESTEIRO 🎉";
+                            resultDescText = "Você aprende na troca, com a comunidade e eventos. Seu estilo é construir conhecimento através de conexões, discussões e vivências em grupo!";
+                        } else {
+                            resultTitleText = "APRENDEDOR 📚";
+                            resultDescText = "Você aprende com conceitos e fundamentos. Seu estilo é entender profundamente o \"porquê\" das coisas antes de agir, buscando estratégias sólidas!";
+                        }
+
+                        // Atualiza tela com o resultado
+                        if (resTitle) resTitle.innerText = resultTitleText;
+                        if (resDesc) resDesc.innerText = resultDescText;
+
+                        if (bodySection) bodySection.style.display = 'none';
+                        if (footerSection) footerSection.style.display = 'none';
+                        if (resultSection) resultSection.style.display = 'block';
+
+                        // Volta para o topo do quiz suavemente
+                        wrapperEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    });
+                }
+
+                // Lógica ao clicar no botão "Fazer o Teste Novamente"
+                if (retryBtn) {
+                    retryBtn.addEventListener('click', function () {
+                        form.reset(); // Reseta formulário
+                        options.forEach(opt => opt.classList.remove('selected')); // Reseta visual
+
+                        if (resultSection) resultSection.style.display = 'none'; // Esconde resultado
+                        if (bodySection) bodySection.style.display = 'block'; // Mostra perguntas
+                        if (footerSection) footerSection.style.display = 'block'; // Mostra botão
+
+                        wrapperEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    });
+                }
+            }
+
+            // Iniciar em elementos já existentes no DOM (caso de load normal)
+            document.querySelectorAll('.ee-quiz-container-instance').forEach(initEvolutionQuiz);
+
+            // Observador para detectar shortcode injetado via AJAX
+            const observer = new MutationObserver(function (mutations) {
+                mutations.forEach(function (mutation) {
+                    if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+                        for (let i = 0; i < mutation.addedNodes.length; i++) {
+                            const node = mutation.addedNodes[i];
+                            if (node.nodeType === 1) { // ELEMENT_NODE
+                                if (node.classList && node.classList.contains('ee-quiz-container-instance')) {
+                                    initEvolutionQuiz(node);
+                                } else {
+                                    const descendants = node.querySelectorAll('.ee-quiz-container-instance');
+                                    descendants.forEach(initEvolutionQuiz);
+                                }
+                            }
+                        }
                     }
                 });
             });
 
-            // Lógica ao clicar no botão "Ver Meu Resultado"
-            submitBtn.addEventListener('click', function () {
-                const formData = new FormData(form);
-                let counts = { 'A': 0, 'B': 0, 'C': 0 };
-                let answeredCount = 0;
-
-                for (let value of formData.values()) {
-                    if (counts[value] !== undefined) {
-                        counts[value]++;
-                    }
-                    answeredCount++;
-                }
-
-                // Verifica se faltou alguma pergunta a ser respondida
-                if (answeredCount < 5) {
-                    errorMsg.classList.add('active');
-                    return;
-                }
-
-                // Determina o resultado através da maior escolha
-                let maxCount = 0;
-                let resultType = 'A';
-
-                for (let type in counts) {
-                    if (counts[type] > maxCount) {
-                        maxCount = counts[type];
-                        resultType = type;
-                    }
-                }
-
-                let resultTitle = "";
-                let resultDesc = "";
-
-                if (resultType === 'A') {
-                    resultTitle = "FAZEDOR 🧱";
-                    resultDesc = "Você aprende na prática, focando em checklist e execução rápida. Seu estilo é colocar a mão na massa e ver resultados através da ação!";
-                } else if (resultType === 'B') {
-                    resultTitle = "FESTEIRO 🎉";
-                    resultDesc = "Você aprende na troca, com a comunidade e eventos. Seu estilo é construir conhecimento através de conexões, discussões e vivências em grupo!";
-                } else {
-                    resultTitle = "APRENDEDOR 📚";
-                    resultDesc = "Você aprende com conceitos e fundamentos. Seu estilo é entender profundamente o \"porquê\" das coisas antes de agir, buscando estratégias sólidas!";
-                }
-
-                // Atualiza tela com o resultado
-                document.getElementById('ee-res-title').innerText = resultTitle;
-                document.getElementById('ee-res-desc').innerText = resultDesc;
-
-                bodySection.style.display = 'none';
-                footerSection.style.display = 'none';
-                resultSection.style.display = 'block';
-
-                // Volta para o topo do quiz suavemente
-                document.getElementById('ee-quiz-wrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-
-            // Lógica ao clicar no botão "Fazer o Teste Novamente"
-            retryBtn.addEventListener('click', function () {
-                form.reset(); // Reseta formulário
-                options.forEach(opt => opt.classList.remove('selected')); // Reseta visual
-
-                resultSection.style.display = 'none'; // Esconde resultado
-                bodySection.style.display = 'block'; // Mostra perguntas
-                footerSection.style.display = 'block'; // Mostra botão
-
-                document.getElementById('ee-quiz-wrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
+            // Configurar e iniciar observador no corpo inteiro do documento
+            observer.observe(document.body, { childList: true, subtree: true });
         })();
     </script>
     <?php
