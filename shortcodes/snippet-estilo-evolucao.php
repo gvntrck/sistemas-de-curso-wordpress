@@ -505,27 +505,13 @@ function render_estilo_evolucao_shortcode()
             // Iniciar em elementos já existentes no DOM (caso de load normal)
             document.querySelectorAll('.ee-quiz-container-instance').forEach(initEvolutionQuiz);
 
-            // Observador para detectar shortcode injetado via AJAX
-            const observer = new MutationObserver(function (mutations) {
-                mutations.forEach(function (mutation) {
-                    if (mutation.addedNodes && mutation.addedNodes.length > 0) {
-                        for (let i = 0; i < mutation.addedNodes.length; i++) {
-                            const node = mutation.addedNodes[i];
-                            if (node.nodeType === 1) { // ELEMENT_NODE
-                                if (node.classList && node.classList.contains('ee-quiz-container-instance')) {
-                                    initEvolutionQuiz(node);
-                                } else {
-                                    const descendants = node.querySelectorAll('.ee-quiz-container-instance');
-                                    descendants.forEach(initEvolutionQuiz);
-                                }
-                            }
-                        }
-                    }
-                });
-            });
-
-            // Configurar e iniciar observador no corpo inteiro do documento
-            observer.observe(document.body, { childList: true, subtree: true });
+            // Observador via Polling (funciona em qualquer cenário de AJAX agressivo/innerHTML)
+            if (!window.eeQuizPollerInit) {
+                window.eeQuizPollerInit = true;
+                setInterval(function() {
+                    document.querySelectorAll('.ee-quiz-container-instance:not([data-ee-initialized="true"])').forEach(initEvolutionQuiz);
+                }, 500); // Verifica a cada meio segundo se há um novo quiz não inicializado na tela
+            }
         })();
     </script>
     <?php
