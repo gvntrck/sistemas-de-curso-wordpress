@@ -3,7 +3,143 @@
  * Snippet para criar o shortcode [estilo-evolucao]
  * Renderiza o questionário "Descubra seu Estilo de Evolução no Chess Broadcasters"
  * baseado no guia de estilos do modelo.html.
+ *
+ * O delay de 2 segundos é feito inteiramente em CSS (animation-delay).
+ * A lógica interativa é injetada inline via wp_footer (event delegation)
+ * para funcionar com navegação AJAX.
  */
+
+// Injeta o JS interativo inline no footer (apenas uma vez por page load)
+add_action('wp_footer', 'ee_quiz_inline_script');
+
+function ee_quiz_inline_script()
+{
+    static $already_printed = false;
+    if ($already_printed)
+        return;
+    $already_printed = true;
+    ?>
+        <script>
+        ;(function () {
+            'use strict';
+
+            function closest(el, selector) {
+                while (el && !el.matches(selector)) el = el.parentElement;
+                return el;
+            }
+
+            function getWrapper(el) {
+                return closest(el, '.ee-quiz-container-instance');
+            }
+
+            // Seleção de opções (radio) via event delegation
+            document.addEventListener('change', function (e) {
+                if (!e.target.matches('.ee-quiz-container-instance .ee-option input[type="radio"]')) return;
+                var radio = e.target;
+                var wrapper = getWrapper(radio);
+                if (!wrapper) return;
+                var form = wrapper.querySelector('.ee-quiz-form');
+                if (!form) return;
+
+                var name = radio.name;
+                var siblings = form.querySelectorAll('input[name="' + name + '"]');
+                siblings.forEach(function (sib) {
+                    var label = sib.closest('.ee-option');
+                    if (label) label.classList.remove('selected');
+                });
+                var parentLabel = radio.closest('.ee-option');
+                if (parentLabel && radio.checked) parentLabel.classList.add('selected');
+
+                var formData = new FormData(form);
+                var count = 0;
+                formData.forEach(function () { count++; });
+                if (count === 5) {
+                    var errorMsg = wrapper.querySelector('.ee-error-msg');
+                    if (errorMsg) errorMsg.classList.remove('active');
+                }
+            });
+
+            // Botão "Ver Meu Resultado" via event delegation
+            document.addEventListener('click', function (e) {
+                var btn = e.target.closest('.ee-btn-submit');
+                if (!btn) return;
+                var wrapper = getWrapper(btn);
+                if (!wrapper) return;
+                var form = wrapper.querySelector('.ee-quiz-form');
+                if (!form) return;
+
+                var formData = new FormData(form);
+                var counts = { A: 0, B: 0, C: 0 };
+                var answeredCount = 0;
+                formData.forEach(function (value) {
+                    if (counts[value] !== undefined) counts[value]++;
+                    answeredCount++;
+                });
+
+                if (answeredCount < 5) {
+                    var errorMsg = wrapper.querySelector('.ee-error-msg');
+                    if (errorMsg) errorMsg.classList.add('active');
+                    return;
+                }
+
+                var maxCount = 0, resultType = 'A';
+                for (var type in counts) {
+                    if (counts[type] > maxCount) { maxCount = counts[type]; resultType = type; }
+                }
+
+                var titleText = '', descText = '';
+                if (resultType === 'A') {
+                    titleText = 'FAZEDOR 🧱';
+                    descText = 'Você aprende na prática, focando em checklist e execução rápida. Seu estilo é colocar a mão na massa e ver resultados através da ação!';
+                } else if (resultType === 'B') {
+                    titleText = 'FESTEIRO 🎉';
+                    descText = 'Você aprende na troca, com a comunidade e eventos. Seu estilo é construir conhecimento através de conexões, discussões e vivências em grupo!';
+                } else {
+                    titleText = 'APRENDEDOR 📚';
+                    descText = 'Você aprende com conceitos e fundamentos. Seu estilo é entender profundamente o "porquê" das coisas antes de agir, buscando estratégias sólidas!';
+                }
+
+                var resTitle = wrapper.querySelector('.ee-res-title');
+                var resDesc  = wrapper.querySelector('.ee-res-desc');
+                if (resTitle) resTitle.innerText = titleText;
+                if (resDesc)  resDesc.innerText  = descText;
+
+                var body   = wrapper.querySelector('.ee-quiz-body');
+                var footer = wrapper.querySelector('.ee-quiz-footer');
+                var result = wrapper.querySelector('.ee-result-section');
+                if (body)   body.style.display   = 'none';
+                if (footer) footer.style.display = 'none';
+                if (result) result.style.display = 'block';
+
+                wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+
+            // Botão "Fazer o Teste Novamente" via event delegation
+            document.addEventListener('click', function (e) {
+                var btn = e.target.closest('.ee-btn-retry');
+                if (!btn) return;
+                var wrapper = getWrapper(btn);
+                if (!wrapper) return;
+                var form = wrapper.querySelector('.ee-quiz-form');
+                if (form) form.reset();
+
+                wrapper.querySelectorAll('.ee-option').forEach(function (opt) {
+                    opt.classList.remove('selected');
+                });
+
+                var result = wrapper.querySelector('.ee-result-section');
+                var body   = wrapper.querySelector('.ee-quiz-body');
+                var footer = wrapper.querySelector('.ee-quiz-footer');
+                if (result) result.style.display = 'none';
+                if (body)   body.style.display   = 'block';
+                if (footer) footer.style.display = 'block';
+
+                wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        })();
+        </script>
+        <?php
+}
 
 function render_estilo_evolucao_shortcode()
 {
@@ -156,19 +292,6 @@ function render_estilo_evolucao_shortcode()
             display: none;
             text-align: center;
             padding: 60px 40px;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         .ee-result-title {
@@ -229,15 +352,93 @@ function render_estilo_evolucao_shortcode()
         .ee-scoring-rules li {
             margin-bottom: 8px;
         }
+
+        /* ── CSS-only delay de 2 segundos ──────────────────────────── */
+        @keyframes eePreloaderHide {
+            0% {
+                opacity: 1;
+                visibility: visible;
+                height: auto;
+            }
+
+            99% {
+                opacity: 1;
+                visibility: visible;
+                height: auto;
+            }
+
+            100% {
+                opacity: 0;
+                visibility: hidden;
+                height: 0;
+                overflow: hidden;
+                padding: 0;
+                margin: 0;
+            }
+        }
+
+        @keyframes eeQuizReveal {
+            0% {
+                opacity: 0;
+                max-height: 0;
+                overflow: hidden;
+            }
+
+            99% {
+                opacity: 0;
+                max-height: 0;
+                overflow: hidden;
+            }
+
+            100% {
+                opacity: 1;
+                max-height: none;
+                overflow: visible;
+            }
+        }
+
+        @keyframes eeFadeInSmooth {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ee-preloader-css {
+            text-align: center;
+            padding: 40px;
+            color: var(--ee-accent-color);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+            font-weight: bold;
+            /* Esconde após 2s via animação CSS */
+            animation: eePreloaderHide 2s forwards;
+        }
+
+        .ee-quiz-container-instance {
+            /* Revela após 2s via animação CSS */
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            animation: eeQuizReveal 2.3s forwards, eeFadeInSmooth 0.5s 2.3s forwards;
+        }
     </style>
 
     <div class="ee-quiz-wrapper-outer">
-        <div class="ee-preloader-instance"
-            style="text-align: center; padding: 40px; color: var(--ee-accent-color); font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 1.2rem; display: flex; justify-content: center; align-items: center; min-height: 200px; font-weight: bold; animation: fadeIn 0.5s ease;">
+        <div class="ee-preloader-css">
             ⏳ Carregando...
         </div>
 
-        <div class="ee-quiz-container ee-quiz-container-instance" style="display: none;">
+        <div class="ee-quiz-container ee-quiz-container-instance">
             <div class="ee-header">
                 <h1 class="ee-demo-title">🧭 Descubra seu Estilo de Evolução</h1>
                 <p class="ee-subtitle">No Chess Broadcasters</p>
@@ -262,7 +463,7 @@ function render_estilo_evolucao_shortcode()
                             outras pessoas.
                         </label>
                         <label class="ee-option">
-                            <input type="radio" name="q1" value="C"> C) Quero entender profundamente o conceito e o “porquê”
+                            <input type="radio" name="q1" value="C"> C) Quero entender profundamente o conceito e o "porquê"
                             das
                             coisas.
                         </label>
@@ -336,8 +537,7 @@ function render_estilo_evolucao_shortcode()
                     </div>
                 </form>
 
-                <div class="ee-error-msg ee-error">⚠️ Por favor, responda todas as opções antes de ver o resultado.
-                </div>
+                <div class="ee-error-msg ee-error">⚠️ Por favor, responda todas as opções antes de ver o resultado.</div>
             </div>
 
             <div class="ee-footer ee-quiz-footer">
@@ -368,152 +568,6 @@ function render_estilo_evolucao_shortcode()
             </div>
         </div>
     </div>
-
-    <script>
-        ; (function () {
-            function initEvolutionQuiz(wrapperEl) {
-                // Previne dupla inicialização
-                if (wrapperEl.hasAttribute('data-ee-initialized')) return;
-                wrapperEl.setAttribute('data-ee-initialized', 'true');
-
-                const parent = wrapperEl.parentElement;
-                const preloader = parent.querySelector('.ee-preloader-instance');
-
-                // Delay de 2 segundos para apresentar o shortcode
-                setTimeout(function () {
-                    if (preloader) preloader.style.display = 'none';
-                    wrapperEl.style.display = 'block';
-                    wrapperEl.style.animation = 'fadeIn 0.5s ease';
-                }, 2000);
-
-                const form = wrapperEl.querySelector('.ee-quiz-form');
-                if (!form) return;
-
-                const options = form.querySelectorAll('.ee-option');
-                const submitBtn = wrapperEl.querySelector('.ee-btn-submit');
-                const retryBtn = wrapperEl.querySelector('.ee-btn-retry');
-                const bodySection = wrapperEl.querySelector('.ee-quiz-body');
-                const footerSection = wrapperEl.querySelector('.ee-quiz-footer');
-                const resultSection = wrapperEl.querySelector('.ee-result-section');
-                const errorMsg = wrapperEl.querySelector('.ee-error-msg');
-                const resTitle = wrapperEl.querySelector('.ee-res-title');
-                const resDesc = wrapperEl.querySelector('.ee-res-desc');
-
-                // Lógica visual para seleção de opções
-                options.forEach(option => {
-                    const radio = option.querySelector('input[type="radio"]');
-                    if (!radio) return;
-
-                    radio.addEventListener('change', function () {
-                        // Remove classe de selecionar de todas as opções da mesma pergunta
-                        const questionName = this.name;
-                        const allQuestionOptions = form.querySelectorAll(`input[name="${questionName}"]`);
-                        allQuestionOptions.forEach(opt => {
-                            opt.closest('.ee-option').classList.remove('selected');
-                        });
-
-                        // Adiciona classe na opção escolhida
-                        if (this.checked) {
-                            option.classList.add('selected');
-                        }
-
-                        // Oculta mensagem de erro se as 5 perguntas foram respondidas
-                        const formData = new FormData(form);
-                        let answeredCount = 0;
-                        for (let value of formData.values()) {
-                            answeredCount++;
-                        }
-                        if (answeredCount === 5) {
-                            errorMsg.classList.remove('active');
-                        }
-                    });
-                });
-
-                // Lógica ao clicar no botão "Ver Meu Resultado"
-                if (submitBtn) {
-                    submitBtn.addEventListener('click', function () {
-                        const formData = new FormData(form);
-                        let counts = { 'A': 0, 'B': 0, 'C': 0 };
-                        let answeredCount = 0;
-
-                        for (let value of formData.values()) {
-                            if (counts[value] !== undefined) {
-                                counts[value]++;
-                            }
-                            answeredCount++;
-                        }
-
-                        // Verifica se faltou alguma pergunta a ser respondida
-                        if (answeredCount < 5) {
-                            errorMsg.classList.add('active');
-                            return;
-                        }
-
-                        // Determina o resultado através da maior escolha
-                        let maxCount = 0;
-                        let resultType = 'A';
-
-                        for (let type in counts) {
-                            if (counts[type] > maxCount) {
-                                maxCount = counts[type];
-                                resultType = type;
-                            }
-                        }
-
-                        let resultTitleText = "";
-                        let resultDescText = "";
-
-                        if (resultType === 'A') {
-                            resultTitleText = "FAZEDOR 🧱";
-                            resultDescText = "Você aprende na prática, focando em checklist e execução rápida. Seu estilo é colocar a mão na massa e ver resultados através da ação!";
-                        } else if (resultType === 'B') {
-                            resultTitleText = "FESTEIRO 🎉";
-                            resultDescText = "Você aprende na troca, com a comunidade e eventos. Seu estilo é construir conhecimento através de conexões, discussões e vivências em grupo!";
-                        } else {
-                            resultTitleText = "APRENDEDOR 📚";
-                            resultDescText = "Você aprende com conceitos e fundamentos. Seu estilo é entender profundamente o \"porquê\" das coisas antes de agir, buscando estratégias sólidas!";
-                        }
-
-                        // Atualiza tela com o resultado
-                        if (resTitle) resTitle.innerText = resultTitleText;
-                        if (resDesc) resDesc.innerText = resultDescText;
-
-                        if (bodySection) bodySection.style.display = 'none';
-                        if (footerSection) footerSection.style.display = 'none';
-                        if (resultSection) resultSection.style.display = 'block';
-
-                        // Volta para o topo do quiz suavemente
-                        wrapperEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    });
-                }
-
-                // Lógica ao clicar no botão "Fazer o Teste Novamente"
-                if (retryBtn) {
-                    retryBtn.addEventListener('click', function () {
-                        form.reset(); // Reseta formulário
-                        options.forEach(opt => opt.classList.remove('selected')); // Reseta visual
-
-                        if (resultSection) resultSection.style.display = 'none'; // Esconde resultado
-                        if (bodySection) bodySection.style.display = 'block'; // Mostra perguntas
-                        if (footerSection) footerSection.style.display = 'block'; // Mostra botão
-
-                        wrapperEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    });
-                }
-            }
-
-            // Iniciar em elementos já existentes no DOM (caso de load normal)
-            document.querySelectorAll('.ee-quiz-container-instance').forEach(initEvolutionQuiz);
-
-            // Observador via Polling (funciona em qualquer cenário de AJAX agressivo/innerHTML)
-            if (!window.eeQuizPollerInit) {
-                window.eeQuizPollerInit = true;
-                setInterval(function() {
-                    document.querySelectorAll('.ee-quiz-container-instance:not([data-ee-initialized="true"])').forEach(initEvolutionQuiz);
-                }, 500); // Verifica a cada meio segundo se há um novo quiz não inicializado na tela
-            }
-        })();
-    </script>
     <?php
     return ob_get_clean();
 }
