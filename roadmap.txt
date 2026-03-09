@@ -1,11 +1,27 @@
-Continuar Assistindo na home
 Log de Atividades
-aulas em ordem depende do curso
 nome do curso no resultado de busca de aula
+checkout independente de woocommerce
 
+---
 
+# Sugestões de Novos Recursos (Roadmap Atualizado)
 
-checkout independente de woocommerce 
+Após analisar os recursos já existentes (como Quizzes, Certificados, Comentários em Aulas, Integração Woo e Vimeo), seguem sugestões de funcionalidades avançadas que complementariam o LMS:
 
+## Ensino e Retenção
+- **Liberação Progressiva (Drip Content)**: Desbloqueio automático de módulos/aulas com base em intervalos de dias após a matrícula ou datas fixas.
+- **Trilhas de Aprendizagem Dinâmicas (Learning Paths)**: Sugerir próximos cursos baseados nas conclusões e no desempenho (notas de quizzes) do aluno.
 
+## Gestão e Relatórios (Analytics)
+- **Dashboard Analítico Avançado**: Métricas visuais de taxa de evasão (churn), tempo médio gasto por vídeo/aula e funil de conclusão de curso.
+- **Relatório de Engajamento Individual**: Histórico detalhado de cliques, logins e interações do aluno para identificar alunos em risco de abandono.
 
+## Vendas e Escala
+- **Sistema Nativo de Assinaturas (Memberships)**: Cobranças recorrentes e gestão de planos diretamente no LMS (complementando seu checkout independente).
+- **Múltiplos Instrutores e Divisão de Receitas (Split)**: Capacidade de atribuir co-autores aos cursos e comissionar vendas de forma automática pelo novo checkout.
+- **Módulo de Afiliados Interno**: Permitir que os próprios alunos gerem links para indicar cursos e receber comissionamento.
+
+## Integrações e Segurança
+- **Proteção Anti-Pirataria Avançada**: Marca d'água dinâmica sobre os vídeos (exibindo CPF/Email do aluno logado) e restrição de acessos simultâneos por IP.
+- **Webhooks Nativos e Automações**: Hub de integração direta para Zapier/Make e CRMs de email marketing (ActiveCampaign, Mailchimp) baseados em gatilhos (ex: "abandono de quiz", "conclusão de módulo").
+- **Suporte a PWA (Progressive Web App)**: Tornar a área de membros instalável no celular com suporte a navegação e cache em modo offline.
