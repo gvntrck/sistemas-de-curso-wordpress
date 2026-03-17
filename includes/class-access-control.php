@@ -6,13 +6,20 @@ if (!defined('ABSPATH')) {
 class System_Cursos_Access_Control
 {
     /**
+     * Evita registros duplicados quando mais de um hook de login dispara no mesmo request.
+     *
+     * @var array<int, bool>
+     */
+    private $tracked_login_users = [];
+
+    /**
      * class-access-control.php
      *
      * Gerencia o controle de acesso dos alunos aos cursos.
      * Cria a tabela personalizada no banco de dados, verifica permissões, concede, revoga e suspende acessos, além de gerenciar a interface administrativa de alunos.
      *
      * @package SistemaCursos
-     * @version 1.0.9
+     * @version 1.8.13
      */
     public function __construct()
     {
@@ -20,17 +27,52 @@ class System_Cursos_Access_Control
         add_action('admin_menu', [$this, 'admin_menu'], 20);
         add_action('admin_init', [$this, 'admin_process']);
         add_action('wp_login', [$this, 'track_user_login'], 10, 2);
+        add_action('set_auth_cookie', [$this, 'track_user_login_cookie'], 10, 4);
         add_action('wp_ajax_sc_admin_get_course_lessons_progress', [$this, 'ajax_get_course_lessons_progress']);
         add_action('wp_ajax_sc_admin_update_course_lesson_progress', [$this, 'ajax_update_course_lesson_progress']);
         add_action('admin_post_update_access_date', [$this, 'handle_update_access_date']);
     }
 
     /**
-     * Rastreia o login do usuário para fins de segurança (Anti-Pirataria)
+     * Faz a ponte entre o hook universal do cookie de autenticação e a rotina de persistência.
+     */
+    public function track_user_login_cookie($auth_cookie, $expire, $expiration, $user_id)
+    {
+        $user = get_user_by('id', (int) $user_id);
+
+        if (!$user instanceof WP_User) {
+            return;
+        }
+
+        $this->track_user_login($user->user_login, $user);
+    }
+
+    /**
+     * Verifica se o login do usuário já foi rastreado durante o request atual.
+     */
+    private function has_tracked_login($user_id)
+    {
+        return isset($this->tracked_login_users[(int) $user_id]);
+    }
+
+    /**
+     * Marca o login do usuário como já rastreado durante o request atual.
+     */
+    private function mark_login_as_tracked($user_id)
+    {
+        $this->tracked_login_users[(int) $user_id] = true;
+    }
+
+    /**
+     * Rastreia o login do usuário para fins de segurança (Anti-Pirataria).
      */
     public function track_user_login($user_login, $user)
     {
-        if (!$user) {
+        if (!$user instanceof WP_User) {
+            return;
+        }
+
+        if ($this->has_tracked_login($user->ID)) {
             return;
         }
 
@@ -61,6 +103,8 @@ class System_Cursos_Access_Control
 
         // Atualizar também o meta simples de último login para compatibilidade
         update_user_meta($user->ID, 'last_login', current_time('mysql'));
+
+        $this->mark_login_as_tracked($user->ID);
     }
 
     // =============================================================================

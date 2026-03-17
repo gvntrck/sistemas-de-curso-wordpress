@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.8.12
+ * Version: 1.8.13
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.8.12');
+define('SISTEMA_CURSOS_VERSION', '1.8.13');
 
 /**
  * sistema-cursos-plugin.php
@@ -22,7 +22,7 @@ define('SISTEMA_CURSOS_VERSION', '1.8.12');
  * Carrega dependências, define hooks de ativação e configura o menu de documentação no admin.
  *
  * @package SistemaCursos
- * @version 1.8.12
+ * @version 1.8.13
  */
 
 // 1. Carregar Classes do Core
@@ -61,7 +61,6 @@ new System_Cursos_CPT_Manager();
 new System_Cursos_Assets();
 new System_Cursos_Shortcode_Minha_Conta();
 new System_Cursos_Shortcode_Cadastro();
-new System_Cursos_Access_Control();
 new System_Cursos_User_Fields();
 new System_Cursos_Admin_Filters();
 new System_Cursos_Progress();
@@ -83,7 +82,19 @@ new System_Cursos_Quiz_Process();
 new System_Cursos_Aula_Comments();
 new System_Cursos_Customizer();
 
+add_action('plugins_loaded', 'sistema_cursos_init_access_control', 1);
 add_action('plugins_loaded', 'sistema_cursos_init_woocommerce_integration');
+
+function sistema_cursos_init_access_control()
+{
+    static $access_control = null;
+
+    if ($access_control instanceof System_Cursos_Access_Control) {
+        return;
+    }
+
+    $access_control = new System_Cursos_Access_Control();
+}
 
 function sistema_cursos_init_woocommerce_integration()
 {
