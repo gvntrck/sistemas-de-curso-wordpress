@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.8.7
+ * Version: 1.8.9
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.8.7');
+define('SISTEMA_CURSOS_VERSION', '1.8.9');
 
 /**
  * sistema-cursos-plugin.php
@@ -22,7 +22,7 @@ define('SISTEMA_CURSOS_VERSION', '1.8.7');
  * Carrega dependências, define hooks de ativação e configura o menu de documentação no admin.
  *
  * @package SistemaCursos
- * @version 1.8.7
+ * @version 1.8.9
  */
 
 // 1. Carregar Classes do Core
@@ -159,6 +159,16 @@ function sistema_cursos_add_admin_menu()
         'manage_options',         // Capability
         'lms-suporte-rapido',     // Menu Slug (Same as parent to override default)
         'sistema_cursos_render_admin_page' // Callback
+    );
+
+    // Adiciona o submenu "Relatórios" chamando o render na classe Reports instanciada previamente
+    add_submenu_page(
+        'lms-suporte-rapido',
+        'Relatórios',
+        'Relatórios',
+        'manage_options',
+        'lms-suporte-rapido-reports',
+        [new System_Cursos_Admin_Reports(), 'render_reports_page']
     );
 }
 
@@ -847,13 +857,13 @@ function sistema_cursos_render_admin_page()
                                 <p>Copie o exemplo abaixo, cole na sua página e ajuste as URLs conforme necessário:</p>
                                 <pre
                                     style="background: #f0f0f1; padding: 15px; border-radius: 4px; border-left: 4px solid #2271b1; overflow-x: auto;"><code>[barra-lateral-aluno 
-                                                                                                                                                                                                                                                                                                    link_inicio="/inicio" 
-                                                                                                                                                                                                                                                                                                    link_minha_conta="/perfil"
-                                                                                                                                                                                                                                                                                                    link_meus_cursos="/meus-cursos" 
-                                                                                                                                                                                                                                                                                                    link_todos_cursos="/loja"
-                                                                                                                                                                                                                                                                                                    link_certificados="/certificados"
-                                                                                                                                                                                                                                                                                                    link_admin="/wp-admin"
-                                                                                                                                                                                                                                                                                                ]</code></pre>
+                                                                                                                                                                                                                                                                                                                    link_inicio="/inicio" 
+                                                                                                                                                                                                                                                                                                                    link_minha_conta="/perfil"
+                                                                                                                                                                                                                                                                                                                    link_meus_cursos="/meus-cursos" 
+                                                                                                                                                                                                                                                                                                                    link_todos_cursos="/loja"
+                                                                                                                                                                                                                                                                                                                    link_certificados="/certificados"
+                                                                                                                                                                                                                                                                                                                    link_admin="/wp-admin"
+                                                                                                                                                                                                                                                                                                                ]</code></pre>
                             </div>
                         </td>
                     </tr>

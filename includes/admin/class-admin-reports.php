@@ -16,6 +16,7 @@ class System_Cursos_Admin_Reports
 
     public function add_reports_menu()
     {
+        // Forçar no admin_menu_hook correto (o parent do plugin no caso)
         add_submenu_page(
             'lms-suporte-rapido',
             'Relatórios',
