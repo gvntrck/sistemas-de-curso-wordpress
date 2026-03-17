@@ -11,7 +11,7 @@ class System_Cursos_Admin_Reports
 {
     public function __construct()
     {
-        add_action('admin_menu', [$this, 'add_reports_menu']);
+        add_action('admin_menu', [$this, 'add_reports_menu'], 20);
     }
 
     public function add_reports_menu()
