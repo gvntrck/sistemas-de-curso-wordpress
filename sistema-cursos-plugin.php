@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.8.6
+ * Version: 1.8.7
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.8.6');
+define('SISTEMA_CURSOS_VERSION', '1.8.7');
 
 /**
  * sistema-cursos-plugin.php
@@ -22,7 +22,7 @@ define('SISTEMA_CURSOS_VERSION', '1.8.6');
  * Carrega dependências, define hooks de ativação e configura o menu de documentação no admin.
  *
  * @package SistemaCursos
- * @version 1.8.6
+ * @version 1.8.7
  */
 
 // 1. Carregar Classes do Core
@@ -37,6 +37,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-access-control.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-user-fields.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-admin-filters.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-course-progress.php';
+require_once plugin_dir_path(__FILE__) . 'includes/admin/class-admin-reports.php';
 // require_once plugin_dir_path(__FILE__) . 'includes/admin/class-admin-quiz-manager.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-listar-aulas.php';
 require_once plugin_dir_path(__FILE__) . 'includes/shortcodes/class-shortcode-meus-cursos.php';
@@ -64,6 +65,7 @@ new System_Cursos_Access_Control();
 new System_Cursos_User_Fields();
 new System_Cursos_Admin_Filters();
 new System_Cursos_Progress();
+new System_Cursos_Admin_Reports();
 // new System_Cursos_Admin_Quiz_Manager();
 new System_Cursos_Shortcode_Listar_Aulas();
 new System_Cursos_Shortcode_Meus_Cursos();
