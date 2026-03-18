@@ -21,7 +21,6 @@ class System_Cursos_Status_List_Table extends WP_List_Table
     public function get_columns()
     {
         return [
-            'cb'         => '<input type="checkbox" />',
             'user'       => 'Usuário',
             'curso'      => 'Curso',
             'status'     => 'Status',
@@ -106,11 +105,6 @@ class System_Cursos_Status_List_Table extends WP_List_Table
             default:
                 return print_r($item, true);
         }
-    }
-
-    protected function column_cb($item)
-    {
-        return sprintf('<input type="checkbox" name="acesso[]" value="%s" />', $item['ID']);
     }
 
     public function prepare_items()

@@ -21,7 +21,6 @@ class System_Cursos_Logins_List_Table extends WP_List_Table
     public function get_columns()
     {
         return [
-            'cb'         => '<input type="checkbox" />',
             'user'       => 'Usuário',
             'email'      => 'E-mail',
             'last_login' => 'Último Login',
@@ -59,11 +58,6 @@ class System_Cursos_Logins_List_Table extends WP_List_Table
             default:
                 return print_r($item, true);
         }
-    }
-
-    protected function column_cb($item)
-    {
-        return sprintf('<input type="checkbox" name="user[]" value="%s" />', $item['ID']);
     }
 
     public function prepare_items()
