@@ -49,6 +49,7 @@ class System_Cursos_Shortcode_Barra_Lateral
         $current_user = wp_get_current_user();
         $user_id = $current_user->ID;
         $user_name = trim((string) get_user_meta($user_id, 'first_name', true));
+        $plugin_version = defined('SISTEMA_CURSOS_VERSION') ? (string) SISTEMA_CURSOS_VERSION : '1.0.0';
         $avatar_id = get_user_meta($user_id, 'local_user_avatar_attachment_id', true);
         $avatar_url = '';
         if ($avatar_id) {
@@ -187,6 +188,17 @@ class System_Cursos_Shortcode_Barra_Lateral
                 align-self: center;
                 margin-bottom: 1rem;
             }
+            .sc-sidebar-container.collapsed .sc-sidebar-version {
+                justify-content: center;
+                padding-top: 0.75rem;
+                margin-top: 0.75rem;
+            }
+            .sc-sidebar-container.collapsed .sc-sidebar-version-label {
+                display: none;
+            }
+            .sc-sidebar-container.collapsed .sc-sidebar-version-value {
+                font-size: 0.68rem;
+            }
             .sc-sidebar-container.collapsed .sc-sidebar-divider {
                 padding-top: 0.5rem;
                 margin-top: 0.5rem;
@@ -264,6 +276,32 @@ class System_Cursos_Shortcode_Barra_Lateral
 
             .sc-sidebar-nav {
                 width: 100%;
+            }
+
+            .sc-sidebar-version {
+                width: 100%;
+                margin-top: auto;
+                padding-top: 1rem;
+                border-top: 1px solid var(--color-border, #2a2a2a);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.75rem;
+            }
+
+            .sc-sidebar-version-label {
+                font-size: 0.72rem;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--color-text-muted, #7a7a7a);
+            }
+
+            .sc-sidebar-version-value {
+                font-size: 0.8rem;
+                font-weight: 700;
+                color: var(--color-text-primary, #e0e0e0);
+                font-variant-numeric: tabular-nums;
             }
 
             .sc-sidebar-nav ul {
@@ -400,6 +438,17 @@ class System_Cursos_Shortcode_Barra_Lateral
                     width: 1.25rem;
                     height: 1.25rem;
                 }
+                .sc-sidebar-container.collapsed .sc-sidebar-version {
+                    justify-content: space-between;
+                    padding-top: 1rem;
+                    margin-top: auto;
+                }
+                .sc-sidebar-container.collapsed .sc-sidebar-version-label {
+                    display: inline;
+                }
+                .sc-sidebar-container.collapsed .sc-sidebar-version-value {
+                    font-size: 0.8rem;
+                }
                 .sc-sidebar-container.mobile-open {
                     left: 0;
                 }
@@ -481,6 +530,11 @@ class System_Cursos_Shortcode_Barra_Lateral
                         endif; ?>
                     </ul>
                 </nav>
+
+                <div class="sc-sidebar-version" aria-label="Versao do plugin">
+                    <span class="sc-sidebar-version-label">Plugin</span>
+                    <span class="sc-sidebar-version-value">v<?php echo esc_html($plugin_version); ?></span>
+                </div>
             </aside>
         </div><!-- .sc-sidebar-container -->
 
