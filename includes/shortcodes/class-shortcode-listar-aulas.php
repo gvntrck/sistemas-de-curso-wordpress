@@ -129,7 +129,7 @@ class System_Cursos_Shortcode_Listar_Aulas
         $embed = get_post_meta($aulaId, 'embed_do_vimeo', true);
         $descricao = get_post_meta($aulaId, 'descricao', true);
 
-        $titulo = esc_html(get_the_title($aulaId));
+        $titulo = esc_html($this->get_lesson_display_title($aulaId));
         $descricaoHtml = $descricao ? do_shortcode(wpautop(wp_kses_post($descricao))) : '';
         $embedHtml = $embed ? $this->kses_embed($embed) : '<div class="lista-aulas__placeholder">Video nao disponivel.</div>';
         $anexosHtml = $this->get_anexos_html($aulaId);
@@ -285,7 +285,7 @@ class System_Cursos_Shortcode_Listar_Aulas
                             </span>
                             <span class="lista-aulas__item-main">
                                 <span class="lista-aulas__item-title">
-                                    <?php echo esc_html(get_the_title($id)); ?>
+                                    <?php echo esc_html($this->get_lesson_display_title($id)); ?>
                                 </span>
                                 <?php if ($isLocked): ?>
                                     <span class="lista-aulas__item-meta">
@@ -343,7 +343,7 @@ class System_Cursos_Shortcode_Listar_Aulas
         $lockState = $this->get_lesson_lock_state($aulaId, $userId);
         if (!empty($lockState['is_locked'])) {
             wp_send_json_success([
-                'titulo' => esc_html(get_the_title($aulaId)),
+                'titulo' => $this->get_lesson_display_title($aulaId),
                 'embed' => $this->get_locked_embed_html($lockState['message']),
                 'descricao' => '',
                 'anexos' => '',
@@ -376,7 +376,7 @@ class System_Cursos_Shortcode_Listar_Aulas
         $esconderBotaoManual = !empty($quizHtml) && !$isCompleted;
 
         wp_send_json_success([
-            'titulo' => esc_html(get_the_title($aulaId)),
+            'titulo' => $this->get_lesson_display_title($aulaId),
             'embed' => $embed ? $this->kses_embed($embed) : '<div class="lista-aulas__placeholder">Video nao disponivel.</div>',
             'descricao' => $descricao ? do_shortcode(wpautop(wp_kses_post($descricao))) : '',
             'anexos' => $this->get_anexos_html($aulaId),
@@ -424,6 +424,11 @@ class System_Cursos_Shortcode_Listar_Aulas
         </div>
         <?php
         return ob_get_clean();
+    }
+
+    private function get_lesson_display_title($aulaId)
+    {
+        return wp_kses_decode_entities((string) get_the_title($aulaId));
     }
 
     private function get_lesson_course_id($aulaId)
