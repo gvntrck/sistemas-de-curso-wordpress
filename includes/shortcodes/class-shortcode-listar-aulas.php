@@ -428,7 +428,13 @@ class System_Cursos_Shortcode_Listar_Aulas
 
     private function get_lesson_display_title($aulaId)
     {
-        return wp_kses_decode_entities((string) get_the_title($aulaId));
+        $title = wp_kses_decode_entities((string) get_the_title($aulaId));
+
+        return str_replace(
+            ['–', '—', '−'],
+            '-',
+            $title
+        );
     }
 
     private function get_lesson_course_id($aulaId)
