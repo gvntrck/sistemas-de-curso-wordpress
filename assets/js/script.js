@@ -339,6 +339,42 @@ window.SystemCursos.initListaAulas = function (containerId) {
         }
     }
 
+    function decodeHtmlEntities(value) {
+        var text = String(value || '');
+        var textarea = document.createElement('textarea');
+
+        for (var i = 0; i < 3; i++) {
+            textarea.innerHTML = text;
+            var decoded = textarea.value;
+            if (decoded === text) {
+                break;
+            }
+            text = decoded;
+        }
+
+        return text;
+    }
+
+    function normalizeLessonTitleText(value) {
+        var text = decodeHtmlEntities(value);
+
+        text = text.replace(/[\u00AD\u058A\u05BE\u1400\u1806\u2010-\u2015\u2043\u2212\u2E17\u2E1A\u2E3A\u2E3B\u2E40\u301C\u3030\u30A0\uFE31\uFE32\uFE58\uFE63\uFF0D\uFFFD\u25A1\u25AB\u25AD\u25FB-\u25FE]/g, '-');
+        text = text.replace(/([A-Za-z0-9\u00C0-\u024F])\s*[^A-Za-z0-9\u00C0-\u024F\s()\-.,:;!?@#%&*+\/\\'"]+\s*(?=[A-Za-z0-9\u00C0-\u024F])/g, '$1 - ');
+        text = text.replace(/\s+/g, ' ').trim();
+
+        return text;
+    }
+
+    function normalizeRenderedLessonTitles() {
+        if (tituloEl) {
+            tituloEl.textContent = normalizeLessonTitleText(tituloEl.textContent);
+        }
+
+        container.querySelectorAll('.lista-aulas__item-title').forEach(function (titleNode) {
+            titleNode.textContent = normalizeLessonTitleText(titleNode.textContent);
+        });
+    }
+
     function isAulaConcluida(aulaId) {
         return aulasConcluidas.indexOf(parseInt(aulaId)) !== -1;
     }
@@ -477,6 +513,7 @@ window.SystemCursos.initListaAulas = function (containerId) {
     }
 
     normalizeMainSectionsOrder();
+    normalizeRenderedLessonTitles();
 
     function atualizarComentariosSection(comentariosHtml) {
         var html = comentariosHtml || '';
@@ -738,7 +775,7 @@ window.SystemCursos.initListaAulas = function (containerId) {
                     if (requestToken !== lessonRequestToken) return;
                     if (data.success && data.data) {
                         if (videoContainer) videoContainer.innerHTML = data.data.embed;
-                        if (tituloEl) tituloEl.textContent = data.data.titulo;
+                        if (tituloEl) tituloEl.textContent = normalizeLessonTitleText(data.data.titulo);
 
                         // Description
                         if (data.data.descricao) {

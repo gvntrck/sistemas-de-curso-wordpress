@@ -532,7 +532,7 @@ class System_Cursos_Shortcode_Barra_Lateral
                 </nav>
 
                 <div class="sc-sidebar-version" aria-label="Versao do plugin">
-                    <span class="sc-sidebar-version-label">Plugin</span>
+                    <span class="sc-sidebar-version-label">Versão</span>
                     <span class="sc-sidebar-version-value">v<?php echo esc_html($plugin_version); ?></span>
                 </div>
             </aside>

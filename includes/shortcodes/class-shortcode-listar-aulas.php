@@ -443,7 +443,11 @@ class System_Cursos_Shortcode_Listar_Aulas
             return '';
         }
 
-        return preg_replace('/[\x{00AD}\x{058A}\x{05BE}\x{1400}\x{1806}\x{2010}-\x{2015}\x{2043}\x{2212}\x{2E17}\x{2E1A}\x{2E3A}\x{2E3B}\x{2E40}\x{301C}\x{3030}\x{30A0}\x{FE31}\x{FE32}\x{FE58}\x{FE63}\x{FF0D}\x{FFFD}]+/u', '-', $title);
+        $title = preg_replace('/[\x{00AD}\x{058A}\x{05BE}\x{1400}\x{1806}\x{2010}-\x{2015}\x{2043}\x{2212}\x{2E17}\x{2E1A}\x{2E3A}\x{2E3B}\x{2E40}\x{301C}\x{3030}\x{30A0}\x{FE31}\x{FE32}\x{FE58}\x{FE63}\x{FF0D}\x{FFFD}\x{25A1}\x{25AB}\x{25AD}\x{25FB}-\x{25FE}]+/u', '-', $title);
+        $title = preg_replace('/([\p{L}\p{N}])\s*[^\p{L}\p{N}\s\(\)\[\]\{\}\.,:;!\?@#%&\*\+\/\\\\\'"_-]+\s*(?=[\p{L}\p{N}])/u', '$1 - ', $title);
+        $title = preg_replace('/\s+/', ' ', $title);
+
+        return trim((string) $title);
     }
 
     private function decode_html_entities_recursively($value)
