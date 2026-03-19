@@ -428,13 +428,38 @@ class System_Cursos_Shortcode_Listar_Aulas
 
     private function get_lesson_display_title($aulaId)
     {
-        $title = wp_kses_decode_entities((string) get_the_title($aulaId));
+        $post = get_post((int) $aulaId);
+        $title = ($post && isset($post->post_title)) ? (string) $post->post_title : '';
 
-        return str_replace(
-            ['–', '—', '−'],
-            '-',
-            $title
-        );
+        if ($title === '') {
+            $title = (string) get_the_title($aulaId);
+        }
+
+        $title = preg_replace('/&(ndash|mdash|minus|#8210|#8211|#8212|#8213|#8722|#x2010|#x2011|#x2012|#x2013|#x2014|#x2015|#x2212);?/i', '-', $title);
+        $title = $this->decode_html_entities_recursively($title);
+        $title = wp_check_invalid_utf8($title, true);
+
+        if ($title === '') {
+            return '';
+        }
+
+        return preg_replace('/[\x{00AD}\x{058A}\x{05BE}\x{1400}\x{1806}\x{2010}-\x{2015}\x{2043}\x{2212}\x{2E17}\x{2E1A}\x{2E3A}\x{2E3B}\x{2E40}\x{301C}\x{3030}\x{30A0}\x{FE31}\x{FE32}\x{FE58}\x{FE63}\x{FF0D}\x{FFFD}]+/u', '-', $title);
+    }
+
+    private function decode_html_entities_recursively($value)
+    {
+        $decoded = (string) $value;
+
+        for ($i = 0; $i < 3; $i++) {
+            $next = html_entity_decode($decoded, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            if ($next === $decoded) {
+                break;
+            }
+
+            $decoded = $next;
+        }
+
+        return $decoded;
     }
 
     private function get_lesson_course_id($aulaId)
