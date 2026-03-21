@@ -30,6 +30,7 @@ class System_Cursos_Access_Control
         add_action('set_auth_cookie', [$this, 'track_user_login_cookie'], 10, 4);
         add_action('wp_ajax_sc_admin_get_course_lessons_progress', [$this, 'ajax_get_course_lessons_progress']);
         add_action('wp_ajax_sc_admin_update_course_lesson_progress', [$this, 'ajax_update_course_lesson_progress']);
+        add_action('wp_ajax_sc_admin_cadastrar_aluno', [$this, 'ajax_cadastrar_aluno']);
         add_action('admin_post_update_access_date', [$this, 'handle_update_access_date']);
     }
 
@@ -1562,6 +1563,80 @@ class System_Cursos_Access_Control
         }
     }
 
+    public function ajax_cadastrar_aluno()
+    {
+        check_ajax_referer('sc_cadastrar_aluno_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Acesso negado.']);
+        }
+
+        $nome = sanitize_text_field($_POST['nome'] ?? '');
+        $sobrenome = sanitize_text_field($_POST['sobrenome'] ?? '');
+        $email = sanitize_email($_POST['email'] ?? '');
+        $cpf = sanitize_text_field($_POST['cpf'] ?? '');
+        $aniversario = sanitize_text_field($_POST['aniversario'] ?? '');
+        $instagram = sanitize_text_field($_POST['instagram'] ?? '');
+        $cep = sanitize_text_field($_POST['cep'] ?? '');
+        $rua = sanitize_text_field($_POST['rua'] ?? '');
+        $numero = sanitize_text_field($_POST['numero'] ?? '');
+        $complemento = sanitize_text_field($_POST['complemento'] ?? '');
+        $bairro = sanitize_text_field($_POST['bairro'] ?? '');
+        $cidade = sanitize_text_field($_POST['cidade'] ?? '');
+        $estado = sanitize_text_field($_POST['estado'] ?? '');
+
+        if (empty($nome) || empty($email)) {
+            wp_send_json_error(['message' => 'Nome e Email são obrigatórios.']);
+        }
+
+        if (!is_email($email)) {
+            wp_send_json_error(['message' => 'Email inválido.']);
+        }
+
+        if (email_exists($email)) {
+            wp_send_json_error(['message' => 'Este email já está cadastrado.']);
+        }
+
+        $password = wp_generate_password(12, false);
+        $user_id = wp_create_user($email, $password, $email);
+
+        if (is_wp_error($user_id)) {
+            wp_send_json_error(['message' => 'Erro ao criar usuário: ' . $user_id->get_error_message()]);
+        }
+
+        wp_update_user([
+            'ID' => $user_id,
+            'first_name' => $nome,
+            'last_name' => $sobrenome,
+            'display_name' => trim($nome . ' ' . $sobrenome),
+            'role' => 'aluno',
+        ]);
+
+        $meta_fields = [
+            'cpf' => $cpf,
+            'aniversario' => $aniversario,
+            'instagram' => $instagram,
+            'cep' => $cep,
+            'rua' => $rua,
+            'numero' => $numero,
+            'complemento' => $complemento,
+            'bairro' => $bairro,
+            'cidade' => $cidade,
+            'estado' => $estado,
+        ];
+
+        foreach ($meta_fields as $key => $value) {
+            if ($value !== '') {
+                update_user_meta($user_id, $key, $value);
+            }
+        }
+
+        wp_send_json_success([
+            'message' => 'Aluno cadastrado com sucesso! (ID: #' . $user_id . ')',
+            'user_id' => $user_id,
+        ]);
+    }
+
     public function render_admin_page()
     {
         $action = isset($_GET['action']) ? sanitize_text_field($_GET['action']) : 'list';
@@ -1740,9 +1815,10 @@ class System_Cursos_Access_Control
 
             <form method="post" id="form-matricula-lote">
                 <?php wp_nonce_field('aluno_matricula_lote'); ?>
-                <div class="alignleft actions bulkactions" style="margin-bottom: 10px;">
+                <div class="alignleft actions bulkactions" style="margin-bottom: 10px; display: flex; gap: 8px;">
                     <button type="button" class="button action" onclick="abrirModalMatriculaLote()">Matricular
                         Selecionados</button>
+                    <button type="button" class="button button-primary" onclick="document.getElementById('modal-cadastrar-aluno').style.display='flex'">+ Cadastrar Aluno</button>
                 </div>
 
                 <table class="wp-list-table widefat fixed striped">
@@ -2015,6 +2091,173 @@ class System_Cursos_Access_Control
                     }
 
                     form.submit();
+                }
+            </script>
+
+            <!-- Modal Cadastrar Aluno -->
+            <div id="modal-cadastrar-aluno"
+                style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99999; align-items:center; justify-content:center;">
+                <div style="background:#fff; padding:25px; border-radius:4px; width:680px; max-width:95%; max-height:90vh; overflow-y:auto;">
+                    <h2 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">Cadastrar Novo Aluno</h2>
+
+                    <div id="cadastrar-aluno-msg"></div>
+
+                    <form id="form-cadastrar-aluno">
+                        <h3 style="margin:15px 0 10px; color:#1d2327;">Dados Pessoais</h3>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                            <div>
+                                <label style="display:block; font-weight:600; margin-bottom:4px;">Nome *</label>
+                                <input type="text" name="nome" required class="regular-text" style="width:100%;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-weight:600; margin-bottom:4px;">Sobrenome</label>
+                                <input type="text" name="sobrenome" class="regular-text" style="width:100%;">
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                            <div>
+                                <label style="display:block; font-weight:600; margin-bottom:4px;">Email *</label>
+                                <input type="email" name="email" required class="regular-text" style="width:100%;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-weight:600; margin-bottom:4px;">CPF</label>
+                                <input type="text" name="cpf" class="regular-text" style="width:100%;" placeholder="000.000.000-00">
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                            <div>
+                                <label style="display:block; font-weight:600; margin-bottom:4px;">Data de Nascimento</label>
+                                <input type="date" name="aniversario" class="regular-text" style="width:100%;" max="9999-12-31">
+                            </div>
+                            <div>
+                                <label style="display:block; font-weight:600; margin-bottom:4px;">Instagram</label>
+                                <input type="text" name="instagram" class="regular-text" style="width:100%;" placeholder="@usuario">
+                            </div>
+                        </div>
+
+                        <h3 style="margin:20px 0 10px; color:#1d2327;">Endereço</h3>
+
+                        <div style="display:grid; grid-template-columns:1fr 2fr; gap:12px; margin-bottom:12px;">
+                            <div>
+                                <label style="display:block; font-weight:600; margin-bottom:4px;">CEP</label>
+                                <input type="text" name="cep" id="cad-cep" class="regular-text" style="width:100%;" placeholder="00000-000">
+                            </div>
+                            <div>
+                                <label style="display:block; font-weight:600; margin-bottom:4px;">Rua</label>
+                                <input type="text" name="rua" id="cad-rua" class="regular-text" style="width:100%;">
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
+                            <div>
+                                <label style="display:block; font-weight:600; margin-bottom:4px;">Número</label>
+                                <input type="text" name="numero" id="cad-numero" class="regular-text" style="width:100%;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-weight:600; margin-bottom:4px;">Complemento</label>
+                                <input type="text" name="complemento" class="regular-text" style="width:100%;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-weight:600; margin-bottom:4px;">Bairro</label>
+                                <input type="text" name="bairro" id="cad-bairro" class="regular-text" style="width:100%;">
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:15px;">
+                            <div>
+                                <label style="display:block; font-weight:600; margin-bottom:4px;">Cidade</label>
+                                <input type="text" name="cidade" id="cad-cidade" class="regular-text" style="width:100%;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-weight:600; margin-bottom:4px;">Estado</label>
+                                <input type="text" name="estado" id="cad-estado" class="regular-text" style="width:100%;">
+                            </div>
+                        </div>
+
+                        <p class="description" style="margin-bottom:15px;">Uma senha será gerada automaticamente para o aluno. O usuário será criado com a role <strong>Aluno</strong>.</p>
+
+                        <div style="display:flex; gap:10px; justify-content:flex-end; border-top:1px solid #eee; padding-top:15px;">
+                            <button type="button" class="button" onclick="fecharModalCadastroAluno()">Cancelar</button>
+                            <button type="submit" class="button button-primary" id="btn-cadastrar-aluno">Cadastrar Aluno</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <script>
+                (function(){
+                    var cadCep = document.getElementById('cad-cep');
+                    if (cadCep) {
+                        cadCep.addEventListener('blur', function() {
+                            var cep = cadCep.value.replace(/\D/g, '').slice(0, 8);
+                            if (cep.length === 8) {
+                                fetch('https://viacep.com.br/ws/' + cep + '/json/')
+                                    .then(function(r) { return r.json(); })
+                                    .then(function(data) {
+                                        if (!data.erro) {
+                                            var rua = document.getElementById('cad-rua');
+                                            var bairro = document.getElementById('cad-bairro');
+                                            var cidade = document.getElementById('cad-cidade');
+                                            var estado = document.getElementById('cad-estado');
+                                            if (rua) rua.value = data.logradouro || '';
+                                            if (bairro) bairro.value = data.bairro || '';
+                                            if (cidade) cidade.value = data.localidade || '';
+                                            if (estado) estado.value = data.uf || '';
+                                            var numero = document.getElementById('cad-numero');
+                                            if (numero) numero.focus();
+                                        }
+                                    })
+                                    .catch(function(e) { console.error(e); });
+                            }
+                        });
+                    }
+
+                    var formCad = document.getElementById('form-cadastrar-aluno');
+                    if (formCad) {
+                        formCad.addEventListener('submit', function(e) {
+                            e.preventDefault();
+                            var btn = document.getElementById('btn-cadastrar-aluno');
+                            var msgDiv = document.getElementById('cadastrar-aluno-msg');
+                            btn.disabled = true;
+                            btn.textContent = 'Cadastrando...';
+                            msgDiv.innerHTML = '';
+
+                            var formData = new FormData(formCad);
+                            formData.append('action', 'sc_admin_cadastrar_aluno');
+                            formData.append('nonce', '<?php echo wp_create_nonce('sc_cadastrar_aluno_nonce'); ?>');
+
+                            fetch(ajaxurl, {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(function(r) { return r.json(); })
+                            .then(function(resp) {
+                                btn.disabled = false;
+                                btn.textContent = 'Cadastrar Aluno';
+
+                                if (resp.success) {
+                                    msgDiv.innerHTML = '<div class="notice notice-success inline" style="margin:0 0 15px;"><p>' + resp.data.message + '</p></div>';
+                                    formCad.reset();
+                                    setTimeout(function() { location.reload(); }, 1500);
+                                } else {
+                                    msgDiv.innerHTML = '<div class="notice notice-error inline" style="margin:0 0 15px;"><p>' + resp.data.message + '</p></div>';
+                                }
+                            })
+                            .catch(function(err) {
+                                btn.disabled = false;
+                                btn.textContent = 'Cadastrar Aluno';
+                                msgDiv.innerHTML = '<div class="notice notice-error inline" style="margin:0 0 15px;"><p>Erro de conexão. Tente novamente.</p></div>';
+                            });
+                        });
+                    }
+                })();
+
+                function fecharModalCadastroAluno() {
+                    document.getElementById('modal-cadastrar-aluno').style.display = 'none';
+                    document.getElementById('cadastrar-aluno-msg').innerHTML = '';
                 }
             </script>
 
