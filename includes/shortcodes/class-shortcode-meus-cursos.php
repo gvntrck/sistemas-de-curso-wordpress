@@ -312,6 +312,28 @@ class System_Cursos_Shortcode_Meus_Cursos
                 display: block;
             }
 
+            .curso-completo-badge {
+                position: absolute !important;
+                top: 10px !important;
+                right: 10px !important;
+                width: 24px !important;
+                height: 24px !important;
+                min-width: 24px !important;
+                min-height: 24px !important;
+                max-width: 24px !important;
+                max-height: 24px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                background: var(--color-success, #22c55e) !important;
+                color: var(--color-success-contrast, #111827) !important;
+                font-size: 14px !important;
+                line-height: 1 !important;
+                font-weight: 700 !important;
+                border-radius: 999px !important;
+                z-index: 2 !important;
+            }
+
             .curso-title {
                 font-weight: 600;
                 font-size: 0.95rem;
@@ -557,9 +579,7 @@ class System_Cursos_Shortcode_Meus_Cursos
 
                         <!-- Overlay de Progresso (Opcional, se quiser mostrar "Concluído" visualmente) -->
                         <?php if ($porcentagem >= 100): ?>
-                            <div
-                                style="position:absolute; top: 10px; right: 10px; background: #2ed573; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px;">
-                                ✔</div>
+                            <span class="curso-completo-badge" aria-label="Curso concluido">✓</span>
                         <?php endif; ?>
 
                         <div

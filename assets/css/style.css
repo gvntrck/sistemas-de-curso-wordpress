@@ -363,6 +363,28 @@
     background: var(--color-border-input) !important;
 }
 
+.lms-sr .curso-completo-badge {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: var(--color-success, #22c55e) !important;
+    color: var(--color-success-contrast, #111827) !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+    border-radius: var(--radius-full) !important;
+    z-index: 2 !important;
+}
+
 /* =========================================
    Componente: Grid e Card de Certificados
    ========================================= */
