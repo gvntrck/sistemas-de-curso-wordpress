@@ -128,7 +128,7 @@ class System_Cursos_Shortcode_Barra_Lateral
                 border-radius: 50%;
                 background: var(--color-accent, #fcc419);
                 border: none;
-                color: #111;
+                color: var(--color-accent-contrast, #111827);
                 cursor: pointer;
                 display: flex;
                 align-items: center;
@@ -372,7 +372,7 @@ class System_Cursos_Shortcode_Barra_Lateral
                 height: 48px;
                 border-radius: 50%;
                 background: var(--color-accent, #fcc419);
-                color: #111;
+                color: var(--color-accent-contrast, #111827);
                 border: none;
                 cursor: pointer;
                 z-index: 1001;

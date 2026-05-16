@@ -87,9 +87,13 @@ class System_Cursos_Customizer
         $css .= "  --color-text-label: {$s['color_text_label']};\n";
         $css .= "  --color-accent: {$s['color_accent']};\n";
         $css .= "  --color-accent-hover: {$s['color_accent_hover']};\n";
+        $css .= "  --color-accent-contrast: " . self::get_contrast_text_color($s['color_accent']) . ";\n";
+        $css .= "  --color-accent-hover-contrast: " . self::get_contrast_text_color($s['color_accent_hover']) . ";\n";
         $css .= "  --color-accent-shadow: " . self::hex_to_rgba($s['color_accent'], 0.2) . ";\n";
         $css .= "  --color-success: {$s['color_success']};\n";
         $css .= "  --color-success-hover: " . self::darken_hex($s['color_success'], 15) . ";\n";
+        $css .= "  --color-success-contrast: " . self::get_contrast_text_color($s['color_success']) . ";\n";
+        $css .= "  --color-success-hover-contrast: " . self::get_contrast_text_color(self::darken_hex($s['color_success'], 15)) . ";\n";
         $css .= "  --color-success-bg: " . self::hex_to_rgba($s['color_success'], 0.15) . ";\n";
         $css .= "  --color-success-border: " . self::hex_to_rgba($s['color_success'], 0.2) . ";\n";
         $css .= "  --color-error: {$s['color_error']};\n";
@@ -434,10 +438,7 @@ class System_Cursos_Customizer
 
     private static function hex_to_rgba($hex, $alpha = 1)
     {
-        $hex = ltrim($hex, '#');
-        if (strlen($hex) === 3) {
-            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
-        }
+        $hex = self::normalize_hex($hex);
         $r = hexdec(substr($hex, 0, 2));
         $g = hexdec(substr($hex, 2, 2));
         $b = hexdec(substr($hex, 4, 2));
@@ -446,10 +447,7 @@ class System_Cursos_Customizer
 
     private static function darken_hex($hex, $percent)
     {
-        $hex = ltrim($hex, '#');
-        if (strlen($hex) === 3) {
-            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
-        }
+        $hex = self::normalize_hex($hex);
         $r = max(0, hexdec(substr($hex, 0, 2)) - (255 * $percent / 100));
         $g = max(0, hexdec(substr($hex, 2, 2)) - (255 * $percent / 100));
         $b = max(0, hexdec(substr($hex, 4, 2)) - (255 * $percent / 100));
@@ -458,13 +456,42 @@ class System_Cursos_Customizer
 
     private static function lighten_hex($hex, $percent)
     {
-        $hex = ltrim($hex, '#');
-        if (strlen($hex) === 3) {
-            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
-        }
+        $hex = self::normalize_hex($hex);
         $r = min(255, hexdec(substr($hex, 0, 2)) + (255 * $percent / 100));
         $g = min(255, hexdec(substr($hex, 2, 2)) + (255 * $percent / 100));
         $b = min(255, hexdec(substr($hex, 4, 2)) + (255 * $percent / 100));
         return sprintf('#%02x%02x%02x', $r, $g, $b);
+    }
+
+    private static function get_contrast_text_color($hex)
+    {
+        $hex = self::normalize_hex($hex);
+        $r = self::linearize_rgb_channel(hexdec(substr($hex, 0, 2)));
+        $g = self::linearize_rgb_channel(hexdec(substr($hex, 2, 2)));
+        $b = self::linearize_rgb_channel(hexdec(substr($hex, 4, 2)));
+        $luminance = (0.2126 * $r) + (0.7152 * $g) + (0.0722 * $b);
+
+        return $luminance > 0.2 ? '#111827' : '#ffffff';
+    }
+
+    private static function linearize_rgb_channel($value)
+    {
+        $value = max(0, min(255, (int) $value)) / 255;
+        return $value <= 0.03928 ? $value / 12.92 : pow(($value + 0.055) / 1.055, 2.4);
+    }
+
+    private static function normalize_hex($hex)
+    {
+        $hex = preg_replace('/[^0-9a-f]/i', '', (string) $hex);
+
+        if (strlen($hex) === 3) {
+            return $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+
+        if (strlen($hex) !== 6) {
+            return '000000';
+        }
+
+        return $hex;
     }
 }

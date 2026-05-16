@@ -38,11 +38,15 @@
     /* === Cores de Destaque === */
     --color-accent: #FDC110;
     --color-accent-hover: #e6b00f;
+    --color-accent-contrast: #111827;
+    --color-accent-hover-contrast: #111827;
     --color-accent-shadow: rgba(253, 193, 16, 0.2);
 
     /* === Cores de Estado === */
     --color-success: #22c55e;
     --color-success-hover: #16a34a;
+    --color-success-contrast: #111827;
+    --color-success-hover-contrast: #fff;
     --color-success-bg: rgba(46, 213, 115, 0.15);
     --color-success-border: rgba(46, 213, 115, 0.2);
     --color-error: #ef4444;
@@ -185,7 +189,7 @@
 .lms-sr .sc-sidebar-toggle {
     background-color: var(--color-accent, #FDC110) !important;
     border: none !important;
-    color: #111 !important;
+    color: var(--color-accent-contrast, #111827) !important;
     width: 32px !important;
     height: 32px !important;
     border-radius: 50% !important;
@@ -196,7 +200,7 @@
 }
 .lms-sr .sc-sidebar-mobile-toggle {
     background-color: var(--color-accent, #FDC110) !important;
-    color: #111 !important;
+    color: var(--color-accent-contrast, #111827) !important;
     border: none !important;
     width: 48px !important;
     height: 48px !important;
@@ -261,7 +265,7 @@
 .lms-sr .mc-btn-save,
 .lms-sr .cert-action {
     background-color: var(--color-accent) !important;
-    color: #fff !important;
+    color: var(--color-accent-contrast) !important;
     box-shadow: var(--shadow-btn) !important;
 }
 
@@ -270,38 +274,40 @@
 .lms-sr .mc-btn-save:hover,
 .lms-sr .cert-action:hover {
     background-color: var(--color-accent-hover) !important;
+    color: var(--color-accent-hover-contrast) !important;
 }
 
 /* Botão Secundário (Escuro) */
 .lms-sr .btn--secondary,
 .lms-sr .mc-btn-secondary,
 .lms-sr .cert-print-btn {
-    background-color: #333 !important;
-    color: #fff !important;
-    border: 1px solid #444 !important;
+    background-color: var(--color-bg-secondary) !important;
+    color: var(--color-text-heading) !important;
+    border: 1px solid var(--color-border-input) !important;
 }
 
 .lms-sr .btn--secondary:hover,
 .lms-sr .mc-btn-secondary:hover,
 .lms-sr .cert-print-btn:hover {
-    background-color: #444 !important;
-    border-color: #555 !important;
+    background-color: var(--color-bg-input-hover) !important;
+    border-color: var(--color-border-hover) !important;
 }
 
 /* Botão Sucesso (Verde) */
 .lms-sr .btn--success {
     background-color: var(--color-success) !important;
-    color: #fff !important;
+    color: var(--color-success-contrast) !important;
 }
 
 .lms-sr .btn--success:hover {
     background-color: var(--color-success-hover) !important;
+    color: var(--color-success-hover-contrast) !important;
 }
 
 /* Botão Ghost (Transparente com borda) */
 .lms-sr .btn--ghost {
     background: rgba(255, 255, 255, 0.05) !important;
-    color: #fff !important;
+    color: var(--color-text-heading) !important;
     border: 2px solid var(--color-border-hover) !important;
 }
 
@@ -534,7 +540,7 @@
     background-color: transparent !important;
     border: 1px solid transparent !important;
     border-bottom: 1px solid var(--color-border-input) !important;
-    color: #fff !important;
+    color: var(--color-text-primary) !important;
     padding: 10px 0 !important;
     font-size: var(--font-size-lg) !important;
     width: 100% !important;
@@ -558,7 +564,7 @@
 }
 
 .lms-sr .mc-input::placeholder {
-    color: #444 !important;
+    color: var(--color-text-muted) !important;
 }
 
 /* Footer do Container */
@@ -588,7 +594,7 @@
     background: var(--color-bg-tertiary) !important;
     border: 1px solid var(--color-panel-border, var(--color-border-light)) !important;
     box-shadow: var(--shadow-panel-soft) !important;
-    color: #fff !important;
+    color: var(--color-text-primary) !important;
     border-radius: var(--radius-xl) !important;
     padding: var(--space-md) !important;
     position: relative !important;
@@ -662,7 +668,7 @@
 }
 
 .lms-sr .lista-aulas__placeholder {
-    color: #fff !important;
+    color: var(--color-text-heading) !important;
     padding: var(--space-lg) !important;
 }
 
@@ -712,7 +718,7 @@
     background: var(--color-bg-tertiary) !important;
     border: 1px solid var(--color-panel-border, var(--color-border-light)) !important;
     box-shadow: var(--shadow-panel-soft) !important;
-    color: #fff !important;
+    color: var(--color-text-primary) !important;
     border-radius: var(--radius-xl) !important;
     overflow: hidden !important;
     display: grid !important;
@@ -794,7 +800,7 @@
 
 .lms-sr .lista-aulas__item-index.is-concluida {
     background: var(--color-success) !important;
-    color: #fff !important;
+    color: var(--color-success-contrast) !important;
 }
 
 .lms-sr .lista-aulas__item-index.is-concluida svg {
@@ -831,7 +837,7 @@
 
 .lms-sr .lista-aulas__progresso-texto {
     font-size: 13px !important;
-    color: rgba(255, 255, 255, 0.7) !important;
+    color: var(--color-text-muted) !important;
     font-weight: 500 !important;
     min-width: 40px !important;
     text-align: right !important;
@@ -847,7 +853,7 @@
     border: 2px solid var(--color-border-hover) !important;
     border-radius: var(--radius-lg) !important;
     background: rgba(255, 255, 255, 0.05) !important;
-    color: #fff !important;
+    color: var(--color-text-primary) !important;
     font-size: 14px !important;
     font-weight: 500 !important;
     font-family: var(--font-family) !important;
@@ -858,17 +864,19 @@
 .lms-sr .lista-aulas__btn-concluir:hover {
     border-color: rgba(255, 255, 255, 0.4) !important;
     background: rgba(255, 255, 255, 0.05) !important;
+    color: var(--color-text-heading) !important;
 }
 
 .lms-sr .lista-aulas__btn-concluir.is-concluida {
     background: var(--color-success) !important;
     border-color: var(--color-success) !important;
-    color: #fff !important;
+    color: var(--color-success-contrast) !important;
 }
 
 .lms-sr .lista-aulas__btn-concluir.is-concluida:hover {
     background: var(--color-success-hover) !important;
     border-color: var(--color-success-hover) !important;
+    color: var(--color-success-hover-contrast) !important;
 }
 
 .lms-sr .lista-aulas__btn-icon {
@@ -920,7 +928,7 @@
     background: var(--color-bg-secondary) !important;
     border: 1px solid var(--color-border-input) !important;
     border-radius: var(--radius-md) !important;
-    color: #fff !important;
+    color: var(--color-text-heading) !important;
     text-decoration: none !important;
     font-size: 14px !important;
     line-height: 1.4 !important;
@@ -1093,7 +1101,7 @@
 .lms-sr .sc-aula-comments__submit {
     border: 1px solid var(--color-accent) !important;
     background: var(--color-accent) !important;
-    color: #121212 !important;
+    color: var(--color-accent-contrast) !important;
     border-radius: var(--radius-md) !important;
     padding: 8px 14px !important;
     font-size: 13px !important;
@@ -1103,13 +1111,14 @@
 .lms-sr .sc-aula-comments__submit:hover {
     background: var(--color-accent-hover) !important;
     border-color: var(--color-accent-hover) !important;
+    color: var(--color-accent-hover-contrast) !important;
 }
 
 /* Acesso Negado */
 .lms-sr .lista-aulas__acesso-negado {
     background: var(--color-bg-tertiary) !important;
     border: 1px solid var(--color-border-light) !important;
-    color: #fff !important;
+    color: var(--color-text-primary) !important;
     border-radius: var(--radius-xl) !important;
     padding: var(--space-xl) !important;
     text-align: center !important;
@@ -1120,7 +1129,7 @@
 .lms-sr .lista-aulas__acesso-negado h3 {
     margin: 0 0 var(--space-xl) !important;
     font-size: 22px !important;
-    color: #fff !important;
+    color: var(--color-text-heading) !important;
 }
 
 .lms-sr .lista-aulas__acesso-negado p {
@@ -1134,7 +1143,7 @@
     display: inline-block !important;
     padding: var(--space-xl) var(--space-lg) !important;
     background: var(--color-success) !important;
-    color: #fff !important;
+    color: var(--color-success-contrast) !important;
     text-decoration: none !important;
     border-radius: var(--radius-lg) !important;
     font-weight: 500 !important;
@@ -1143,6 +1152,7 @@
 
 .lms-sr .lista-aulas__btn-login:hover {
     background: var(--color-success-hover) !important;
+    color: var(--color-success-hover-contrast) !important;
 }
 
 .lms-sr .lista-aulas__btn-voltar {
@@ -1441,7 +1451,7 @@
     border-radius: 50% !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
     background: rgba(255, 255, 255, 0.05) !important;
-    color: #fff !important;
+    color: var(--color-text-heading) !important;
     cursor: pointer !important;
     display: flex !important;
     align-items: center !important;
