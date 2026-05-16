@@ -98,8 +98,13 @@ class System_Cursos_Customizer
         $css .= "  --color-border: {$s['color_border']};\n";
         $css .= "  --color-border-input: {$s['color_border_input']};\n";
         $css .= "  --color-border-input-hover: " . self::lighten_hex($s['color_border_input'], 10) . ";\n";
-        $css .= "  --color-border-light: " . self::hex_to_rgba('#ffffff', 0.1) . ";\n";
-        $css .= "  --color-border-hover: " . self::hex_to_rgba('#ffffff', 0.2) . ";\n";
+        $css .= "  --color-border-light: " . self::hex_to_rgba($s['color_border'], 0.85) . ";\n";
+        $css .= "  --color-border-hover: " . self::hex_to_rgba($s['color_border_input'], 0.95) . ";\n";
+        $css .= "  --color-panel-border: " . self::hex_to_rgba($s['color_border_input'], 0.9) . ";\n";
+        $css .= "  --color-panel-item-bg: {$s['color_bg_secondary']};\n";
+        $css .= "  --color-panel-item-bg-hover: {$s['color_bg_primary']};\n";
+        $css .= "  --color-panel-item-bg-active: " . self::hex_to_rgba($s['color_accent'], 0.12) . ";\n";
+        $css .= "  --shadow-panel-soft: 0 12px 28px rgba(15, 23, 42, 0.08);\n";
         $css .= "  --font-family: {$s['font_family']};\n";
         $css .= "  --font-size-base: 1rem;\n";
         $css .= "  --radius-sm: {$radius_base}px;\n";
