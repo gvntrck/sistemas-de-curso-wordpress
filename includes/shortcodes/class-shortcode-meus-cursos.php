@@ -308,6 +308,7 @@ class System_Cursos_Shortcode_Meus_Cursos
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
+                object-position: center center;
                 display: block;
             }
 

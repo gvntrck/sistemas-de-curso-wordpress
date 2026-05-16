@@ -351,6 +351,7 @@ class System_Cursos_CPT_Manager
 
             <p>
                 <label style="font-weight:bold; display:block; margin-bottom:5px;">Capa Vertical (Usada nas listagens):</label>
+                <span class="description" style="display:block; margin-bottom:8px;">Tamanho ideal: 400 x 600 px (proporção 2:3).</span>
             <div class="image-preview-wrapper" style="margin-bottom: 10px;">
                 <img id="capa_vertical_preview" src="<?php echo esc_url($capa_preview); ?>"
                     style="max-width: 150px; display: <?php echo $capa_preview ? 'block' : 'none'; ?>; border: 1px solid #ccc; padding: 2px;">

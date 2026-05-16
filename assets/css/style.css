@@ -341,6 +341,28 @@
     border-color: var(--color-accent) !important;
 }
 
+.lms-sr .curso-thumb-wrapper img,
+.lms-sr .curso-item.type-curso .curso-link > img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    display: block !important;
+}
+
+.lms-sr .curso-item.type-curso .curso-link {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+}
+
+.lms-sr .curso-item.type-curso .curso-link > img {
+    aspect-ratio: 2 / 3 !important;
+    flex: 0 0 auto !important;
+    height: auto !important;
+    background: var(--color-border-input) !important;
+}
+
 /* =========================================
    Componente: Grid e Card de Certificados
    ========================================= */
