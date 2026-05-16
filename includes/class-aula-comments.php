@@ -7,6 +7,7 @@ class System_Cursos_Aula_Comments
 {
     const COURSE_META_KEY = '_sistema_cursos_comments_course_enabled';
     const LESSON_OVERRIDE_META_KEY = '_sistema_cursos_comments_lesson_override';
+    const LESSON_MODE_META_KEY = '_sistema_cursos_comments_lesson_mode';
     const NONCE_ACTION = 'sistema_cursos_aula_comment_action';
 
     public function __construct()
@@ -34,9 +35,23 @@ class System_Cursos_Aula_Comments
             $course_enabled = self::is_truthy(get_post_meta($curso_id, self::COURSE_META_KEY, true));
         }
 
+        $lesson_mode = (string) get_post_meta($aula_id, self::LESSON_MODE_META_KEY, true);
+
+        if ($lesson_mode === 'enabled') {
+            return true;
+        }
+
+        if ($lesson_mode === 'disabled') {
+            return false;
+        }
+
+        if ($lesson_mode === 'inherit') {
+            return $course_enabled;
+        }
+
         $lesson_override = self::is_truthy(get_post_meta($aula_id, self::LESSON_OVERRIDE_META_KEY, true));
 
-        // Sobrescrita da aula inverte a regra herdada do curso.
+        // Compatibilidade com a regra antiga: a sobrescrita invertia a regra herdada do curso.
         if ($lesson_override) {
             return !$course_enabled;
         }

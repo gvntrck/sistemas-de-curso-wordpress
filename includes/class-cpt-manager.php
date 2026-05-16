@@ -374,10 +374,10 @@ class System_Cursos_CPT_Manager
                         name="sistema_cursos_comments_course_enabled"
                         value="1"
                         <?php checked($comments_course_enabled, '1'); ?>>
-                    Ativar comentarios no curso (habilita comentarios nas aulas por padrao)
+                    Comentarios ativos por padrao nas aulas deste curso
                 </label>
                 <span class="description" style="display:block; margin-top:4px;">
-                    Padrao: desativado. Ao ativar, todas as aulas do curso passam a aceitar comentarios.
+                    Esta regra vale para todas as aulas, exceto quando uma aula tiver uma configuracao individual.
                 </span>
             </p>
         </div>
@@ -416,6 +416,47 @@ class System_Cursos_CPT_Manager
         }
 
         return false;
+    }
+
+    private function is_course_comments_enabled($curso_id)
+    {
+        return get_post_meta((int) $curso_id, '_sistema_cursos_comments_course_enabled', true) === '1';
+    }
+
+    private function get_lesson_comments_mode($aula_id)
+    {
+        $aula_id = (int) $aula_id;
+        $stored_mode = (string) get_post_meta($aula_id, '_sistema_cursos_comments_lesson_mode', true);
+
+        if (in_array($stored_mode, ['inherit', 'enabled', 'disabled'], true)) {
+            return $stored_mode;
+        }
+
+        $legacy_override = get_post_meta($aula_id, '_sistema_cursos_comments_lesson_override', true) === '1';
+        if (!$legacy_override) {
+            return 'inherit';
+        }
+
+        $curso_id = (int) get_post_meta($aula_id, 'curso', true);
+        return $this->is_course_comments_enabled($curso_id) ? 'disabled' : 'enabled';
+    }
+
+    private function sync_legacy_lesson_comments_override($aula_id, $mode)
+    {
+        if ($mode === 'inherit') {
+            update_post_meta($aula_id, '_sistema_cursos_comments_lesson_override', '0');
+            return;
+        }
+
+        $curso_id = (int) get_post_meta((int) $aula_id, 'curso', true);
+        $course_enabled = $this->is_course_comments_enabled($curso_id);
+        $lesson_enabled = ($mode === 'enabled');
+
+        update_post_meta(
+            $aula_id,
+            '_sistema_cursos_comments_lesson_override',
+            $lesson_enabled === $course_enabled ? '0' : '1'
+        );
     }
 
     public function render_curso_aulas_metabox($post)
@@ -555,7 +596,7 @@ class System_Cursos_CPT_Manager
 
         // Field: descricao
         $descricao = get_post_meta($post->ID, 'descricao', true);
-        $comments_lesson_override = get_post_meta($post->ID, '_sistema_cursos_comments_lesson_override', true);
+        $comments_lesson_mode = $this->get_lesson_comments_mode($post->ID);
         $release_datetime = class_exists('System_Cursos_Lesson_Schedule')
             ? System_Cursos_Lesson_Schedule::get_release_datetime($post->ID)
             : '';
@@ -635,19 +676,22 @@ class System_Cursos_CPT_Manager
         <hr>
 
         <p>
-            <input type="hidden" name="sistema_cursos_comments_lesson_override" value="0">
-            <label for="sistema_cursos_comments_lesson_override" style="display:block; font-weight:600;">
-                <input
-                    type="checkbox"
-                    id="sistema_cursos_comments_lesson_override"
-                    name="sistema_cursos_comments_lesson_override"
-                    value="1"
-                    <?php checked($comments_lesson_override, '1'); ?>>
-                Sobrescrever regra de comentarios do curso nesta aula
+            <label for="sistema_cursos_comments_lesson_mode" style="display:block; font-weight:600; margin-bottom:5px;">
+                Comentarios nesta aula
             </label>
+            <select name="sistema_cursos_comments_lesson_mode" id="sistema_cursos_comments_lesson_mode" class="widefat">
+                <option value="inherit" <?php selected($comments_lesson_mode, 'inherit'); ?>>
+                    Usar configuracao do curso
+                </option>
+                <option value="enabled" <?php selected($comments_lesson_mode, 'enabled'); ?>>
+                    Ativar comentarios nesta aula
+                </option>
+                <option value="disabled" <?php selected($comments_lesson_mode, 'disabled'); ?>>
+                    Desativar comentarios nesta aula
+                </option>
+            </select>
             <span class="description" style="display:block; margin-top:4px;">
-                Quando marcado: se o curso estiver com comentarios ativos, esta aula fica desativada. Se o curso estiver
-                desativado, esta aula fica ativa.
+                A configuracao escolhida aqui tem prioridade sobre a configuracao geral do curso.
             </span>
         </p>
 
@@ -758,10 +802,15 @@ class System_Cursos_CPT_Manager
             update_post_meta($post_id, '_sistema_cursos_comments_course_enabled', $course_comments_enabled);
         }
 
-        // 3.2 Comentarios na Aula (sobrescrita da regra do curso)
-        if ($post_type === 'aula' && isset($_POST['sistema_cursos_comments_lesson_override'])) {
-            $lesson_comments_override = ($_POST['sistema_cursos_comments_lesson_override'] === '1') ? '1' : '0';
-            update_post_meta($post_id, '_sistema_cursos_comments_lesson_override', $lesson_comments_override);
+        // 3.2 Comentarios na Aula (configuracao individual)
+        if ($post_type === 'aula' && isset($_POST['sistema_cursos_comments_lesson_mode'])) {
+            $lesson_comments_mode = sanitize_key(wp_unslash($_POST['sistema_cursos_comments_lesson_mode']));
+            if (!in_array($lesson_comments_mode, ['inherit', 'enabled', 'disabled'], true)) {
+                $lesson_comments_mode = 'inherit';
+            }
+
+            update_post_meta($post_id, '_sistema_cursos_comments_lesson_mode', $lesson_comments_mode);
+            $this->sync_legacy_lesson_comments_override($post_id, $lesson_comments_mode);
         }
 
         // 3.3 Data/hora de liberacao da aula
