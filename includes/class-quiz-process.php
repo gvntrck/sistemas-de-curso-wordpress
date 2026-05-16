@@ -27,7 +27,7 @@ class System_Cursos_Quiz_Process
                 'sistema-cursos-quiz-frontend',
                 plugins_url('../assets/js/frontend-quiz.js', __FILE__),
                 ['jquery'],
-                SISTEMA_CURSOS_VERSION,
+                sistema_cursos_asset_version('assets/js/frontend-quiz.js'),
                 true
             );
 
@@ -37,7 +37,7 @@ class System_Cursos_Quiz_Process
                 'sistema-cursos-quiz-frontend-css',
                 plugins_url('../assets/css/frontend-quiz.css', __FILE__),
                 [],
-                SISTEMA_CURSOS_VERSION
+                sistema_cursos_asset_version('assets/css/frontend-quiz.css')
             );
 
             wp_enqueue_style('sistema-cursos-quiz-frontend-css');

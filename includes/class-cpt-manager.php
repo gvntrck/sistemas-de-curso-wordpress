@@ -236,7 +236,7 @@ class System_Cursos_CPT_Manager
                 'sistema-cursos-admin',
                 plugins_url('assets/js/admin-metaboxes.js', dirname(__DIR__) . '/sistema-cursos-plugin.php'),
                 ['jquery', 'jquery-ui-sortable'],
-                '1.0.4',
+                sistema_cursos_asset_version('assets/js/admin-metaboxes.js', '1.0.4'),
                 true
             );
 

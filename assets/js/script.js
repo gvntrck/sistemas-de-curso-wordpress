@@ -386,6 +386,9 @@ window.SystemCursos.initListaAulas = function (containerId) {
         var fill = container.querySelector('.lista-aulas__progresso-fill');
         var txt = container.querySelector('.lista-aulas__progresso-texto');
 
+        if (progWrapper) {
+            progWrapper.setAttribute('data-concluidas', JSON.stringify(aulasConcluidas));
+        }
         if (fill) fill.style.width = pct + '%';
         if (txt) txt.textContent = pct + '%';
     }
@@ -585,7 +588,16 @@ window.SystemCursos.initListaAulas = function (containerId) {
                         }
                         atualizarItemLista(aulaId, concluida);
                         atualizarBarraProgresso();
-                        if (window.SystemCursos && window.SystemCursos.refreshOverallProgressBar) {
+                        document.dispatchEvent(new CustomEvent('sistema_cursos_lesson_completed', {
+                            detail: {
+                                aulaId: parseInt(aulaId, 10),
+                                cursoId: parseInt(cursoId, 10),
+                                concluida: !!concluida
+                            }
+                        }));
+                        if (window.jQuery) {
+                            window.jQuery(document).trigger('sistema_cursos_lesson_completed', [aulaId, cursoId, concluida]);
+                        } else if (window.SystemCursos && window.SystemCursos.refreshOverallProgressBar) {
                             window.SystemCursos.refreshOverallProgressBar(ajaxUrl);
                         }
                     } else {

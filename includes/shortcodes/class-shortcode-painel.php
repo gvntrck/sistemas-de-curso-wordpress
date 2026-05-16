@@ -189,9 +189,24 @@ class System_Cursos_Shortcode_Painel
                 var ajaxUrl = '<?php echo admin_url('admin-ajax.php'); ?>';
                 var nonce = '<?php echo wp_create_nonce('lms_painel_nonce'); ?>';
 
+                function isCacheableView(viewName) {
+                    var dynamicViews = [
+                        'inicio',
+                        'meus-cursos',
+                        'todos-cursos',
+                        'curso',
+                        'certificados',
+                        'certificado-view',
+                        'minha-conta',
+                        'cadastro'
+                    ];
+
+                    return dynamicViews.indexOf(viewName) === -1;
+                }
+
                 // Cache da view inicial
                 var initialContent = document.getElementById('lms-view-content');
-                if (initialContent) {
+                if (initialContent && isCacheableView(currentView)) {
                     var initialCacheKey = currentView;
                     if ((currentView === 'curso' || currentView === 'certificado-view') && currentCursoId) {
                         initialCacheKey = currentView + '-' + currentCursoId;
@@ -253,7 +268,7 @@ class System_Cursos_Shortcode_Painel
                         : viewName + cacheScope;
 
                     // Se a view está em cache, usar cache
-                    if (viewCache[cacheKey]) {
+                    if (isCacheableView(viewName) && viewCache[cacheKey]) {
                         content.innerHTML = viewCache[cacheKey];
                         content.className = 'lms-view-content';
                         currentView = viewName;
@@ -294,9 +309,7 @@ class System_Cursos_Shortcode_Painel
                             loader.classList.remove('active');
 
                             if (data.success && data.data.html) {
-                                // Não cachear views com formulário para evitar problemas com nonces
-                                var noCache = ['minha-conta', 'cadastro'];
-                                if (noCache.indexOf(viewName) === -1) {
+                                if (isCacheableView(viewName)) {
                                     viewCache[cacheKey] = data.data.html;
                                 }
 

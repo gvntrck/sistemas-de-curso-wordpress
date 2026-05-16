@@ -4,7 +4,7 @@
  * Description: Plugin LMS para WordPress - Alternativa ao Learndash
  * Author: Giovani Tureck
  * Text Domain: lms-suporte-rapido
- * Version: 1.8.21
+ * Version: 1.8.22
  */
 
 if (!defined('ABSPATH')) {
@@ -12,7 +12,20 @@ if (!defined('ABSPATH')) {
 }
 
 // Definição de constantes
-define('SISTEMA_CURSOS_VERSION', '1.8.21');
+define('SISTEMA_CURSOS_VERSION', '1.8.22');
+
+if (!function_exists('sistema_cursos_asset_version')) {
+    function sistema_cursos_asset_version($relative_path, $fallback = SISTEMA_CURSOS_VERSION)
+    {
+        $file_path = plugin_dir_path(__FILE__) . ltrim((string) $relative_path, '/');
+
+        if (file_exists($file_path)) {
+            return (string) filemtime($file_path);
+        }
+
+        return (string) $fallback;
+    }
+}
 
 /**
  * sistema-cursos-plugin.php
@@ -858,13 +871,13 @@ function sistema_cursos_render_admin_page()
                                 <p>Copie o exemplo abaixo, cole na sua página e ajuste as URLs conforme necessário:</p>
                                 <pre
                                     style="background: #f0f0f1; padding: 15px; border-radius: 4px; border-left: 4px solid #2271b1; overflow-x: auto;"><code>[barra-lateral-aluno 
-                                                                                                                                                                                                                                                                                                                    link_inicio="/inicio" 
-                                                                                                                                                                                                                                                                                                                    link_minha_conta="/perfil"
-                                                                                                                                                                                                                                                                                                                    link_meus_cursos="/meus-cursos" 
-                                                                                                                                                                                                                                                                                                                    link_todos_cursos="/loja"
-                                                                                                                                                                                                                                                                                                                    link_certificados="/certificados"
-                                                                                                                                                                                                                                                                                                                    link_admin="/wp-admin"
-                                                                                                                                                                                                                                                                                                                ]</code></pre>
+                                                                                                                                                                                                                                                                                                                            link_inicio="/inicio" 
+                                                                                                                                                                                                                                                                                                                            link_minha_conta="/perfil"
+                                                                                                                                                                                                                                                                                                                            link_meus_cursos="/meus-cursos" 
+                                                                                                                                                                                                                                                                                                                            link_todos_cursos="/loja"
+                                                                                                                                                                                                                                                                                                                            link_certificados="/certificados"
+                                                                                                                                                                                                                                                                                                                            link_admin="/wp-admin"
+                                                                                                                                                                                                                                                                                                                        ]</code></pre>
                             </div>
                         </td>
                     </tr>

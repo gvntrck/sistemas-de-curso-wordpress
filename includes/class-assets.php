@@ -30,7 +30,7 @@ class System_Cursos_Assets
             'sistema-cursos-style',
             $plugin_url . 'assets/css/style.css',
             [],
-            '1.6.1' // Bump version to force refresh
+            sistema_cursos_asset_version('assets/css/style.css', '1.6.1')
         );
 
         // JS Principal
@@ -38,7 +38,7 @@ class System_Cursos_Assets
             'sistema-cursos-script',
             $plugin_url . 'assets/js/script.js',
             [],
-            '1.4.0', // Updated version to force cache refresh
+            sistema_cursos_asset_version('assets/js/script.js', '1.4.1'),
             true
         );
 
@@ -47,7 +47,7 @@ class System_Cursos_Assets
             'sistema-cursos-certificado-js',
             $plugin_url . 'assets/js/certificado.js',
             [],
-            '1.1.0',
+            sistema_cursos_asset_version('assets/js/certificado.js', '1.1.0'),
             true
         );
     }
@@ -61,7 +61,7 @@ class System_Cursos_Assets
             'sistema-cursos-script-admin',
             $plugin_url . 'assets/js/script.js',
             [],
-            '1.0.7',
+            sistema_cursos_asset_version('assets/js/script.js', '1.0.7'),
             true
         );
     }

@@ -35,7 +35,7 @@ class System_Cursos_Quiz_Builder
                 'sistema-cursos-quiz-builder',
                 plugins_url('../assets/js/admin-quiz-builder.js', __FILE__),
                 ['jquery', 'jquery-ui-sortable'],
-                SISTEMA_CURSOS_VERSION,
+                sistema_cursos_asset_version('assets/js/admin-quiz-builder.js'),
                 true
             );
 
@@ -43,7 +43,7 @@ class System_Cursos_Quiz_Builder
                 'sistema-cursos-quiz-builder-css',
                 plugins_url('../assets/css/admin-quiz-builder.css', __FILE__),
                 [],
-                SISTEMA_CURSOS_VERSION
+                sistema_cursos_asset_version('assets/css/admin-quiz-builder.css')
             );
 
             // Passar dados iniciais para o JS
