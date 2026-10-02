@@ -11,6 +11,24 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
+
+require 'plugin-update-checker/plugin-update-checker.php';
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$myUpdateChecker = PucFactory::buildUpdateChecker(
+	'https://github.com/gvntrck/sistemas-de-curso-wordpress/',
+	__FILE__,
+	'sistemas-de-curso-wordpress'
+);
+
+//Set the branch that contains the stable release.
+$myUpdateChecker->setBranch('main');
+
+
+
+
+
+
 // Definição de constantes
 define('SISTEMA_CURSOS_VERSION', '1.8.28');
 
