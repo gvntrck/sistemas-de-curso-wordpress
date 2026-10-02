@@ -191,6 +191,16 @@ class System_Cursos_CPT_Manager
             'default'
         );
 
+        // Gerenciamento de Alunos na Trilha
+        add_meta_box(
+            'trilha_alunos_manager',
+            'Matricular Alunos na Trilha',
+            [$this, 'render_curso_alunos_metabox'],
+            'trilha',
+            'normal',
+            'default'
+        );
+
         // Gerenciamento de Aulas no Curso
         add_meta_box(
             'curso_aulas_manager',
@@ -750,6 +760,26 @@ class System_Cursos_CPT_Manager
 
         $post_type = get_post_type($post_id);
 
+        // Matrícula na trilha é independente dos acessos diretos nos cursos.
+        if ($post_type === 'trilha' && current_user_can('manage_options')
+            && isset($_POST['trilha_alunos_nonce']) && is_string($_POST['trilha_alunos_nonce'])
+            && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['trilha_alunos_nonce'])), 'trilha_alunos_save')
+            && !wp_is_post_revision($post_id)) {
+            $submitted = isset($_POST['trilha_alunos']) ? wp_unslash($_POST['trilha_alunos']) : [];
+            if (is_array($submitted) && !array_filter($submitted, 'is_array')) {
+                $alunos = array_values(array_unique(array_filter(array_map('absint', $submitted), function ($user_id) {
+                    return $user_id > 0 && get_user_by('id', $user_id);
+                })));
+                $atuais = array_map('intval', get_post_meta($post_id, '_trilha_aluno', false));
+                foreach (array_diff($alunos, $atuais) as $user_id) {
+                    add_post_meta($post_id, '_trilha_aluno', $user_id);
+                }
+                foreach (array_diff($atuais, $alunos) as $user_id) {
+                    delete_post_meta($post_id, '_trilha_aluno', $user_id);
+                }
+            }
+        }
+
         // Salvar Campos
 
         // 1. Trilha (Post Object ID)
@@ -1236,11 +1266,20 @@ class System_Cursos_CPT_Manager
     }
 
     /**
-     * Renderiza Metabox de Gestão de Alunos (Matrícula Direta CPT Curso)
+     * Renderiza o seletor de matrículas diretas no curso ou na trilha.
      */
     public function render_curso_alunos_metabox($post)
     {
+        $is_trilha = $post->post_type === 'trilha';
+        if ($is_trilha && !current_user_can('manage_options')) {
+            echo '<p>Sem permissão para gerenciar matrículas.</p>';
+            return;
+        }
         wp_nonce_field('sistema_cursos_save_meta', 'sistema_cursos_nonce');
+        if ($is_trilha) {
+            wp_nonce_field('trilha_alunos_save', 'trilha_alunos_nonce');
+            wp_enqueue_script('jquery');
+        }
 
         // Buscar todos os usuários
         $users = get_users([
@@ -1250,14 +1289,14 @@ class System_Cursos_CPT_Manager
         ]);
 
         // Acessos diretos ativos
-        $acessos_diretos_raw = System_Cursos_Access_Control::list_accesses([
+        $acessos_diretos_raw = $is_trilha ? [] : System_Cursos_Access_Control::list_accesses([
             'curso_id' => $post->ID,
             'status' => 'ativo',
             'expirados' => false,
             'limit' => 99999
         ]);
 
-        $acessos_diretos_ids = [];
+        $acessos_diretos_ids = $is_trilha ? array_map('intval', get_post_meta($post->ID, '_trilha_aluno', false)) : [];
         if (!empty($acessos_diretos_raw)) {
             foreach ($acessos_diretos_raw as $ac) {
                 $acessos_diretos_ids[] = (int) $ac->user_id;
@@ -1282,8 +1321,8 @@ class System_Cursos_CPT_Manager
             <!-- Default / Available List -->
             <div class="sc-listbox-half" style="flex: 1; border: 1px solid #ccd0d4; padding: 10px; background: #fff;">
                 <strong>Pesquisar todos os usuários</strong>
-                <input type="text" id="sc_search_available" class="widefat" placeholder="Pesquisar..." style="margin: 8px 0;">
-                <select id="sc_available_users" multiple="multiple" style="width: 100%; height: 300px; padding: 5px;">
+                <input type="text" id="sc_search_available" aria-label="Pesquisar usuários disponíveis" class="widefat" placeholder="Pesquisar..." style="margin: 8px 0;">
+                <select id="sc_available_users" aria-label="Usuários disponíveis" multiple="multiple" style="width: 100%; height: 300px; padding: 5px;">
                     <?php foreach ($disponiveis as $user): ?>
                         <option value="<?php echo esc_attr($user->ID); ?>" data-search="<?php echo esc_attr(strtolower($user->display_name . ' ' . $user->user_email)); ?>">
                             <?php echo esc_html($user->display_name . ' (' . $user->user_email . ')'); ?>
@@ -1294,15 +1333,15 @@ class System_Cursos_CPT_Manager
 
             <!-- Controls -->
             <div class="sc-listbox-controls" style="display: flex; flex-direction: column; justify-content: center; gap: 10px;">
-                <button type="button" class="button button-secondary" id="sc_btn_move_right" title="Matricular Selecionados">&rarr;</button>
-                <button type="button" class="button button-secondary" id="sc_btn_move_left" title="Remover Selecionados">&larr;</button>
+                <button type="button" class="button button-secondary" id="sc_btn_move_right" title="Matricular Selecionados" aria-label="Matricular selecionados">&rarr;</button>
+                <button type="button" class="button button-secondary" id="sc_btn_move_left" title="Remover Selecionados" aria-label="Remover selecionados">&larr;</button>
             </div>
 
             <!-- Selected List -->
             <div class="sc-listbox-half" style="flex: 1; border: 1px solid #ccd0d4; padding: 10px; background: #fff;">
-                <strong>Usuários matriculados no Curso</strong>
-                <input type="text" id="sc_search_selected" class="widefat" placeholder="Pesquisar..." style="margin: 8px 0;">
-                <select id="sc_selected_users" name="curso_alunos_diretos[]" multiple="multiple" style="width: 100%; height: 300px; padding: 5px;">
+                <strong><?php echo $is_trilha ? 'Usuários matriculados na Trilha' : 'Usuários matriculados no Curso'; ?></strong>
+                <input type="text" id="sc_search_selected" aria-label="Pesquisar usuários matriculados" class="widefat" placeholder="Pesquisar..." style="margin: 8px 0;">
+                <select id="sc_selected_users" name="<?php echo $is_trilha ? 'trilha_alunos[]' : 'curso_alunos_diretos[]'; ?>" aria-label="Usuários matriculados" multiple="multiple" style="width: 100%; height: 300px; padding: 5px;">
                     <?php foreach ($selecionados as $user): ?>
                         <option value="<?php echo esc_attr($user->ID); ?>" data-search="<?php echo esc_attr(strtolower($user->display_name . ' ' . $user->user_email)); ?>" selected="selected">
                             <?php echo esc_html($user->display_name . ' (' . $user->user_email . ')'); ?>
@@ -1312,7 +1351,11 @@ class System_Cursos_CPT_Manager
             </div>
             
         </div>
-        <p class="description">Alunos matriculados via Grupos ou Trilhas não aparecem aqui e devem ser gerenciados nas respectivas telas.</p>
+        <?php if ($is_trilha): ?>
+            <p class="description">Salve a trilha para confirmar as matrículas. Os alunos terão acesso a todos os cursos desta trilha, incluindo cursos adicionados depois. Remover um aluno daqui preserva acessos diretos nos cursos e por grupos.</p>
+        <?php else: ?>
+            <p class="description">Alunos matriculados via Grupos ou Trilhas não aparecem aqui e devem ser gerenciados nas respectivas telas.</p>
+        <?php endif; ?>
 
         <script>
         jQuery(document).ready(function($) {

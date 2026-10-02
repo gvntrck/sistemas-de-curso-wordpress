@@ -427,6 +427,13 @@ class System_Cursos_Access_Control
             return ['type' => 'direct', 'label' => 'Matrícula Direta'];
         }
 
+        $trilha_id = (int) get_post_meta($curso_id, 'trilha', true);
+        if ($user_id > 0 && $trilha_id > 0 && get_post_type($trilha_id) === 'trilha'
+            && get_post_status($trilha_id) === 'publish'
+            && in_array((int) $user_id, array_map('intval', get_post_meta($trilha_id, '_trilha_aluno', false)), true)) {
+            return ['type' => 'trilha', 'label' => 'Trilha: ' . get_the_title($trilha_id), 'trilha_id' => $trilha_id];
+        }
+
         // 2. Verificar Grupos do Usuário
         $user_grupos = get_user_meta($user_id, '_aluno_grupos', true);
         if (empty($user_grupos) || !is_array($user_grupos)) {
@@ -468,7 +475,6 @@ class System_Cursos_Access_Control
         }
 
         // 2b. Grupos na Trilha (Pai) - Opcional, mantido para compatibilidade se usar Trilhas
-        $trilha_id = get_post_meta($curso_id, 'trilha', true);
         if ($trilha_id) {
             $trilha_grupos = get_post_meta($trilha_id, '_grupos_permitidos', true);
             if (is_array($trilha_grupos) && !empty($trilha_grupos)) {
@@ -900,8 +906,25 @@ class System_Cursos_Access_Control
             }
         }
 
+        // Matrículas na trilha acompanham seus cursos atuais, sem criar acesso direto.
+        $trilha_ids = get_posts([
+            'post_type' => 'trilha',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'meta_key' => '_trilha_aluno',
+            'meta_value' => (int) $user_id,
+            'fields' => 'ids'
+        ]);
+        $trilha_course_ids = empty($trilha_ids) ? [] : get_posts([
+            'post_type' => 'curso',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'meta_query' => [['key' => 'trilha', 'value' => $trilha_ids, 'compare' => 'IN']],
+            'fields' => 'ids'
+        ]);
+
         // Combinar e remover duplicatas
-        $all_ids = array_merge($direct_ids, $group_course_ids);
+        $all_ids = array_merge($direct_ids, $group_course_ids, $trilha_course_ids);
         return array_map('intval', array_unique($all_ids));
     }
 
@@ -3066,11 +3089,12 @@ class System_Cursos_Access_Control
                         <?php foreach ($cursos as $curso):
                             $acesso = isset($acessos_map[$curso->ID]) ? $acessos_map[$curso->ID] : null;
 
-                            // Check for Group Access if no Direct Access
+                            // Identificar acessos herdados de grupos ou da trilha.
                             $access_source = self::get_access_source($user->ID, $curso->ID);
 
                             $tem_acesso = ($access_source !== false);
-                            $is_group_access = ($access_source && in_array($access_source['type'], ['group', 'group_trilha']));
+                            $is_inherited_access = ($access_source && in_array($access_source['type'], ['group', 'group_trilha', 'trilha'], true));
+                            $via_trilha = $access_source && $access_source['type'] === 'trilha';
 
                             $expirado = $acesso && $acesso->status === 'ativo' && $acesso->data_fim && strtotime($acesso->data_fim) < time();
                             $cert_link = self::get_admin_certificate_link($user->ID, $curso->ID);
@@ -3091,7 +3115,7 @@ class System_Cursos_Access_Control
                                             <span style="color: #9ca3af;">Sem acesso</span>
                                         <?php endif; ?>
                                     <?php else: ?>
-                                        <?php if ($is_group_access): ?>
+                                        <?php if ($is_inherited_access): ?>
                                             <span
                                                 style="color: #2563eb; font-weight: 600; background: #dbeafe; padding: 2px 8px; border-radius: 4px;">Utilizando
                                                 <?php echo esc_html($access_source['label']); ?></span>
@@ -3105,8 +3129,8 @@ class System_Cursos_Access_Control
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php if ($is_group_access): ?>
-                                        <em>Gerenciado pelo Grupo</em>
+                                    <?php if ($is_inherited_access): ?>
+                                        <em><?php echo $via_trilha ? 'Gerenciado pela Trilha' : 'Gerenciado pelo Grupo'; ?></em>
                                     <?php elseif ($acesso && $acesso->data_fim): ?>
                                         <?php echo date('d/m/Y', strtotime($acesso->data_fim)); ?>
                                     <?php elseif ($acesso && $acesso->status === 'ativo'): ?>
@@ -3114,7 +3138,7 @@ class System_Cursos_Access_Control
                                     <?php else: ?>
                                         —
                                     <?php endif; ?>
-                                    <?php if ($tem_acesso && !$is_group_access && $acesso): ?>
+                                    <?php if ($tem_acesso && !$is_inherited_access && $acesso): ?>
                                         <button type="button" class="button button-small"
                                             onclick="openEditDateModal(<?php echo (int) $curso->ID; ?>, '<?php echo $acesso->data_fim ? date('Y-m-d', strtotime($acesso->data_fim)) : ''; ?>')"
                                             title="Editar data de expiração"
@@ -3128,8 +3152,12 @@ class System_Cursos_Access_Control
                                     <?php echo $acesso ? date('d/m/Y', strtotime($acesso->created_at)) : '—'; ?>
                                 </td>
                                 <td>
-                                    <?php if ($is_group_access): ?>
-                                        <small style="color:#666;">Acesso via grupo. Edite o grupo ou remova o aluno dele.</small>
+                                    <?php if ($is_inherited_access): ?>
+                                        <?php if ($via_trilha): ?>
+                                            <a href="<?php echo esc_url(admin_url('post.php?post=' . (int) $access_source['trilha_id'] . '&action=edit')); ?>">Gerenciar matrícula na trilha</a>
+                                        <?php else: ?>
+                                            <small style="color:#666;">Acesso via grupo. Edite o grupo ou remova o aluno dele.</small>
+                                        <?php endif; ?>
                                     <?php elseif (!$acesso || $acesso->status !== 'ativo' || $expirado): ?>
                                         <button type="submit" name="acao_rapida" value="ativar_<?php echo $curso->ID; ?>"
                                             class="button button-primary button-small">
@@ -3146,7 +3174,7 @@ class System_Cursos_Access_Control
                                         </button>
                                     <?php endif; ?>
 
-                                    <?php if ($acesso && $acesso->status === 'suspenso' && !$is_group_access): ?>
+                                    <?php if ($acesso && $acesso->status === 'suspenso' && !$is_inherited_access): ?>
                                         <button type="submit" name="acao_rapida" value="reativar_<?php echo $curso->ID; ?>"
                                             class="button button-primary button-small">
                                             Reativar
